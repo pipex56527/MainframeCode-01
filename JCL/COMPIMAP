@@ -1,0 +1,49 @@
+//COMPIMAP JOB COMPIMAP,'COMPILA MAPAS',NOTIFY=&SYSUID,                 00010000
+//          MSGCLASS=Q,CLASS=A,MSGLEVEL=(1,1),REGION=0M,TIME=(0,7)      00020000
+//*================================================================     00030000
+//* HACER:    C CICS03 <NOMBRE MAPA SIN LA M>                           00040012
+//*           Y SALIR CON:  CAN                                         00050000
+//*================================================================     00060000
+//*                                                                     00070000
+//*            COMPILA MAPA BMS                                         00080000
+//*                                                                     00090000
+//COMPIL  EXEC PGM=ASMA90,REGION=2000K,PARM='SYSPARM(MAP)'              00100000
+//SYSLIB   DD  DSN=CICSTS13.CICS.SDFHMAC,DISP=SHR                       00110000
+//         DD  DSN=SYS1.MACLIB,DISP=SHR                                 00120000
+//SYSUT1   DD  SPACE=(1700,(999,999)),UNIT=SYSDA                        00130000
+//SYSUT2   DD  SPACE=(1700,(300,50)),UNIT=SYSDA                         00140000
+//SYSUT3   DD  SPACE=(1700,(300,50)),UNIT=SYSDA                         00150000
+//SYSLIN   DD  DSN=&&LOADSET,DISP=(MOD,PASS),UNIT=SYSDA,                00160000
+//             SPACE=(800,(500,500))                                    00170000
+//* NOMBRE DEL MAPA                                                     00171000
+//SYSIN    DD  DSN=P390.CICS.MAPS(MCICS03),DISP=SHR                     00180012
+//SYSPRINT DD  SYSOUT=*                                                 00190000
+//SYSUDUMP DD  SYSOUT=*                                                 00200000
+//*                                                                     00210000
+//*            LINKEDITA SI COMPILACION                                 00220000
+//*            DA COD. RETORNO MENOR O IGUAL A 4                        00230000
+//*                                                                     00240000
+//LKED    EXEC PGM=IEWL,PARM='LIST,XREF,LET',REGION=2000K,              00250000
+//             COND=(4,LT,COMPIL)                                       00260000
+//SYSLIN   DD  DSN=&&LOADSET,DISP=(OLD,DELETE)                          00270000
+//         DD  DDNAME=SYSIN                                             00280000
+//SYSLMOD  DD  DISP=SHR,DSN=IBMUSER.CICS.LOAD(MCICS03)                  00290012
+//* COPIAR OBJETO LOAD A IBMUSER.CICS.LOAD                              00291000
+//SYSUT1   DD  SPACE=(1024,(50,50)),UNIT=SYSDA                          00300000
+//SYSPRINT DD  SYSOUT=*                                                 00310000
+//SYSUDUMP DD  SYSOUT=*                                                 00320000
+//*                                                                     00330000
+//*            GENERA LA COPY DEL MAPA (SIMBOLICA)                      00340000
+//*                                                                     00350000
+//ASMDSECT EXEC PGM=ASMA90,REGION=2000K,                                00360000
+//  PARM='SYSPARM(A.DSECT),DECK,NOOBJECT'                               00370000
+//SYSPRINT DD SYSOUT=*                                                  00380000
+//SYSLIB   DD DSN=CICSTS13.CICS.SDFHMAC,DISP=SHR                        00390000
+//         DD DSN=SYS1.MACLIB,DISP=SHR                                  00400000
+//SYSUT1   DD UNIT=SYSDA,SPACE=(TRK,(5,5))                              00410000
+//SYSUT2   DD UNIT=SYSDA,SPACE=(TRK,(5,5))                              00420000
+//SYSUT3   DD UNIT=SYSDA,SPACE=(TRK,(5,5))                              00430000
+//SYSPUNCH DD DSN=P390.CICS.COPY(CCICS03),DISP=SHR                      00440012
+//SYSIN    DD DSN=P390.CICS.MAPS(MCICS03),DISP=SHR                      00450012
+//                                                                      00460002
+
