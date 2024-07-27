@@ -4,35 +4,35 @@
          BORRARPERF, INGRESPERF, MODIFIPERF )
        VALUES
        (
-        ' TR03', '001', 'ACCESO TOTAL EST', 'SI', 'SI', 'SI', 'SI'
+        'PTR03', '001', 'ACCESO TOTAL EST', 'SI', 'SI', 'SI', 'SI'
        );
    INSERT INTO P390.PERFILES
        ( TRANPERF, IDPERF, NOMBREPERF, CONSULPERF,
          BORRARPERF, INGRESPERF, MODIFIPERF )
        VALUES
        (
-        ' TR03', '002', 'SOLO CONSULTA EST', 'SI', 'NO', 'NO', 'NO'
+        'PTR03', '002', 'SOLO CONSULTA EST', 'SI', 'NO', 'NO', 'NO'
        );
    INSERT INTO P390.PERFILES
        ( TRANPERF, IDPERF, NOMBREPERF, CONSULPERF,
          BORRARPERF, INGRESPERF, MODIFIPERF )
        VALUES
        (
-        ' TR03', '003', 'CONSUL. Y INGR. EST', 'SI', 'NO', 'SI', 'NO'
+        'PTR03', '003', 'CONSUL. Y INGR. EST', 'SI', 'NO', 'SI', 'NO'
        );
    INSERT INTO P390.PERFILES
        ( TRANPERF, IDPERF, NOMBREPERF, CONSULPERF,
          BORRARPERF, INGRESPERF, MODIFIPERF )
        VALUES
        (
-        ' TR03', '004', 'CONSUL.Y BORRAR EST', 'SI', 'SI', 'NO', 'NO'
+        'PTR03', '004', 'CONSUL.Y BORRAR EST', 'SI', 'SI', 'NO', 'NO'
        );
    INSERT INTO P390.PERFILES
        ( TRANPERF, IDPERF, NOMBREPERF, CONSULPERF,
          BORRARPERF, INGRESPERF, MODIFIPERF )
        VALUES
        (
-        ' TR03', '005', 'CONSUL.Y MODIF. EST', 'SI', 'NO', 'NO', 'SI'
+        'PTR03', '005', 'CONSUL.Y MODIF. EST', 'SI', 'NO', 'NO', 'SI'
        );
 ---------------------------------------------
 
