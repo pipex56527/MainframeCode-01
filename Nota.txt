@@ -1,2 +1,2 @@
 Clonado ok
-Prueba Regla. Prueba ok
+Prueba Regla. Prueba pull request
