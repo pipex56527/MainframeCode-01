@@ -1,0 +1,57 @@
+         PRINT NOGEN                                                    00010000
+MST0629  DFHMSD TYPE=DSECT,                                            X00020017
+               LANG=COBOL,                                             X00050000
+               MODE=INOUT,                                             X00060000
+               TERM=3270-2,                                            X00070000
+               CTRL=FREEKB,                                            X00080000
+               STORAGE=AUTO,                                           X00090000
+               DSATTS=(COLOR,HILIGHT),MAPATTS=(COLOR,HILIGHT),         X00091002
+               TIOAPFX=YES                                              00100000
+*********************************************************************** 00110001
+MAP0629  DFHMDI SIZE=(24,80),                                          X00120017
+               LINE=1,                                                 X00130000
+               COLUMN=1                                                 00140002
+*********************************************************************** 00150001
+         DFHMDF POS=(1,63),                                            X00160003
+               LENGTH=5,                                               X00170017
+               ATTRB=(NORM,PROT),                                      X00180001
+               COLOR=BLUE,                                             X00190001
+               INITIAL='LOGIN'                                          00200017
+         DFHMDF POS=(6,12),                                            X00210003
+               LENGTH=25,                                              X00220017
+               ATTRB=(NORM,PROT),                                      X00230001
+               COLOR=BLUE,                                             X00240001
+               INITIAL='LOGIN USUARIO REGISTRADOS'                      00250017
+         DFHMDF POS=(8,2),                                             X00260003
+               LENGTH=23,                                              X00270003
+               ATTRB=(NORM,PROT),                                      X00280001
+               COLOR=RED,                                              X00290004
+               INITIAL='INGRESE ID USUARIO.....'                        00300017
+MUID     DFHMDF POS=(8,26),                                            X00360017
+               LENGTH=6,                                               X00370018
+               ATTRB=(NORM,UNPROT),                                    X00380016
+               COLOR=BLUE,                                             X00390001
+               INITIAL='______'                                         00400018
+         DFHMDF POS=(9,2),                                             X00401019
+               LENGTH=23,                                              X00402019
+               ATTRB=(NORM,PROT),                                      X00403019
+               COLOR=RED,                                              X00404019
+               INITIAL='INGRESE PASSWORD.......'                        00405019
+MPAS     DFHMDF POS=(9,26),                                            X00410017
+               LENGTH=6,                                               X00420018
+               ATTRB=(NORM,UNPROT),                                    X00430017
+               COLOR=RED,                                              X00440019
+               INITIAL='______'                                         00450018
+MMSG     DFHMDF POS=(21,2),,                                           X00459214
+               LENGTH=72,                                              X00459315
+               ATTRB=(NORM,PROT),                                      X00459408
+               COLOR=NEUTRAL,                                          X00459504
+               INITIAL='                    '                           00459603
+         DFHMDF POS=(24,2),                                            X00510005
+               LENGTH=8,                                               X00520005
+               ATTRB=(NORM,PROT),                                      X00530005
+               COLOR=RED,                                              X00540014
+               INITIAL='F3=SALIR'                                       00550005
+         DFHMSD TYPE=FINAL                                              00760000
+         END                                                            00770000
+

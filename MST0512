@@ -1,0 +1,100 @@
+         PRINT NOGEN                                                    00010000
+MST0512  DFHMSD TYPE=DSECT,                                            X00020010
+               LANG=COBOL,                                             X00050000
+               MODE=INOUT,                                             X00060000
+               TERM=3270-2,                                            X00070000
+               CTRL=FREEKB,                                            X00080000
+               STORAGE=AUTO,                                           X00090000
+               DSATTS=(COLOR,HILIGHT),MAPATTS=(COLOR,HILIGHT),         X00091002
+               TIOAPFX=YES                                              00100000
+*********************************************************************** 00110001
+MAP0512  DFHMDI SIZE=(24,80),                                          X00120010
+               LINE=1,                                                 X00130000
+               COLUMN=1                                                 00140002
+*********************************************************************** 00150001
+         DFHMDF POS=(1,63),                                            X00160003
+               LENGTH=7,                                               X00170001
+               ATTRB=(NORM,PROT),                                      X00180001
+               COLOR=BLUE,                                             X00190001
+               INITIAL='CEDULA'                                         00200003
+         DFHMDF POS=(6,12),                                            X00210003
+               LENGTH=27,                                              X00220011
+               ATTRB=(NORM,PROT),                                      X00230001
+               COLOR=BLUE,                                             X00240001
+               INITIAL='CONSULTA DE ESTUDIANTES DB2'                    00250011
+         DFHMDF POS=(8,2),                                             X00260003
+               LENGTH=23,                                              X00270003
+               ATTRB=(NORM,PROT),                                      X00280001
+               COLOR=RED,                                              X00290004
+               INITIAL='INGRESE LA CEDULA......'                        00300008
+MCED     DFHMDF POS=(8,26),                                            X00360004
+               LENGTH=9,                                               X00370003
+               ATTRB=(NORM,UNPROT),                                    X00380016
+               COLOR=BLUE,                                             X00390001
+               INITIAL='_________'                                      00400003
+*        DFHMDF POS=(8,36),                                             00401006
+*              LENGTH=1,                                                00402006
+*              ATTRB=ASKIP                                              00403006
+         DFHMDF POS=(10,2),                                            X00404018
+               LENGTH=23,                                              X00405019
+               ATTRB=(NORM,PROT),                                      X00406018
+               COLOR=RED,                                              X00407018
+               INITIAL='           NOMBRE......'                        00408019
+MNOM     DFHMDF POS=(10,26),                                           X00410019
+               LENGTH=20,                                              X00420003
+               ATTRB=(NORM,UNPROT),                                    X00430016
+               COLOR=YELLOW,                                           X00440004
+               INITIAL='                    '                           00450003
+         DFHMDF POS=(11,2),                                            X00450118
+               LENGTH=23,                                              X00450219
+               ATTRB=(NORM,PROT),                                      X00450318
+               COLOR=RED,                                              X00450418
+               INITIAL='           APELLIDO....'                        00450519
+MAPE     DFHMDF POS=(11,26),                                           X00451019
+               LENGTH=20,                                              X00452003
+               ATTRB=(NORM,PROT),                                      X00453008
+               COLOR=YELLOW,                                           X00454004
+               INITIAL='                    '                           00455003
+         DFHMDF POS=(12,2),                                            X00455118
+               LENGTH=23,                                              X00455219
+               ATTRB=(NORM,PROT),                                      X00455318
+               COLOR=RED,                                              X00455418
+               INITIAL='           DIRECCION...'                        00455519
+MDIR     DFHMDF POS=(12,26),                                           X00456019
+               LENGTH=20,                                              X00457003
+               ATTRB=(NORM,PROT),                                      X00458008
+               COLOR=YELLOW,                                           X00459004
+               INITIAL='                    '                           00459103
+MMS5     DFHMDF POS=(21,2),,                                           X00459717
+               LENGTH=72,                                              X00459815
+               ATTRB=(NORM,PROT),                                      X00459908
+               COLOR=NEUTRAL,                                          X00460004
+               INITIAL='                    '                           00460103
+         DFHMDF POS=(22,2),                                            X00461014
+               LENGTH=45,                                              X00470008
+               ATTRB=(NORM,PROT),                                      X00480001
+               COLOR=TURQUOISE,                                        X00490005
+               INITIAL='F2= BORRAR                   F10= INGRESAR   '  00500014
+         DFHMDF POS=(22,63),                                           X00500114
+               LENGTH=14,                                              X00500214
+               ATTRB=(NORM,PROT),                                      X00500314
+               COLOR=TURQUOISE,                                        X00500414
+               INITIAL='F12= MODIFICAR'                                 00500514
+         DFHMDF POS=(23,17),                                           X00500614
+               LENGTH=22,                                              X00500714
+               ATTRB=(NORM,PROT),                                      X00500814
+               COLOR=TURQUOISE,                                        X00500914
+               INITIAL='F7= REGISTRO ANTERIOR '                         00501015
+         DFHMDF POS=(23,50),                                           X00501108
+               LENGTH=22,                                              X00502014
+               ATTRB=(NORM,PROT),                                      X00503008
+               COLOR=TURQUOISE,                                        X00504008
+               INITIAL='F8= REGISTRO SIGUIENTE'                         00505015
+         DFHMDF POS=(24,2),                                            X00510005
+               LENGTH=8,                                               X00520005
+               ATTRB=(NORM,PROT),                                      X00530005
+               COLOR=RED,                                              X00540014
+               INITIAL='F3=SALIR'                                       00550005
+         DFHMSD TYPE=FINAL                                              00760000
+         END                                                            00770000
+

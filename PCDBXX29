@@ -1,0 +1,590 @@
+       IDENTIFICATION DIVISION.                                         00010000
+         PROGRAM-ID. PCDBXX29.                                          00020023
+       ENVIRONMENT DIVISION.                                            00030000
+       DATA DIVISION.                                                   00040000
+       WORKING-STORAGE SECTION.                                         00050000
+       01 WRK-MY-COMM.                                                  00060020
+          03 WRK-PGM  PIC X(1).                                         00070024
+          03 WRK-OPT  PIC X(1).                                         00071024
+             88 ERA-ENT     VALUE 'E'.                                  00080007
+             88 ERA-INIT    VALUE 'I'.                                  00090024
+             88 ERA-F2      VALUE '2'.                                  00100009
+             88 ERA-F7      VALUE '7'.                                  00101011
+             88 ERA-F8      VALUE '8'.                                  00102011
+             88 ERA-F10     VALUE 'A'.                                  00110009
+             88 ERA-F12     VALUE 'C'.                                  00120009
+          03 WRK-CEDULA PIC X(9).                                       00130005
+          03 WRK-USR    PIC X(6).                                       00131020
+          03 WRK-ACC    PIC X(3).                                       00132020
+       01 WRK-COMMAREA REDEFINES WRK-MY-COMM.                           00140020
+          03 MY-COMMAREA    PIC X(20).                                  00150024
+      *                                                                 00160004
+       01 W-ACCESS.                                                     00160126
+          03 W-ING    PIC X.                                            00160226
+             88 OK-ING    VALUE '1'.                                    00160326
+          03 W-BOR    PIC X.                                            00160426
+             88 OK-BORR   VALUE '1'.                                    00160526
+          03 W-MOD    PIC X.                                            00160626
+             88 OK-MOD    VALUE '1'.                                    00160726
+       01 WRK-ACCS REDEFINES W-ACCESS.                                  00160826
+          03 WRK-ACCESS   PIC X(3).                                     00160926
+      *                                                                 00161026
+       01 WRK2-CEDULA  PIC X(9).                                        00161116
+       01 W-NUM        PIC S9(4) COMP.                                  00161217
+       01 WRK-NUM      PIC 9(4).                                        00161317
+       01 WRK-STR      PIC X(4).                                        00161417
+      *                                                                 00162013
+       01 FLAGS.                                                        00170006
+          03 CHK-EMP      PIC X.                                        00180006
+             88 EMP-OK       VALUE 'Y'.                                 00190006
+          03 CHK-USR      PIC X.                                        00190125
+             88 USR-OK       VALUE 'Y'.                                 00190225
+          03 CHK-PGM      PIC X.                                        00191024
+             88 PGM-0629     VALUE '6'.                                 00192024
+             88 PGM-0512     VALUE '5'.                                 00193024
+      *                                                                 00200006
+      *                                                                 00203011
+       01 DB2-ERR.                                                      00210006
+          03 DB2-SQLCODE     PIC S9(9).                                 00220006
+          03 DB2-SQLCODE-2   PIC -ZZZZZZZZ9.                            00230006
+          03 DB2-ERROR.                                                 00240006
+             06 DB2-ERR-MSG     PIC X(50).                              00250006
+             06 DB2-ERR-CODE    PIC X(20).                              00260006
+      *                                                                 00270006
+      *  SQL COMMUNICATION AREA                                         00271011
+           EXEC SQL INCLUDE SQLCA END-EXEC.                             00280004
+      *                                                                 00290008
+      *  DCLGEN FOR MYTBLEMP                                            00300008
+           EXEC SQL INCLUDE DCLEMP END-EXEC.                            00310005
+           EXEC SQL INCLUDE DCLUSR END-EXEC.                            00311024
+      *                                                                 00320004
+      *  MAPSET                                                         00330005
+       COPY MST0512.                                                    00340005
+       COPY MST0629.                                                    00341024
+      *                                                                 00350005
+      *  CICS                                                           00360005
+       COPY DFHAID.                                                     00370005
+       COPY DFHBMSCA.                                                   00380005
+      *                                                                 00390005
+       LINKAGE SECTION.                                                 00400005
+       01 DFHCOMMAREA     PIC X(20).                                    00410024
+      *                                                                 00420005
+       PROCEDURE DIVISION.                                              00430000
+      *                                                                 00440004
+      ******************************************************************00450001
+       0000-MAIN.                                                       00460004
+           IF EIBCALEN = ZERO                                           00460124
+              MOVE LOW-VALUES TO MAP0629O                               00460224
+              MOVE SPACES TO WRK-USR MY-COMMAREA                        00460324
+              MOVE '6' TO WRK-PGM                                       00460424
+              MOVE -1 TO MUIDL                                          00460624
+              PERFORM 1600-SEND-MAP0629                                 00460724
+           ELSE                                                         00460824
+              MOVE DFHCOMMAREA TO MY-COMMAREA                           00460924
+              MOVE WRK-PGM TO CHK-PGM                                   00461024
+              IF PGM-0629                                               00461124
+                 PERFORM 0000-P629                                      00461224
+              ELSE                                                      00461324
+                 IF PGM-0512                                            00461424
+                    PERFORM 0000-P512                                   00461524
+                 ELSE                                                   00461624
+                    DISPLAY 'PGM-629 WTF ' WRK-PGM ' ' CHK-PGM          00461724
+                 END-IF                                                 00461824
+              END-IF                                                    00461926
+           END-IF                                                       00462026
+           DISPLAY 'GOING TO DIE ' MY-COMMAREA                          00462126
+      *                                                                 00462226
+           EXEC CICS                                                    00462326
+             RETURN TRANSID('TX29')                                     00462426
+                COMMAREA(MY-COMMAREA)                                   00462526
+           END-EXEC                                                     00462626
+           .                                                            00462726
+       0000-P629.                                                       00462826
+           DISPLAY 'P629 MY-COMM ' MY-COMMAREA                          00462926
+           EVALUATE TRUE                                                00463026
+      *                                                                 00463126
+             WHEN EIBAID = DFHENTER                                     00463226
+                PERFORM 1000-PROCESO-0629                               00463326
+                IF USR-OK                                               00463426
+                   MOVE SPACES TO MY-COMMAREA                           00463526
+                   MOVE USR TO WRK-USR                                  00463626
+                   MOVE ACC TO WRK-ACC WRK-ACCESS                       00463726
+                   MOVE 'I' TO WRK-OPT                                  00463826
+                   MOVE '5' TO WRK-PGM                                  00463926
+                   MOVE LOW-VALUES TO MAP0512O                          00464027
+                   MOVE SPACES TO WRK-CEDULA CED                        00464127
+                   PERFORM 1100-GET-REG-NEXT                            00464227
+                   PERFORM 1500-MOVE-REG-O                              00464327
+                   MOVE -1 TO MCEDL                                     00464526
+                   PERFORM 1600-SEND-MAP0512                            00464626
+                ELSE                                                    00464724
+      *            MOVE LOW-VALUES TO MAP0629O WRK-USR USR              00464827
+                   MOVE SPACES TO WRK-USR USR                           00464927
+                   MOVE -1 TO MUIDL                                     00465027
+                   PERFORM 1600-SEND-MAP0629                            00465127
+                END-IF                                                  00465227
+      *                                                                 00465327
+             WHEN EIBAID = DFHPF3                                       00465427
+                MOVE LOW-VALUES TO MAP0629O                             00465527
+                PERFORM 1600-SEND-MAP0629                               00465627
+                PERFORM 9000-TERMINAR                                   00465727
+      *                                                                 00465827
+             WHEN OTHER                                                 00465927
+                MOVE LOW-VALUES TO MAP0629O                             00466027
+      *         MOVE 'TECLA NO PERMITIDA ' TO MMS6O                     00466127
+                MOVE -1 TO MUIDL                                        00466227
+                PERFORM 1600-SEND-MAP0629                               00466327
+      *                                                                 00466427
+           END-EVALUATE                                                 00466527
+           .                                                            00466627
+       0000-P512.                                                       00466727
+           DISPLAY 'P512 MY-COMM ' MY-COMMAREA                          00467026
+      *                                                                 00491013
+           EVALUATE TRUE                                                00500006
+      *                                                                 00600007
+              WHEN EIBAID = DFHENTER                                    00610007
+                   IF ERA-F12                                           00620008
+                      PERFORM 1300-RECEIVE-MAP0512                      00630025
+                      MOVE WRK-CEDULA TO CED                            00640008
+                      PERFORM 1200-GET-EMP                              00650010
+                      MOVE -1 TO MCEDL                                  00651015
+                      MOVE DFHBMUNP TO MCEDA                            00652015
+                      MOVE DFHBMUNP TO MNOMA MAPEA MDIRA                00653015
+                      MOVE 'I' TO WRK-OPT                               00654015
+                      IF EMP-OK                                         00660007
+                         PERFORM 1400-UPDATE-EMP                        00670008
+                         PERFORM 1500-MOVE-REG-O                        00680008
+                         MOVE 'REGISTR0 ACTUALIZADO...' TO MMS5O        00721024
+                      ELSE                                              00730007
+                         MOVE 'NO SE PUDO ACTUALIZAR...' TO MMS5O       00740024
+                      END-IF                                            00750007
+                   ELSE                                                 00760007
+                      IF ERA-F10                                        00770008
+                         PERFORM 1300-RECEIVE-MAP0512                   00780025
+      *                  PERFORM 3000-CHK-VALUES-IN                     00791014
+                         PERFORM 1550-MOVE-I-REG                        00800014
+                         PERFORM 3000-INS-EMP                           00810008
+                         IF EMP-OK                                      00810215
+                            MOVE 'REGISTR0 INGRESADO...' TO MMS5O       00810424
+                         ELSE                                           00820015
+                            MOVE 'ESTUDIANTE YA EXISTE ' TO MMS5O       00820124
+                         END-IF                                         00820215
+                         MOVE -1 TO MCEDL                               00820315
+                         MOVE 'I' TO WRK-OPT                            00820415
+                      ELSE                                              00821015
+                         MOVE LOW-VALUES TO MAP0512O                    00821118
+                         MOVE WRK-CEDULA TO CED                         00822118
+                         PERFORM 1300-RECEIVE-MAP0512                   00830125
+                         PERFORM 1350-EMP-DATA                          00840018
+                         IF EMP-OK                                      00850014
+                            PERFORM 1200-GET-EMP                        00860014
+                            IF EMP-OK                                   00910014
+                               PERFORM 1500-MOVE-REG-O                  00920014
+                            ELSE                                        00930014
+                               MOVE 'ESTUDIANTE NO EXISTE' TO MMS5O     00940024
+                            END-IF                                      00940114
+                         ELSE                                           00941014
+                            MOVE 'INGRESE  DATOS' TO MMS5O              00942024
+                         END-IF                                         00950010
+                         MOVE -1 TO MCEDL                               00960010
+                         MOVE 'E' TO WRK-OPT                            00961010
+                      END-IF                                            00980009
+                   END-IF                                               00990009
+                   PERFORM 1600-SEND-MAP0512                            01010025
+      *                                                                 01070009
+              WHEN EIBAID = DFHPF2                                      01080009
+                   IF OK-BORR                                           01091127
+                     IF ERA-F2                                          01091227
+                        PERFORM 1550-MOVE-I-REG                         01092027
+                        PERFORM 4000-DEL-EMP                            01093027
+                        IF EMP-OK                                       01095027
+                           STRING 'REGISTRO ' DELIMITED BY SIZE         01095127
+                                  WRK-CEDULA DELIMITED BY SIZE          01095227
+                                  ' BORRADO' DELIMITED BY SIZE          01095327
+                                  INTO MMS5O                            01095427
+                        ELSE                                            01097027
+                           MOVE 'NO SE PUDO BORRAR ' TO MMS5O           01098027
+                        END-IF                                          01099027
+                        MOVE DFHBMUNP TO MNOMA MAPEA MDIRA              01099127
+                        MOVE DFHBMUNP TO MCEDA                          01099227
+                        PERFORM 1100-GET-REG-PREV                       01099327
+                        PERFORM 1500-MOVE-REG-O                         01099427
+                        MOVE -1 TO MCEDL                                01099527
+                        MOVE 'I' TO WRK-OPT                             01099627
+                     ELSE                                               01099727
+                        MOVE '2' TO WRK-OPT                             01099827
+                        MOVE                                            01100027
+                        'F2 PARA CONFIRMAR BORRADO - ENTER CANCELAR'    01100127
+                             TO MMS5O                                   01100227
+                        MOVE DFHBMPRO TO MNOMA MAPEA MDIRA              01100327
+                        MOVE DFHBMPRO TO MCEDA                          01100427
+                     END-IF                                             01101027
+                   ELSE                                                 01102027
+                     STRING 'NO AUTORIZADO A BORRAR REGISTROS IBM='     01102127
+                            DELIMITED BY SIZE                           01102227
+                            WRK-ACCESS DELIMITED BY SIZE INTO MMS5O     01102327
+                     MOVE '7' TO WRK-OPT                                01102427
+                   END-IF                                               01103027
+                   MOVE MCEDO TO WRK-CEDULA                             01150009
+                   PERFORM 1600-SEND-MAP0512                            01160025
+      *                                                                 01170009
+              WHEN EIBAID = DFHPF3                                      01171011
+                   MOVE LOW-VALUES TO MAP0629O                          01172026
+                   MOVE -1 TO MUIDL                                     01172126
+                   PERFORM 1600-SEND-MAP0629                            01172226
+                   MOVE '6' TO WRK-PGM                                  01172326
+                   MOVE 'I' TO WRK-OPT                                  01172424
+      *                                                                 01175011
+              WHEN EIBAID = DFHPF7                                      01176011
+                   MOVE LOW-VALUES TO MAP0512O                          01177011
+                   PERFORM 1100-GET-REG-PREV                            01177224
+                   PERFORM 1500-MOVE-REG-O                              01177311
+      *            MOVE 'ANTERIOR  .......' TO MMS5O                    01177424
+                   MOVE -1 TO MCEDL                                     01177513
+                   MOVE '7' TO WRK-OPT                                  01177618
+                   PERFORM 1600-SEND-MAP0512                            01177724
+      *                                                                 01179111
+              WHEN EIBAID = DFHPF8                                      01179211
+                   MOVE LOW-VALUES TO MAP0512O                          01179311
+                   PERFORM 1100-GET-REG-NEXT                            01179524
+                   PERFORM 1500-MOVE-REG-O                              01179611
+      *            MOVE 'SIGUIENTE........' TO MMS5O                    01179725
+                   MOVE -1 TO MCEDL                                     01179813
+                   MOVE '8' TO WRK-OPT                                  01179918
+                   PERFORM 1600-SEND-MAP0512                            01180024
+      *                                                                 01180111
+              WHEN EIBAID = DFHPF10                                     01181009
+                   IF OK-ING                                            01182026
+                     MOVE LOW-VALUES TO MAP0512O                        01190026
+                     MOVE 'A' TO WRK-OPT                                01200026
+                     MOVE DFHBMUNP TO MCEDA MNOMA MAPEA MDIRA           01210026
+                     MOVE 'INGRESO DE REGISTRO NUEVO' TO MMS5O          01211026
+                   ELSE                                                 01212026
+                     STRING 'NO AUTORIZADO A INGRESAR REGISTROS IBM='   01212127
+                            DELIMITED BY SIZE                           01212227
+                            WRK-ACCESS DELIMITED BY SIZE INTO MMS5O     01212327
+                     MOVE '7' TO WRK-OPT                                01212526
+                   END-IF                                               01213026
+                   MOVE -1 TO MCEDL                                     01220009
+                   PERFORM 1600-SEND-MAP0512                            01230024
+      *                                                                 01240009
+              WHEN EIBAID = DFHPF12                                     01250009
+                   IF OK-MOD                                            01260026
+                     MOVE 'C' TO WRK-OPT                                01310026
+                     MOVE DFHBMPRO TO MCEDA                             01320026
+                     MOVE DFHBMUNP TO MNOMA MAPEA MDIRA                 01330026
+                     MOVE 'CAMBIO DE CAMPOS DEL REGISTRO' TO MMS5O      01331026
+                     MOVE -1 TO MNOML                                   01340026
+                   ELSE                                                 01341026
+                STRING 'NO AUTORIZADO A MODIFICAR REGISTRO IBM='        01341127
+                            DELIMITED BY SIZE                           01341227
+                            WRK-ACCESS DELIMITED BY SIZE INTO MMS5O     01341327
+                     MOVE '7' TO WRK-OPT                                01341626
+                     MOVE -1 TO MCEDL                                   01341726
+                   END-IF                                               01342026
+                   PERFORM 1600-SEND-MAP0512                            01350025
+      *                                                                 01370009
+              WHEN OTHER                                                01380009
+                   MOVE LOW-VALUES TO MAP0512O                          01390009
+                   MOVE 'TECLA NO PERMITIDA ' TO MMS5O                  01400024
+                   MOVE -1 TO MCEDL                                     01410009
+                   PERFORM 1600-SEND-MAP0512                            01420024
+      *                                                                 01430009
+           END-EVALUATE                                                 01440009
+           .                                                            01500009
+       1000-PROCESO-0512.                                               01510024
+           PERFORM 1300-RECEIVE-MAP0512                                 01520024
+           PERFORM 1350-EMP-DATA                                        01530009
+           IF EMP-OK                                                    01540009
+              PERFORM 1200-GET-EMP                                      01550010
+           END-IF                                                       01560009
+           .                                                            01570009
+       1000-PROCESO-0629.                                               01570124
+           PERFORM 1300-RECEIVE-MAP0629                                 01570225
+           PERFORM 1350-USR-DATA                                        01570325
+           IF USR-OK                                                    01570425
+              PERFORM 1200-GET-USR                                      01570525
+              IF USR-OK                                                 01570625
+                 IF MPASI = PASSW                                       01570725
+                    CONTINUE                                            01570825
+                 ELSE                                                   01570925
+                    MOVE SPACE TO CHK-USR                               01571025
+                    STRING 'PASSWORD INCORRECTO ' DELIMITED BY SIZE     01571125
+                           'PARA USURIO ' DELIMITED BY SIZE             01571225
+                           USR DELIMITED BY SIZE                        01571325
+                           INTO MMS6O                                   01571425
+                 END-IF                                                 01571525
+              END-IF                                                    01571625
+           END-IF                                                       01571725
+           .                                                            01571825
+       1100-GET-REG-NEXT.                                               01572024
+      *                                                                 01572211
+           EXEC SQL                                                     01573012
+              DECLARE EMPCURSI CURSOR FOR                               01573112
+                 SELECT CED, NOMBRE, APELLIDO, DIRECCION                01574012
+                 FROM P390.MYTBLEMP                                     01576012
+                    WHERE CED > :WRK-CEDULA                             01577012
+                    ORDER BY CED                                        01577119
+            END-EXEC                                                    01578012
+           IF SQLSTATE = '00000'                                        01578122
+              CONTINUE                                                  01578222
+           ELSE                                                         01578322
+              STRING 'T512 WRK-CEDULA ' DELIMITED BY SIZE               01578422
+                   WRK-CEDULA  DELIMITED BY SIZE                        01578522
+                  'SQLSTATE ' DELIMITED BY SIZE                         01578822
+                   SQLSTATE   DELIMITED BY SIZE                         01578922
+                   INTO MMS5O                                           01579024
+              DISPLAY MMS5O                                             01579124
+           END-IF                                                       01579322
+      *                                                                 01579412
+           EXEC SQL                                                     01579512
+              OPEN EMPCURSI                                             01579612
+           END-EXEC                                                     01579712
+      *                                                                 01579814
+           EXEC SQL                                                     01579912
+              FETCH  EMPCURSI                                           01580012
+                 INTO   :CED, :NOMBRE, :APELLIDO, :DIRECCION            01580112
+           END-EXEC                                                     01580212
+      *                                                                 01580314
+           EXEC SQL                                                     01580412
+              CLOSE EMPCURSI                                            01580512
+           END-EXEC                                                     01580612
+      *                                                                 01580714
+           MOVE CED TO WRK-CEDULA                                       01580812
+           .                                                            01581012
+       1100-GET-REG-PREV.                                               01581424
+           MOVE WRK-CEDULA TO WRK2-CEDULA                               01582213
+           MOVE SPACES TO WRK-CEDULA                                    01582317
+           MOVE ZERO TO WRK-NUM                                         01582417
+           EXEC SQL                                                     01582517
+              SELECT COUNT(*)                                           01582617
+                 INTO :W-NUM                                            01582717
+                 FROM P390.MYTBLEMP                                     01582817
+                    WHERE CED < :WRK2-CEDULA                            01582917
+           END-EXEC                                                     01583017
+           IF SQLSTATE = '00000'                                        01583117
+              CONTINUE                                                  01583217
+           ELSE                                                         01583317
+              STRING ' WRK2 ' DELIMITED BY SIZE                         01583417
+                   WRK2-CEDULA  DELIMITED BY SIZE                       01583517
+                     ' CNT ' DELIMITED BY SIZE                          01583617
+                   WRK-NUM  DELIMITED BY SIZE                           01583717
+                  'SQLSTATE ' DELIMITED BY SIZE                         01583817
+                   SQLSTATE   DELIMITED BY SIZE                         01583917
+                   INTO MMS5O                                           01584024
+              DISPLAY MMS5O                                             01584124
+           END-IF                                                       01584217
+           EXEC SQL                                                     01584312
+              SELECT MAX(CED)                                           01584413
+                 INTO :WRK-CEDULA                                       01584513
+                 FROM P390.MYTBLEMP                                     01584612
+                    WHERE CED < :WRK2-CEDULA                            01584713
+           END-EXEC                                                     01584812
+           MOVE W-NUM TO WRK-NUM                                        01584917
+           MOVE WRK-NUM TO WRK-STR                                      01585217
+      *    IF WRK-NUM < 2                                               01585426
+           IF WRK-NUM < 1                                               01585526
+              MOVE WRK2-CEDULA TO WRK-CEDULA CED                        01585626
+           END-IF                                                       01585726
+      *                                                                 01588216
+           MOVE WRK-CEDULA TO CED                                       01588316
+           PERFORM 1200-GET-EMP                                         01588416
+           .                                                            01588510
+       1200-GET-USR.                                                    01589024
+           EXEC SQL                                                     01589124
+              SELECT USR,PASSW, ACC                                     01589224
+              INTO :USR, :PASSW, :ACC                                   01589324
+              FROM P390.MYTBLUSR                                        01589424
+              WHERE USR = :USR                                          01589524
+           END-EXEC                                                     01589624
+           IF SQLSTATE = '00000'                                        01589724
+              MOVE USR TO WRK-USR                                       01589824
+              MOVE 'Y' TO CHK-USR                                       01589924
+           ELSE                                                         01590024
+              IF SQLSTATE = '02000'                                     01590124
+                 MOVE SPACES TO CHK-USR                                 01590224
+                 MOVE 'USUARIO NO EXISTE ' TO MMS6O                     01590324
+              ELSE                                                      01590424
+                 DISPLAY 'SQLSTATE 1200-GET-USR ' SQLSTATE              01590524
+                 EXEC CICS ABEND END-EXEC                               01590624
+              END-IF                                                    01590724
+           END-IF                                                       01590824
+           .                                                            01590924
+       1200-GET-EMP.                                                    01591024
+      *                                                                 01592012
+              EXEC SQL                                                  01600009
+                 SELECT CED, NOMBRE, APELLIDO, DIRECCION                01610009
+                 INTO   :CED, :NOMBRE, :APELLIDO, :DIRECCION            01620009
+                 FROM P390.MYTBLEMP                                     01630009
+                 WHERE CED = :CED                                       01640009
+              END-EXEC                                                  01650009
+              IF SQLCODE = 0                                            01660009
+                 MOVE CED TO WRK-CEDULA                                 01680009
+                 MOVE 'Y' TO CHK-EMP                                    01690009
+              ELSE                                                      01700009
+                 IF SQLCODE = 100                                       01710009
+                    MOVE SPACES TO CHK-EMP                              01720009
+                    MOVE 'ESTUDIANTE NO EXISTE ' TO MMS5O               01730024
+                 ELSE                                                   01740009
+                    EXEC CICS ABEND END-EXEC                            01750009
+                 END-IF                                                 01760009
+              END-IF                                                    01770009
+              .                                                         01780009
+       1300-RECEIVE-MAP0512.                                            01781024
+           EXEC CICS                                                    01782024
+                   RECEIVE MAP('MAP0512')                               01783024
+                   MAPSET('MST0512')                                    01784024
+                   INTO(MAP0512I)                                       01785024
+                   NOHANDLE                                             01786024
+           END-EXEC                                                     01787024
+           EXEC CICS IGNORE CONDITION MAPFAIL END-EXEC                  01788024
+           .                                                            01789024
+       1300-RECEIVE-MAP0629.                                            01789224
+           EXEC CICS                                                    01789324
+                   RECEIVE MAP('MAP0629')                               01789424
+                   MAPSET('MST0629')                                    01789524
+                   INTO(MAP0629I)                                       01789624
+                   NOHANDLE                                             01789724
+           END-EXEC                                                     01789824
+           EXEC CICS IGNORE CONDITION MAPFAIL END-EXEC                  01789924
+           .                                                            01790024
+       1350-EMP-DATA.                                                   01790124
+           IF MCEDL = ZERO OR MCEDI = SPACE                             01790224
+              MOVE 'N' TO CHK-EMP                                       01790324
+              MOVE 'DEBE INGRESAR VALOR CEDULA' TO MMS5O                01790424
+           ELSE                                                         01790524
+              MOVE MCEDI TO WRK-CEDULA CED                              01790624
+              MOVE 'Y' TO CHK-EMP                                       01790724
+           END-IF                                                       01790824
+           .                                                            01790924
+       1350-USR-DATA.                                                   01791024
+           IF MUIDL = ZERO OR MUIDI = SPACE                             01791124
+              MOVE 'N' TO CHK-USR                                       01791224
+              MOVE 'DEBE INGRESAR USUARIO ' TO MMS6O                    01791324
+           ELSE                                                         01791424
+              IF MPASL = ZERO OR MPASI = SPACE                          01791524
+                 MOVE 'N' TO CHK-USR                                    01791624
+                 MOVE 'DEBE INGRESAR PASSWORD ' TO MMS6O                01791724
+              ELSE                                                      01791824
+                 MOVE MUIDI TO WRK-USR USR                              01791924
+                 MOVE 'Y' TO CHK-USR                                    01792024
+              END-IF                                                    01792124
+           END-IF                                                       01792424
+           .                                                            01792524
+       1400-UPDATE-EMP.                                                 01792624
+           MOVE 'N' TO CHK-EMP                                          01792724
+           IF MNOMI = SPACE OR MNOML = ZERO                             01792824
+              CONTINUE                                                  01792924
+           ELSE                                                         01793024
+              MOVE MNOMI TO NOMBRE                                      01793124
+              MOVE 'Y' TO CHK-EMP                                       01793224
+           END-IF                                                       01793324
+           IF MAPEI = SPACE OR MAPEL = ZERO                             01793424
+              CONTINUE                                                  01793524
+           ELSE                                                         01793624
+              MOVE MAPEI TO APELLIDO                                    01793724
+              MOVE 'Y' TO CHK-EMP                                       01793824
+           END-IF                                                       01793924
+           IF MDIRI = SPACE OR MDIRL = ZERO                             01794024
+              CONTINUE                                                  01794124
+           ELSE                                                         01794224
+              MOVE MDIRI TO DIRECCION                                   01794324
+              MOVE 'Y' TO CHK-EMP                                       01794424
+           END-IF                                                       01794524
+           IF EMP-OK                                                    01794624
+              EXEC SQL                                                  01794724
+                  UPDATE P390.MYTBLEMP                                  01794824
+                    SET NOMBRE = :NOMBRE, APELLIDO = :APELLIDO,         01794924
+                        DIRECCION = :DIRECCION                          01795024
+                    WHERE CED = :CED                                    01795124
+              END-EXEC                                                  01795224
+              IF SQLCODE = 0                                            01795324
+                 MOVE 'Y' TO CHK-EMP                                    01795424
+                 MOVE 'ESTUDIANTE ACTUALIZADO' TO MMS5O                 01795524
+              ELSE                                                      01795624
+                 IF SQLCODE = 100                                       01795724
+                    MOVE SPACES TO MCEDO MNOMO MAPEO MDIRO CHK-EMP      01795824
+                    MOVE 'ESTUDIANTE NO EXISTE,NO ACTULIZO'             01795924
+                          TO MMS5O                                      01796025
+                 ELSE                                                   01796124
+                    DISPLAY 'ABEND UPDATE ' SQLCODE                     01796224
+                    EXEC CICS ABEND END-EXEC                            01796324
+                 END-IF                                                 01796424
+              END-IF                                                    01796524
+           END-IF                                                       01796624
+           .                                                            01796724
+       1500-MOVE-REG-O.                                                 01796824
+           MOVE CED TO MCEDO                                            01796924
+           MOVE NOMBRE TO MNOMO                                         01797024
+           MOVE APELLIDO TO MAPEO                                       01797124
+           MOVE DIRECCION TO MDIRO                                      01797224
+           .                                                            01797324
+       1550-MOVE-I-REG.                                                 01797424
+           MOVE MCEDI TO CED                                            01797524
+           MOVE MNOMI TO NOMBRE                                         01797624
+           MOVE MAPEI TO APELLIDO                                       01797724
+           MOVE MDIRI TO DIRECCION                                      01797824
+           .                                                            01797924
+       1600-SEND-MAP0512.                                               01798024
+           EXEC CICS SEND MAP('MAP0512')                                01798124
+                   MAPSET('MST0512')                                    01798224
+                   FROM(MAP0512O)                                       01798324
+                   ERASE                                                01798424
+                   CURSOR                                               01798524
+                   NOHANDLE                                             01798624
+           END-EXEC                                                     01798724
+           EXEC CICS IGNORE CONDITION MAPFAIL END-EXEC                  01798824
+           .                                                            01798924
+       1600-SEND-MAP0629.                                               01799024
+           EXEC CICS SEND MAP('MAP0629')                                01799124
+                   MAPSET('MST0629')                                    01799224
+                   FROM(MAP0629O)                                       01799324
+                   ERASE                                                01799424
+                   CURSOR                                               01799524
+                   NOHANDLE                                             01799624
+           END-EXEC                                                     01799724
+           EXEC CICS IGNORE CONDITION MAPFAIL END-EXEC                  01799824
+           .                                                            01799924
+       3000-INS-EMP.                                                    01800009
+      *                                                                 01801009
+              EXEC SQL                                                  01810009
+                 INSERT INTO P390.MYTBLEMP                              01820009
+                       (CED, NOMBRE, APELLIDO, DIRECCION)               01830009
+                 VALUES (:CED, :NOMBRE, :APELLIDO, :DIRECCION)          01840009
+              END-EXEC                                                  01850009
+              IF SQLCODE = 0                                            01870015
+                 MOVE CED TO WRK-CEDULA                                 01880009
+                 MOVE 'Y' TO CHK-EMP                                    01890009
+              ELSE                                                      01900009
+                 IF SQLSTATE = '23505'                                  01911015
+                    MOVE SPACES TO CHK-EMP                              01920009
+                 ELSE                                                   01940009
+                    EXEC CICS ABEND END-EXEC                            01950009
+                 END-IF                                                 01960009
+              END-IF                                                    01970009
+              .                                                         01980009
+       4000-DEL-EMP.                                                    01990009
+      *                                                                 02000009
+              EXEC SQL                                                  02010009
+                 DELETE FROM P390.MYTBLEMP                              02020009
+                 WHERE CED = :WRK-CEDULA                                02030009
+              END-EXEC                                                  02040009
+              IF SQLCODE = 0                                            02050009
+                 MOVE CED TO WRK-CEDULA                                 02070009
+                 MOVE 'Y' TO CHK-EMP                                    02080009
+              ELSE                                                      02090009
+                 IF SQLCODE = 100                                       02100009
+                    MOVE SPACES TO CHK-EMP                              02110009
+                    MOVE 'ESTUDIANTE NO EXISTE ' TO MMS5O               02120024
+                 ELSE                                                   02130009
+                    EXEC CICS ABEND END-EXEC                            02140009
+                 END-IF                                                 02150009
+              END-IF                                                    02160009
+              .                                                         02170009
+       9000-TERMINAR.                                                   02980006
+              EXEC CICS RETURN                                          03020005
+              END-EXEC                                                  03030005
+      *       STOP RUN                                                  03040005
+              GOBACK                                                    03050005
+              .                                                         03060004
+
