@@ -1,0 +1,11 @@
+-- ELIMINAR TABLAS  usuario, permisos y perfiles 
+--  Si YA montaron al p390 la tarea de Gabriel               
+-- ELIMINAR TABLA  PERMISOS                                           
+   DROP TABLE P390.PERMISOS;                                          
+-- ELIMINAR TABLA PERFILES                                            
+   DROP TABLE P390.PERFILES;	                                      
+-- ELIMINAR TABLA USUARIOS                                            
+   DROP TABLE P390.USUARIOS;                                          
+
+
+
