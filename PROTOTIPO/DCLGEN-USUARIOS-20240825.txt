@@ -1,0 +1,53 @@
+      ******************************************************************
+      * DCLGEN TABLE(USUARIOS)                                         *
+      *        LIBRARY(P390.DB2.DCLGEN(USUARIOS))                      *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(US-)                                              *
+      *        QUOTE                                                   *
+      *        LABEL(YES)                                              *
+      *        DBCSDELIM(NO)                                           *
+      *        COLSUFFIX(YES)                                          *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE USUARIOS TABLE
+           ( DNI                            CHAR(9) NOT NULL,
+             TIPOUSUA                       CHAR(5) NOT NULL,
+             CLAVE                          CHAR(8) NOT NULL,
+             NOMBRE                         CHAR(20) NOT NULL,
+             APELLIDOS                      CHAR(20) NOT NULL,
+             DIRECCION                      CHAR(35) NOT NULL,
+             CARGO                          CHAR(20) NOT NULL,
+             ESTADO                         CHAR(1) NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE USUARIOS                           *
+      ******************************************************************
+       01  DCLUSUARIOS.
+      *    *************************************************************
+      *                       DNI
+           10 US-DNI               PIC X(9).
+      *    *************************************************************
+      *                       TIPOUSUA
+           10 US-TIPOUSUA          PIC X(5).
+      *    *************************************************************
+      *                       CLAVE
+           10 US-CLAVE             PIC X(8).
+      *    *************************************************************
+      *                       NOMBRE
+           10 US-NOMBRE            PIC X(20).
+      *    *************************************************************
+      *                       APELLIDOS
+           10 US-APELLIDOS         PIC X(20).
+      *    *************************************************************
+      *                       DIRECCION
+           10 US-DIRECCION         PIC X(35).
+      *    *************************************************************
+      *                       CARGO
+           10 US-CARGO             PIC X(20).
+      *    *************************************************************
+      *                       ESTADO
+           10 US-ESTADO            PIC X(1).
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 8       *
+      ******************************************************************

@@ -1,0 +1,138 @@
+      *************************************************************
+      *   PRUEBA DE LINK A RUTINA SQL
+      *************************************************************
+       IDENTIFICATION DIVISION.
+         PROGRAM-ID. RTSK1.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      *===============================================================
+      * MODSQL - DEFINICON TABLA USUARIOS SQL Y COBOL
+           EXEC SQL
+                INCLUDE USERS
+           END-EXEC.
+      *===============================================================
+      * MODSQL - SE TIENE QUE UTILIZAR SQLCA
+           EXEC SQL
+                INCLUDE SQLCA
+           END-EXEC.
+      *===============================================================
+      * MODSQL CAMPOS PARA ERROR DE DB2
+       01  DB2-ERR.
+           03  DB2-SQLCODE                PIC S9(9).
+           03  DB2-SQLCODE-Z              PIC -ZZZZZZZZ9.
+           03  DB2-ERROR.
+               05  DB2-ERR-MSG            PIC X(50).
+               05  DB2-ERR-CODE           PIC X(20).
+
+      *============================================================
+       LINKAGE SECTION.
+       01  DFHCOMMAREA        PIC X(155).
+       01  AREA-LINK          REDEFINES DFHCOMMAREA.
+           05 WS-COD-RET      PIC 9(01).
+           05 WS-COD-OPE      PIC 9(01).
+           05 WS-US-DNI       PIC X(09).
+           05 WS-US-TIPOUSUA  PIC X(05).
+      *    05 WS-US-CLAVE     PIC X(08).
+           05 WS-US-CLAVE     PIC X(05).
+           05 WS-US-NOMBRE    PIC X(20).
+           05 WS-US-APELLIDOS PIC X(20).
+           05 WS-US-EMAIL     PIC X(35).
+           05 WS-US-DIRECCION PIC X(35).
+           05 WS-US-CARGO     PIC X(20).
+           05 WS-US-ESTADO    PIC X(01).
+
+      *=================================================================
+       PROCEDURE DIVISION USING DFHCOMMAREA.
+      *=================================================================
+      ******************************************************************
+      * 0000-RAIZ
+      ******************************************************************
+       0000-RAIZ.
+      *    MODSQL EXCEPCIONES SQL DB2
+           EXEC SQL
+                WHENEVER  SQLERROR    CONTINUE
+           END-EXEC
+
+           EXEC SQL
+                WHENEVER  SQLWARNING  CONTINUE
+           END-EXEC
+
+           EXEC SQL
+                WHENEVER  NOT FOUND   CONTINUE
+           END-EXEC
+
+           PERFORM 0100-INICIO
+           PERFORM 0200-EJECUTAR-OPERACION
+           PERFORM 0300-FIN
+           .
+      ******************************************************************
+      * 0100-INICIO
+      ******************************************************************
+       0100-INICIO.
+           DISPLAY "ENTRO A RUTINA RTSK1"
+           DISPLAY "AREA-LINK: " AREA-LINK
+           .
+      ******************************************************************
+      * 0200-EJECUTAR-OPERACION
+      ******************************************************************
+       0200-EJECUTAR-OPERACION.
+           EVALUATE WS-COD-OPE
+              WHEN 1
+      *          DISPLAY "CONSULTA"
+                 PERFORM 0210-CONSULTA-USUARIO
+              WHEN OTHER
+      *          DISPLAY "OPCION NO IMPLEMENTADA"
+                 MOVE 1                        TO WS-COD-RET
+           END-EVALUATE
+           .
+      **************************************************************
+      * 0210-VALIDAR-USUARIO
+      **************************************************************
+       0210-CONSULTA-USUARIO.
+           MOVE 1           TO WS-COD-RET
+           MOVE WS-US-DNI   TO ET-LOGUSER
+      *
+           EXEC SQL
+                SELECT
+                   LOGUSER, NOMUSER, PASUSER
+                INTO
+                   :ET-LOGUSER, :ET-NOMUSER, :ET-PASUSER
+                FROM USERS
+                WHERE LOGUSER = :ET-LOGUSER
+           END-EXEC
+
+           IF SQLCODE = 0 THEN
+              MOVE 0            TO  WS-COD-RET
+              MOVE ET-NOMUSER   TO  WS-US-NOMBRE
+      *       MOVE ET-APEUSER   TO  WS-US-APELLIDOS
+      *       MOVE ET-DIRUSER   TO  WS-US-EMAIL
+              MOVE ET-PASUSER   TO  WS-US-CLAVE
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1 TO  WS-COD-RET
+              ELSE
+                 MOVE 2 TO  WS-COD-RET
+                 PERFORM ERROR-DB2
+              END-IF
+           END-IF
+           .
+      ******************************************************************
+      * ERROR-DB2
+      ******************************************************************
+       ERROR-DB2.
+           DISPLAY "ERROR DB2 EN RUTINA: "
+           DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
+           DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
+           DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG
+           DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE
+           .
+      ******************************************************************
+      * FIN SESION
+      ******************************************************************
+       0300-FIN.
+           DISPLAY "SALGO DE RUTINA RTSK1"
+           DISPLAY "AREA-LINK: " AREA-LINK
+           GOBACK
+           .
+      ******************************************************************
