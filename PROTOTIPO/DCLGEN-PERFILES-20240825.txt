@@ -1,0 +1,49 @@
+      ******************************************************************
+      * DCLGEN TABLE(PERFILES)                                         *
+      *        LIBRARY(P390.DB2.DCLGEN(PERFILES))                      *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(PF-)                                              *
+      *        QUOTE                                                   *
+      *        LABEL(YES)                                              *
+      *        DBCSDELIM(NO)                                           *
+      *        COLSUFFIX(YES)                                          *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE PERFILES TABLE
+           ( TRAN                           CHAR(4) NOT NULL,
+             IDPERFIL                       CHAR(3) NOT NULL,
+             NOMBRE                         CHAR(20) NOT NULL,
+             CONSUL                         CHAR(2) NOT NULL,
+             BORRAR                         CHAR(2) NOT NULL,
+             INGRESAR                       CHAR(2) NOT NULL,
+             MODIF                          CHAR(2) NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE PERFILES                           *
+      ******************************************************************
+       01  DCLPERFILES.
+      *    *************************************************************
+      *                       TRAN
+           10 PF-TRAN              PIC X(4).
+      *    *************************************************************
+      *                       IDPERFIL
+           10 PF-IDPERFIL          PIC X(3).
+      *    *************************************************************
+      *                       NOMBRE
+           10 PF-NOMBRE            PIC X(20).
+      *    *************************************************************
+      *                       CONSUL
+           10 PF-CONSUL            PIC X(2).
+      *    *************************************************************
+      *                       BORRAR
+           10 PF-BORRAR            PIC X(2).
+      *    *************************************************************
+      *                       INGRESAR
+           10 PF-INGRESAR          PIC X(2).
+      *    *************************************************************
+      *                       MODIF
+           10 PF-MODIF             PIC X(2).
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 7       *
+      ******************************************************************

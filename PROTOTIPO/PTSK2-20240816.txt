@@ -1,0 +1,228 @@
+      *************************************************************
+      *  PROGRAMA DE PRUEBA DE CICS-COBOL CON TABLA DB2
+      *************************************************************
+       IDENTIFICATION DIVISION.
+         PROGRAM-ID. PTSK2.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      *==============================================================
+      * LA COPY DEL MAPA DE MENU
+      *==============================================================
+       COPY CTSK2.
+      *===============================================================
+      * FIN DE LA COPY DEL MAPA GENERADO
+      *===============================================================
+       01  MSG-FIN-SESION  PIC X(23) VALUE "FIN DE SESION".
+      *
+       01  COD-RETORNO     PIC 9.
+       01  RESPUESTA       PIC S9(08) COMP.
+      *
+       01  MI-COMMAREA.
+           05 TRANS           PIC X(04).
+           05 TERM            PIC X(04).
+           05 CICLO           PIC X(02).
+           05 WS-US-DNI       PIC X(09).
+           05 WS-US-TIPOUSUA  PIC X(05).
+           05 WS-US-NOMBRE    PIC X(20).
+           05 WS-US-APELLIDOS PIC X(20).
+           05 FILLER          PIC X(31).
+
+       01  ID-TRAN-TERM.
+           05 TRANS-ORIG      PIC X(04).
+           05 TERM-ORIG       PIC X(04).
+      *
+       01  WS-MJES-LOG.
+           03 WS-OPT-ERR  PIC X(23) VALUE "OPCION INVALIDA.       ".
+           03 WS-AUT-ERR  PIC X(23) VALUE "NO ESTA AUTORIZADO.    ".
+           03 WS-OPT-PEND PIC X(23) VALUE "POR IMPLEMENTAR.       ".
+
+      *============================================================
+      * COPIAMOS AYUDAS DE BMS PARA HACER BONITO EL TERMINAL
+      *============================================================
+       COPY DFHAID.
+       COPY DFHBMSCA.
+      *=================================================================
+       LINKAGE SECTION.
+       01  DFHCOMMAREA    PIC X(95).
+      *=================================================================
+       PROCEDURE DIVISION.
+      *=================================================================
+      ******************************************************************
+      * 0000-RAIZ
+      ******************************************************************
+       0000-RAIZ.
+
+           PERFORM RECIBIR-TXN
+           PERFORM PROCESAR-TXN
+           PERFORM RETORNAR-TXN
+           .
+      ******************************************************************
+      * RECIBIR-TXN
+      ******************************************************************
+       RECIBIR-TXN.
+           MOVE DFHCOMMAREA  TO MI-COMMAREA
+           DISPLAY "MI-COMMAREA AL ENTRAR: " MI-COMMAREA
+      *    EL PROGRAMA PTSK1 COLOCA CICLO EN 99 CUANDO LLAMA A PTSK2
+      *    ES UNA FORMA DE DETERMINAR QUE ES LA PRIMERA VEZ QUE INVOCA
+           IF CICLO NOT EQUAL "99" THEN
+              EXEC CICS RECEIVE MAP('MTSK2')
+                        INTO(MTSK2I)
+                        NOHANDLE
+              END-EXEC
+
+              EXEC CICS
+                   IGNORE CONDITION MAPFAIL
+              END-EXEC
+           END-IF
+           .
+      ******************************************************************
+      * PROCESAR-TXN
+      ******************************************************************
+       PROCESAR-TXN.
+           MOVE SPACES TO MSGLOGO
+           IF CICLO = "99" THEN
+              PERFORM PRIMERA-VEZ
+           ELSE
+              DISPLAY "ANALIZO RECEIVE MAPA"
+              EVALUATE EIBAID
+                 WHEN DFHENTER
+      *             DISPLAY "ENTER"
+                    PERFORM VALIDAR-OPCION
+                 WHEN DFHPF3
+      *             DISPLAY "F3"
+                    PERFORM TERMINAR-PROG
+                 WHEN OTHER
+      *             DISPLAY "TECLA INVALIDA"
+                    MOVE SPACES         TO MSGLOGO
+                    MOVE "TECLA INVALIDA" TO MSGLOGO
+              END-EVALUATE
+           END-IF
+           .
+      ******************************************************************
+      * RETORNAR-TXN
+      ******************************************************************
+       RETORNAR-TXN.
+           EXEC CICS SEND MAP('MTSK2')
+                     FROM(MTSK2O)
+                     ERASE
+           END-EXEC
+      *
+           DISPLAY "MI-COMMAREA AL SALIR: " MI-COMMAREA
+      *
+           EXEC CICS RETURN
+                     TRANSID('TSK2')
+                     COMMAREA(MI-COMMAREA)
+                     LENGTH(95)
+           END-EXEC
+      *    LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO
+      *    O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN
+           GOBACK
+           .
+      ******************************************************************
+      * TERMINAR-PROG
+      ******************************************************************
+       TERMINAR-PROG.
+           DISPLAY "TERMINA PROGRAMA"
+      *
+           EXEC CICS
+                SEND TEXT FROM(MSG-FIN-SESION)
+                ERASE
+                FREEKB
+           END-EXEC
+      *
+           EXEC CICS RETURN END-EXEC
+      *    LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO
+      *    O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN
+           GOBACK
+           .
+      ******************************************************************
+      * PRIMERA-VEZ
+      ******************************************************************
+       PRIMERA-VEZ.
+      *    PROGRAMA LLAMADO POR PRIMERA VEZ
+           DISPLAY "ENTRO A PROGRAMA PTSK2 X PRIMERA VEZ "
+      *    INICIALIZO MI-COMMAREA
+           MOVE "88"         TO CICLO
+      *    PERFORM PANTALLA-INICIAL
+           DISPLAY "ENVIAR-MAPA MTSK2 PRIMERA VEZ"
+           MOVE LOW-VALUES TO MTSK2I
+
+           EXEC CICS SEND MAP('MTSK2')
+                     MAPONLY
+                     ERASE
+                     NOHANDLE
+           END-EXEC
+      *
+           DISPLAY "TERMINAR TRANSACCION TSK2 PRIMERA VEZ"
+           EXEC CICS RETURN
+                     TRANSID('TSK2')
+                     COMMAREA(MI-COMMAREA)
+                     LENGTH(95)
+           END-EXEC
+      *    LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO
+      *    O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN
+           GOBACK
+           .
+      ******************************************************************
+      * VALIDAR OPCION
+      ******************************************************************
+       VALIDAR-OPCION.
+           DISPLAY "EVALUO OPCION: " OPCIONI
+           EVALUATE OPCIONI
+              WHEN "1"
+                 PERFORM LINK-CONSULTA-PROFE
+              WHEN "2"
+                 PERFORM LINK-CONSULTA-ESTUD
+              WHEN "3"
+                 PERFORM LINK-ADMIN-ESTUD
+              WHEN OTHER
+                 MOVE WS-OPT-ERR TO MSGLOGO
+           END-EVALUATE
+           .
+      ******************************************************************
+      * LINK-CONSULTA-PROFE
+      ******************************************************************
+       LINK-CONSULTA-PROFE.
+           DISPLAY "CONSULTA PROFE"
+           MOVE WS-OPT-PEND TO MSGLOGO
+      *
+      *    EXEC CICS XCTL
+      *         PROGRAM('PPROFE')
+      *         COMMAREA(MI-COMMAREA)
+      *         LENGTH(LENGTH OF MI-COMMAREA)
+      *         RESP(RESPUESTA)
+      *    END-EXEC
+      *
+           .
+      ******************************************************************
+      * LINK-CONSULTA-ESTUD
+      ******************************************************************
+       LINK-CONSULTA-ESTUD.
+           DISPLAY "CONSULTA ESTUD"
+           MOVE WS-OPT-PEND TO MSGLOGO
+      *
+      *    EXEC CICS XCTL
+      *         PROGRAM('PESTUD')
+      *         COMMAREA(MI-COMMAREA)
+      *         LENGTH(LENGTH OF MI-COMMAREA)
+      *         RESP(RESPUESTA)
+      *    END-EXEC
+      *
+           .
+      ******************************************************************
+      * LINK-ADMIN-ESTUD
+      ******************************************************************
+       LINK-ADMIN-ESTUD.
+           DISPLAY "ADMIN ESTUD"
+           MOVE WS-OPT-PEND TO MSGLOGO
+      *
+      *    EXEC CICS XCTL
+      *         PROGRAM('PADMIN')
+      *         COMMAREA(MI-COMMAREA)
+      *         LENGTH(LENGTH OF MI-COMMAREA)
+      *         RESP(RESPUESTA)
+      *    END-EXEC
+      *
+           .
+      ******************************************************************
