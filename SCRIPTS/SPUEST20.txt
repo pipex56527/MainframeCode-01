@@ -1,0 +1,3 @@
+-- ELIMINAR TABLA  PERMISOS                                           
+   DROP TABLE P390.PERMISOS;                                          
+

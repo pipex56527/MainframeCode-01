@@ -1,0 +1,964 @@
+--   CREA TABLAS USUARIOS, PERMISOS, PERFILES, CURSOS Y NOTASFIN        
+--   Y CARGA REGISTROS INICIALES A LAS MISMAS TABLAS                    
+-- CREAR TABLA DE CURSOS                                                
+   CREATE TABLE CURSOS                                                  
+      (                                                                 
+        CURSO            CHAR(5)  NOT NULL                              
+       ,DESCRIPCION      CHAR(20) NOT NULL                              
+       ,DNI_PROFESOR     CHAR(9)  NOT NULL                              
+       ,ESTADO           CHAR(1)  NOT NULL                              
+                                                                        
+       ,PRIMARY KEY (CURSO)                                             
+      )                                                                 
+                                                                        
+      IN P390DB.CURSOSTS;                                               
+                                                                        
+   CREATE UNIQUE INDEX CURSOS_IPK ON CURSOS                             
+      (                                                                 
+        CURSO                                                           
+      )                                                                 
+        CLUSTER CLOSE NO                                                
+        USING STOGROUP P390SG                                           
+        BUFFERPOOL BP1;                                                 
+-- ELIMINAR TABLA                                                       
+-- DROP TABLE P390.CURSOS;                                              
+--                                                                      
+-- CREAR TABLA DE NOTAS DEFINITIVAS                                     
+   CREATE TABLE NOTASFIN                                                
+      (                                                                 
+        CURSO            CHAR(5)        NOT NULL                        
+       ,DNI_ESTUDIANTE   CHAR(9)        NOT NULL                        
+       ,AAAA             CHAR(4)        NOT NULL                        
+       ,NOTA             DECIMAL(5,2)   NOT NULL                        
+                                                                        
+       ,PRIMARY KEY (CURSO, DNI_ESTUDIANTE)                             
+      )                                                                 
+                                                                        
+      IN P390DB.NOTASFTS;                                               
+                                                                        
+   CREATE UNIQUE INDEX NOTASFIN_IPK ON NOTASFIN                         
+      (                                                                 
+         CURSO,DNI_ESTUDIANTE                                           
+       )                                                                
+         CLUSTER CLOSE NO                                               
+         USING STOGROUP P390SG                                          
+         BUFFERPOOL BP1;                                                
+-- ELIMINAR TABLA                                                       
+-- DROP TABLE P390.NOTASFIN;                                            
+--                                                                      
+--                                                                      
+-- CREAR TABLA DE PERMISOS DE SEGURIDAD                                 
+   CREATE TABLE PERMISOS                                                
+      (                                                                 
+        TRAN         CHAR(4)  NOT NULL                                  
+       ,DNI          CHAR(9)  NOT NULL                                  
+       ,IDPERFIL     CHAR(3)  NOT NULL                                  
+       ,NROACCESOS   INTEGER  NOT NULL                                  
+       ,FECHAUL      CHAR(10) NOT NULL                                  
+       ,HORAUL       CHAR(8)  NOT NULL                                  
+                                                                        
+       ,PRIMARY KEY (TRAN,DNI)                                          
+      )                                                                 
+                                                                        
+      IN P390DB.PERMITS;                                                
+                                                                        
+   CREATE UNIQUE INDEX PERMISOS_IPK ON PERMISOS                         
+      (                                                                 
+         TRAN,DNI                                                       
+       )                                                                
+         CLUSTER CLOSE NO                                               
+         USING STOGROUP P390SG                                          
+         BUFFERPOOL BP1;                                                
+-- CREAR TABLA DE PERFILES DE SEGURIDAD                                 
+   CREATE TABLE PERFILES                                                
+      (                                                                 
+        TRAN         CHAR(4)  NOT NULL                                  
+       ,IDPERFIL     CHAR(3)  NOT NULL                                  
+       ,NOMBRE       CHAR(20) NOT NULL                                  
+       ,CONSUL       CHAR(2)  NOT NULL                                  
+       ,BORRAR       CHAR(2)  NOT NULL                                  
+       ,INGRESAR     CHAR(2)  NOT NULL                                  
+       ,MODIF        CHAR(2)  NOT NULL                                  
+                                                                        
+        ,PRIMARY KEY (TRAN,IDPERFIL)                                    
+       )                                                                
+                                                                        
+       IN P390DB.PERFILTS;                                              
+                                                                        
+   CREATE UNIQUE INDEX PERFILES_PK ON PERFILES                          
+       (                                                                
+         TRAN,IDPERFIL                                                  
+        )                                                               
+         CLUSTER CLOSE NO                                               
+         USING STOGROUP P390SG                                          
+         BUFFERPOOL BP1;                                                
+--                                                                      
+-- CREAR TABLA DE USUARIOS                                              
+   CREATE TABLE USUARIOS                                                
+      (                                                                 
+        DNI          CHAR(9)  NOT NULL                                  
+       ,TIPOUSUA     CHAR(5)  NOT NULL                                  
+       ,CLAVE        CHAR(8)  NOT NULL                                  
+       ,NOMBRE       CHAR(20) NOT NULL                                  
+       ,APELLIDOS    CHAR(20) NOT NULL                                  
+       ,DIRECCION    CHAR(35) NOT NULL                                  
+       ,CARGO        CHAR(20) NOT NULL                                  
+       ,ESTADO       CHAR(1)  NOT NULL                                  
+                                                                        
+       ,PRIMARY KEY (DNI)                                               
+      )                                                                 
+                                                                        
+      IN P390DB.USUARITS;                                               
+                                                                        
+   CREATE UNIQUE INDEX USUARIOS_IPK ON USUARIOS                         
+      (                                                                 
+        DNI                                                             
+      )                                                                 
+        CLUSTER CLOSE NO                                                
+        USING STOGROUP P390SG                                           
+        BUFFERPOOL BP1;                                                 
+--                                                                      
+--                                                                      
+-- INSERTAR DATOS A LA TABLA USUARIOS                                   
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('10289212', 'ESTUD', 'FLOALB',    
+    'ALBERTO',  'FLOREZ MORENO', 'ENVIGADO', 'ESTUDIANTE', 'A');        
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('110167251', 'ESTUD', 'VARCAR',   
+    'CAROLINA', 'VARGAS PIEDRAHITA', 'ITAGUI', 'ESTUDIANTE', 'A');      
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('110465690', 'ESTUD', 'BERJUL',   
+    'JULIAN FELIPE', 'BERNAL GARZON', 'CIUDAD BOLIVAR', 'ESTUDIANTE',   
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('11318971', 'ESTUD', 'CAIMAU',    
+    'MAURICIO ALFONSO', 'CAICEDO ', 'CLADAS', 'ESTUDIANTE', 'A');       
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('113580424', 'ESTUD', 'FIGJUL',   
+    'JULIETH ENERIETH', 'FIGUEROA QUIROGA ', 'BELLO', 'ESTUDIANTE',     
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('11379819', 'ESTUD', 'DIMEDU',    
+    'EDUARDO', 'DIMATE GOMEZ ', 'CLADAS', 'ESTUDIANTE', 'A');           
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('123898532', 'ESTUD', 'GALSER',   
+    'SERGIO CAMILO', 'GALLO QUINTERO', 'BELLO', 'ESTUDIANTE', 'A');     
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('130527507', 'ESTUD', 'SIECLA',   
+    'CLAUDIA VIVIANA', 'SIERRA PALOMARE', 'COPACABANA', 'ESTUDIANTE',   
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('171838145', 'ESTUD', 'CORJOS',   
+    'JOSE WILFREDO', 'CORREDOR MOSCOSO', 'COPACABANA', 'ESTUDIANTE',    
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('175655422', 'ESTUD', 'VELAND',   
+    'ANDREA CAROLINA',  'VELANDIA DURAN ', 'ENVIGADO', 'ESTUDIANTE',    
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('17950453', 'ESTUD', 'MEJBRI',    
+    'PEDRO ANGEL',  'MEJIA BRITO', 'COPACABANA', 'ESTUDIANTE', 'A');    
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('19357651', 'ESTUD', 'ROBOSC',    
+    'OSCAR TULIO',  'ROBECHI SEVERICHE', 'RIONEGRO', 'ESTUDIANTE', 'A');
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('19387955', 'PROFE', 'CASFEL',    
+    'FELIPE',  'CASTANO', 'LA CEJA', 'PROFESOR', 'A');                  
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('19453565', 'ESTUD', 'WILHEC',    
+    'HECTOR DANIEL', 'WILCHES ROMERO', 'CLADAS', 'ESTUDIANTE', 'A');    
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('19468189', 'ESTUD', 'MOLMAR',    
+    'MARIO DUVAN', 'MOLINA CARDONA', 'CLADAS', 'ESTUDIANTE', 'A');      
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('19469939', 'ESTUD', 'ARIJOR',    
+    'JORGE ARTURO', 'ARIAS MORALES', 'ENVIGADO', 'ESTUDIANTE', 'A');    
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('23555321', 'ESTUD', 'VILLUZ',    
+    'LUZ ALICIA', 'VILLAMIL BARRERA', 'MEDELLIN', 'ESTUDIANTE', 'A');   
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('27682764', 'PROFE', 'NOCCAR',    
+    'CARMEN ROSA', 'NOCUA PEREZ', 'LA CEJA', 'PROFESOR', 'A');          
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('3229015', 'ESTUD', 'CASGER',     
+    'GERMAN LIBARDO', 'CASTALIA', 'COPACABANA', 'ESTUDIANTE', 'A');     
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('35410291', 'ESTUD', 'ALVMAR',    
+    'MARTA ISABEL', 'ALVAREZ TORRES', 'BELLO', 'ESTUDIANTE', 'A');      
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('35488897', 'ESTUD', 'TAVANA',    
+    'ANA ELSY',  'TAVERA CUBIDES', 'BELLO', 'ESTUDIANTE', 'A');         
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('35514724', 'ESTUD', 'MARYIN',    
+    'YINETH GISELA', 'MARTINEZ MEISELES', 'ENVIGADO', 'ESTUDIANTE',     
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('38231716', 'ESTUD', 'GUAMAR',    
+    'MARIA OMAIRA',  'GUARNIZO ESPINOSA', 'RIONEGRO', 'ESTUDIANTE',     
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('39562888', 'ESTUD', 'TRI AL',    
+    'ALICIA',  'TRIANA PRADA', 'CLADAS', 'ESTUDIANTE', 'A');            
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('39756988', 'ESTUD', 'RAMLUZ',    
+    'LUZ ADRIANA', 'RAMIREZ FRANCO', 'ENVIGADO', 'ESTUDIANTE', 'A');    
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('39768027', 'ESTUD', 'ACUMAR',    
+    'MARIA TERESA',  'BUITRAGO', 'COPACABANA', 'ESTUDIANTE', 'A');      
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('39794663', 'PROFE', 'ORTGLO',    
+    'GLORIA INES', 'ORTEGA GARCIA', 'ITAGUI', 'PROFESOR', 'A');         
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('39797876', 'ESTUD', 'TORMAR',    
+    'MARTHA LUCIA', 'TORO AJIACO ', 'ENVIGADO', 'ESTUDIANTE', 'A');     
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('46357157', 'ESTUD', 'BAYMAR',    
+    'MARTHA PATRICIA', 'BAYONA TORRES', 'CLADAS', 'ESTUDIANTE', 'A');   
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('51550054', 'ADMIN', 'GALGAB',    
+    'GABRIEL JAIME', 'GALLEGO', 'ANTONIO NARINO', 'ADMINISTRADOR',      
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('51583972', 'ESTUD', 'CRUGLA',    
+    'GLADYS', 'CRUZ HERNANDEZ', 'COPACABANA', 'ESTUDIANTE', 'A');       
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('51598505', 'ESTUD', 'GUIGLO',    
+    'GLORIA ELSA',  'GUIO PEREZ', 'ITAGUI', 'ESTUDIANTE', 'A');         
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('51675574', 'PROFE', 'GUTCAR',    
+    'CARMEN ROSMERY', 'GUTIERREZ GONZALEZ', 'ANTONIO NARINO',           
+    'PROFESOR', 'A');                                                   
+     INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS,
+    DIRECCION, CARGO, ESTADO) VALUES ('51708666', 'ESTUD', 'CAMMAR',    
+    'MARLEN',  'CAMACHO BASTIDAS', 'LA CEJA', 'ESTUDIANTE', 'A');       
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('5174301', 'ESTUD', 'MAEFRA',     
+    'FRANCISCO', 'MAESTRE BROCHERO', 'RIONEGRO', 'ESTUDIANTE', 'A');    
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('51798670', 'ESTUD', 'MUNANA',    
+    'ANA MARIA', 'MUNOZ RODRIGUEZ ', 'CIUDAD BOLIVAR', 'ESTUDIANTE',    
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('51812864', 'ESTUD', 'ESCPEN',    
+    'PENUELA ELIZABETH', 'ESCARRAGA PENUELA', 'COPACABANA',             
+    'ESTUDIANTE', 'A');                                                 
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('51871941', 'ESTUD', 'DIAMAG',    
+    'MAGDA LUCIA', 'DIAZ ORTIZ MAGDA', 'BELLO', 'ESTUDIANTE', 'A');     
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('51875355', 'ESTUD', 'LAGSAN',    
+    'SANDRA',  'LAGUNA LUQUE', 'BELLO', 'ESTUDIANTE', 'A');             
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('51881112', 'ESTUD', 'AVIGLO',    
+    'GLORIA',  'AVILA RINCON', 'RIONEGRO', 'ESTUDIANTE', 'A');          
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('51991214', 'ESTUD', 'CASZUL',    
+    'ZULMA GIOVANNA',  'CASTRO RODRIGUEZ', 'RIONEGRO', 'ESTUDIANTE',    
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52056163', 'ESTUD', 'ALALUZ',    
+    'LUZ MERY',  'ALARCON MEJIA ', 'MEDELLIN', 'ESTUDIANTE', 'A');      
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52057782', 'ESTUD', 'MONROD',    
+    'MONICA LILIANA',  'RODRIGUEZ RODRIGUEZ', 'MEDELLIN',               
+    'ESTUDIANTE', 'A');                                                 
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52145346', 'ESTUD', 'HERYUL',    
+    'YULI MARGARITA', 'HERNANDEZ VILLAMIZAR', 'RIONEGRO',               
+    'ESTUDIANTE', 'A');                                                 
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52163020', 'ESTUD', 'MENANG',    
+    'ANGELA CONSUELO',  'MENDIVELSO DURAN', 'ENVIGADO', 'ESTUDIANTE',   
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52226938', 'ESTUD', 'CUAYOM',    
+    'YOMAIRA MILENA', 'CUADROS MARTINEZ ', 'LA CEJA', 'ESTUDIANTE',     
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52263924', 'ESTUD', 'OJE RO',    
+    'ROSA CANDIDA',  'OJEDA', 'COPACABANA', 'ESTUDIANTE', 'A');         
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52268601', 'ESTUD', 'MONSAN',    
+    'SANDRA MILENA', 'MONTANA RODRIGUEZ', 'CLADAS', 'ESTUDIANTE', 'A'); 
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52282030', 'ESTUD', 'CARJEN',    
+    'JENNY ESPERANZA', 'CARDENAS SORIANO', 'ENVIGADO', 'ESTUDIANTE',    
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52438489', 'ESTUD', 'SANDOR',    
+    'DORY CONSTANZA', 'SANCHEZ ARAGON', 'RIONEGRO', 'ESTUDIANTE', 'A'); 
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52727991', 'ESTUD', 'BALCAT',    
+    'CATHERINE PAOLA', 'BALLESTEROS MORENO', 'RIONEGRO', 'ESTUDIANTE',  
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52825799', 'ESTUD', 'MAGROD',    
+    'MAGDA MILENA', 'RODRIGUEZ ', 'RIONEGRO', 'ESTUDIANTE', 'A');       
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('52827327', 'ESTUD', 'PAEANG',    
+    'ANGELA MARCELA', 'PAEZ CASTILLO ', 'CLADAS', 'ESTUDIANTE', 'A');   
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('53011852', 'ESTUD', 'CETDIA',    
+    'DIANA FERNANDA', 'CETINA ROA', 'LA CEJA', 'ESTUDIANTE', 'A');      
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('79308897', 'ESTUD', 'MORNOR',    
+    'NORBERTO ENRIQUE', 'MORENO VELASQUEZ', 'RIONEGRO', 'ESTUDIANTE',   
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('79368006', 'ESTUD', 'CASHEC',    
+    'HECTOR HERNANDO',  'CASTRO RODRIGUEZ', 'BELLO', 'ESTUDIANTE',      
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('79371502', 'ESTUD', 'PIRMAR',    
+    'MARQUEZ ISAIAS',   'PIRABAN MARQUEZ', 'BELLO', 'ESTUDIANTE',       
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('79384247', 'ESTUD', 'CLAOSC',    
+    'OSCAR GERMAN', 'CLAVIJO PALACIOS', 'COPACABANA', 'ESTUDIANTE',     
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('79470938', 'ESTUD', 'LOZJUA',    
+    'JUAN PABLO',   'LOZANO PACHECO', 'CLADAS', 'ESTUDIANTE', 'A');     
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('79522306', 'ESTUD', 'VILLUI',    
+    'LUIS ALEJANDRO', 'VILLAMIL MENDIETA', 'MEDELLIN', 'ESTUDIANTE',    
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('79708766', 'ESTUD', 'SANHUM',    
+    'HUMBERTO', 'SANCHEZ ALVAREZ', 'ENVIGADO', 'ESTUDIANTE', 'A');      
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('79751594', 'ESTUD', 'AVI JO',    
+    'JOSE REYES', 'AVILA SANCHEZ', 'BELLO', 'ESTUDIANTE', 'A');         
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('79788423', 'ESTUD', 'ROMWIL',    
+    'WILSON JAVIER', 'ROMERO MORENO', 'ITAGUI', 'ESTUDIANTE', 'A');     
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('79939281', 'ESTUD', 'BEC WI',    
+    'WILLIAM ARMANDO',  'BECERRA ', 'RIONEGRO', 'ESTUDIANTE', 'A');     
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('79979294', 'ESTUD', 'ARGMAU',    
+    'MAURICIO', 'ARGUMERO ESCOBAR', 'RIONEGRO', 'ESTUDIANTE', 'A');     
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('80229200', 'ESTUD', 'COTVEI',    
+    'VEIMAN SNEYDER', 'COTRINO DIAZ', 'CLADAS', 'ESTUDIANTE', 'A');     
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('80395118', 'ESTUD', 'MONCAR',    
+    'CARLOS JULIO',  'MONTENEGRO CIFUENTES', 'MEDELLIN', 'ESTUDIANTE',  
+    'A');                                                               
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('83091861', 'ESTUD', 'FIGABN',    
+    'ABNER',    'FIGUEROA GOMEZ ', 'CIUDAD BOLIVAR', 'ESTUDIANTE', 'A');
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('93393374', 'PROFE', 'SANAND',    
+    'ANDRES ALFREDO', 'SANCHEZ GONZALEZ', 'MEDELLIN', 'PROFESOR', 'A'); 
+    INSERT INTO P390.USUARIOS (DNI, TIPOUSUA, CLAVE, NOMBRE, APELLIDOS, 
+    DIRECCION, CARGO, ESTADO) VALUES ('9533075', 'ESTUD', 'PATFLA',     
+    'FLAVIO NESTOR', 'PATINO CORREA', 'BELLO', 'ESTUDIANTE', 'A');      
+                                                                        
+---------------------------------------------                           
+-- INSERTAR DATOS A LA TABLA DE PERMISOS                                
+-- INSERTAR DATOS A LA TABLA DE PERMISOS                                
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '1201235', '001', 0, '23/08/2024', '12:00:97');            
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '1205284', '004', 0, '21/08/2024', '12:00:05');            
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '10289212', '001', 0, '23/08/2024', '12:00:97');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '110167251', '004', 0, '21/08/2024', '12:00:05');          
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '110465690', '005', 0, '14/08/2024', '12:00:00');          
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '11318971', '004', 0, '20/08/2024', '12:00:95');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '113580424', '004', 0, '15/08/2024', '12:00:78');          
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '11379819', '003', 0, '21/08/2024', '12:00:94');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL)VALUES            
+    ('TR03', '123898532', '005', 0, '15/08/2024', '12:00:04');          
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '130527507', '005', 0, '21/08/2024', '12:00:03');          
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '132379980', '002', 0, '14/08/2024', '12:00:02');          
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '171838145', '002', 0, '20/08/2024', '12:00:01');          
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '175655422', '002', 0, '19/08/2024', '12:00:77');          
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '17950453', '002', 0, '19/08/2024', '12:00:92');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '19357651', '002', 0, '17/08/2024', '12:00:90');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '19387955', '002', 0, '17/08/2024', '12:00:88');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '19453565', '005', 0, '20/08/2024', '12:00:87');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '19468189', '005', 0, '23/08/2024', '12:00:84');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '19469939', '005', 0, '14/08/2024', '12:00:81');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '23555321', '002', 0, '17/08/2024', '12:00:90');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '27682764', '004', 0, '15/08/2024', '12:00:78');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '3229015', '005', 0, '14/08/2024', '12:00:00');            
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '35410291', '002', 0, '19/08/2024', '12:00:77');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '35488897', '002', 0, '14/08/2024', '12:00:02');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '35514724', '001', 0, '15/08/2024', '12:00:76');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '38231716', '002', 0, '23/08/2024', '12:00:74');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '39562888', '005', 0, '17/08/2024', '12:00:72');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '39756988', '003', 0, '21/08/2024', '12:00:94');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '39768027', '004', 0, '20/08/2024', '12:00:95');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '39794663', '004', 0, '15/08/2024', '12:00:70');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '39797876', '004', 0, '21/08/2024', '12:00:05');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '46357157', '003', 0, '23/08/2024', '12:00:68');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '51550054', '004', 0, '22/08/2024', '12:00:67');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '51583972', '002', 0, '15/08/2024', '12:00:66');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '51598505', '002', 0, '19/08/2024', '12:00:92');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '51675574', '005', 0, '15/08/2024', '12:00:65');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '51708666', '005', 0, '22/08/2024', '12:00:61');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '5174301', '001', 0, '15/08/2024', '12:00:76');            
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '51798670', '002', 0, '15/08/2024', '12:00:59');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '51812864', '004', 0, '19/08/2024', '12:00:57');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '51871941', '001', 0, '23/08/2024', '12:00:53');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '51875355', '002', 0, '15/08/2024', '12:00:52');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '51881112', '003', 0, '14/08/2024', '12:00:50');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '51991214', '002', 0, '17/08/2024', '12:00:88');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52056163', '004', 0, '18/08/2024', '12:00:48');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52057782', '001', 0, '15/08/2024', '12:00:46');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52145346', '002', 0, '19/08/2024', '12:00:44');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52163020', '003', 0, '22/08/2024', '12:00:43');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52226938', '003', 0, '20/08/2024', '12:00:39');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52263924', '002', 0, '14/08/2024', '12:00:38');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52268601', '005', 0, '15/08/2024', '12:00:04');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52282030', '002', 0, '23/08/2024', '12:00:37');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52438489', '005', 0, '21/08/2024', '12:00:03');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52727991', '003', 0, '14/08/2024', '12:00:35');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52825799', '003', 0, '18/08/2024', '12:00:33');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '52827327', '004', 0, '18/08/2024', '12:00:32');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '53011852', '003', 0, '23/08/2024', '12:00:31');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '79308897', '002', 0, '19/08/2024', '12:00:30');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '79368006', '003', 0, '20/08/2024', '12:00:29');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '79371502', '002', 0, '20/08/2024', '12:00:01');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '79384247', '001', 0, '22/08/2024', '12:00:28');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '79470938', '004', 0, '20/08/2024', '12:00:26');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '79522306', '001', 0, '23/08/2024', '12:00:97');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '79708766', '001', 0, '15/08/2024', '12:00:22');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '79751594', '002', 0, '17/08/2024', '12:00:18');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '79788423', '003', 0, '23/08/2024', '12:00:13');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '79939281', '005', 0, '20/08/2024', '12:00:87');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '79979294', '001', 0, '18/08/2024', '12:00:09');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '80229200', '005', 0, '23/08/2024', '12:00:84');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '80395118', '001', 0, '19/08/2024', '12:00:08');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '83091861', '001', 0, '16/08/2024', '12:00:06');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '93393374', '005', 0, '14/08/2024', '12:00:81');           
+    INSERT INTO P390.PERMISOS                                           
+    (TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL) VALUES           
+    ('TR03', '9533075', '003', 0, '19/08/2024', '12:00:98');            
+                                                                        
+---------------------------------------------                           
+-- INSERTAR DATOS A LA TABLA DE PERFILES                                
+   INSERT INTO P390.PERFILES                                            
+       (TRAN,IDPERFIL,NOMBRE,CONSUL,BORRAR,INGRESAR,MODIF)              
+       VALUES                                                           
+       (                                                                
+        'TR03', '001', 'ACCESO TOTAL EST', 'SI', 'SI', 'SI', 'SI'       
+       );                                                               
+   INSERT INTO P390.PERFILES                                            
+        (TRAN,IDPERFIL,NOMBRE,CONSUL,BORRAR,INGRESAR,MODIF)             
+       VALUES                                                           
+       (                                                                
+        'TR03', '002', 'SOLO CONSULTA EST', 'SI', 'NO', 'NO', 'NO'      
+       );                                                               
+   INSERT INTO P390.PERFILES                                            
+       (TRAN,IDPERFIL,NOMBRE,CONSUL,BORRAR,INGRESAR,MODIF)              
+       VALUES                                                           
+       (                                                                
+        'TR03', '003', 'CONSUL. Y INGR. EST', 'SI', 'NO', 'SI', 'NO'    
+       );                                                               
+   INSERT INTO P390.PERFILES                                            
+       (TRAN,IDPERFIL,NOMBRE,CONSUL,BORRAR,INGRESAR,MODIF)              
+       VALUES                                                           
+       (                                                                
+        'TR03', '004', 'CONSUL.Y BORRAR EST', 'SI', 'SI', 'NO', 'NO'    
+       );                                                               
+   INSERT INTO P390.PERFILES                                            
+       (TRAN,IDPERFIL,NOMBRE,CONSUL,BORRAR,INGRESAR,MODIF)              
+       VALUES                                                           
+       (                                                                
+        'TR03', '005', 'CONSUL.Y MODIF. EST', 'SI', 'NO', 'NO', 'SI'    
+       );                                                               
+---------------------------------------------                           
+-- INSERTAR DATOS A LA TABLA DE CURSOS                                  
+    INSERT INTO P390.CURSOS (CURSO, DESCRIPCION, DNI_PROFESOR, ESTADO)  
+    VALUES     ('CCICS', 'COBOL CICS', '51675574', 'A');                
+    INSERT INTO P390.CURSOS (CURSO, DESCRIPCION, DNI_PROFESOR, ESTADO)  
+    VALUES     ('CODB2', 'COBOLDB2', '93393374', 'A');                  
+    INSERT INTO P390.CURSOS (CURSO, DESCRIPCION, DNI_PROFESOR, ESTADO)  
+    VALUES     ('GITHB', 'GITHUB', '27682764', 'A');                    
+    INSERT INTO P390.CURSOS (CURSO, DESCRIPCION, DNI_PROFESOR, ESTADO)  
+    VALUES     ('OS390', 'IBM390', '39794663', 'A');                    
+    INSERT INTO P390.CURSOS (CURSO, DESCRIPCION, DNI_PROFESOR, ESTADO)  
+    VALUES     ('OSZSE', 'IBMZSERIES', '19387955', 'A');                
+---------------------------------------------                           
+-- INSERTAR DATOS A LA TABLA DE NOTASFIN                                
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '1201235', '2023', 2.8);                           
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '1205284', '2024', 2.9);                           
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '10167251', '2023', 2.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '11318971', '2024', 2.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '12379980', '2024', 3.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '13898532', '2024', 3.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '175655422', '2023', 2.8);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '19357651', '2023', 3.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '19453565', '2024', 4.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '23555321', '2024', 4.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '27682764', '2023', 4);                            
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '35488897', '2023', 2.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CCICS', '39768027', '2023', 4.7);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '46357157', '2023', 2.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CCICS', '51812864', '2024', 3.8);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '51875355', '2023', 2.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '51881112', '2024', 2.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '51991214', '2024', 4.3);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '52263924', '2024', 4.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '52282030', '2023', 4.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '52438489', '2024', 4.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '52727991', '2023', 4.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '52827327', '2024', 4.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '79308897', '2024', 4);                            
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '79371502', '2024', 4.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '79509629', '2024', 2.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '79522306', '2023', 4.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CCICS', '79708766', '2024', 2.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CCICS', '79751594', '2023', 3.2);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CODB2', '10167251', '2024', 3.1);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CODB2', '10465690', '2024', 4.7);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CODB2', '10527507', '2024', 3.8);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CODB2', '110167251', '2024', 4.7);                        
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CODB2', '110465690', '2024', 3.1);                        
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '11318971', '2024', 3.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '11379819', '2023', 3.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '13580424', '2024', 3.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '15655422', '2024', 4.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '17950453', '2024', 3.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '19453565', '2024', 4.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '19468189', '2024', 4.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '19469939', '2023', 4.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '35410291', '2023', 3.2);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '35488897', '2023', 2.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CODB2', '35514724', '2024', 4.5);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '39562888', '2023', 4.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CODB2', '39797876', '2024', 3.1);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '46357157', '2024', 4.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '51583972', '2024', 2.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '51598505', '2024', 4.3);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '51708666', '2024', 2.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '51798670', '2024', 4.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CODB2', '51871941', '2024', 2.8);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '51875355', '2023', 3.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '52057782', '2024', 3.2);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '52145346', '2023', 3.2);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '52163020', '2023', 3.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '52263924', '2023', 2.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '52282030', '2023', 2.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '52438489', '2024', 3.2);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '52727991', '2023', 2.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '52825799', '2024', 3.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '53011852', '2023', 4.3);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '79308897', '2023', 3.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '79384247', '2024', 3.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '79509629', '2024', 2.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '79522306', '2023', 4.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '79751594', '2023', 2.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '79788423', '2024', 4);                            
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '79979294', '2023', 2.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CODB2', '80229200', '2023', 2.6);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('CODB2', '80395118', '2024', 3.5);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '83091861', '2023', 2.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('CODB2', '9533075', '2024', 4.6);                           
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '10167251', '2024', 3.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '10289212', '2024', 4.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '113580424', '2024', 4.9);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '11379819', '2024', 2.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '15655422', '2024', 2.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '171838145', '2024', 3.8);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '3229015', '2023', 3.8);                           
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '35488897', '2024', 2.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '35514724', '2023', 3.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '39562888', '2024', 3.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('GITHB', '39768027', '2024', 2.8);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '39797876', '2023', 4.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '51583972', '2024', 3.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '5174301', '2023', 3.8);                           
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '52056163', '2024', 3.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '52145346', '2024', 3.2);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '52226938', '2024', 2.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '52438489', '2023', 3.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '52727991', '2024', 2.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '53011852', '2024', 4.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '79371502', '2023', 2.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '79522306', '2024', 3.2);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('GITHB', '79708766', '2023', 4.6);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '79939281', '2023', 2.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '80395118', '2024', 4.3);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('GITHB', '9533075', '2024', 3.2);                           
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '10167251', '2024', 2.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '11318971', '2023', 4.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '11379819', '2024', 3.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OS390', '12379980', '2023', 2.5);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '123898532', '2024', 2.8);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '17950453', '2024', 3.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OS390', '19453565', '2024', 3.4);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OS390', '27682764', '2024', 2.6);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '35410291', '2023', 4.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '35488897', '2024', 3.2);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '35514724', '2024', 4.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '39562888', '2023', 3.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '39756988', '2024', 4.3);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '46357157', '2023', 3.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '51583972', '2024', 4.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '51708666', '2023', 3.2);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '51798670', '2024', 4.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OS390', '51871941', '2023', 3.5);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OS390', '52056163', '2023', 3.1);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OS390', '52145346', '2024', 3.2);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '52163020', '2023', 4.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '52263924', '2023', 3.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '52268601', '2023', 4.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '52282030', '2024', 3.2);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OS390', '52438489', '2024', 4.1);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '52827327', '2023', 4.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '79368006', '2024', 4.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OS390', '79470938', '2024', 4);                           
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OS390', '79509629', '2023', 3.4);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OS390', '79939281', '2024', 3.8);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '79979294', '2023', 4.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '80229200', '2024', 4.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '80395118', '2024', 4);                            
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '83091861', '2024', 4.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OS390', '9533075', '2023', 2.5);                           
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '10167251', '2024', 4.3);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OSZSE', '10465690', '2024', 4.1);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '11379819', '2024', 4.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '130527507', '2024', 4.3);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '13898532', '2023', 3.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '15655422', '2024', 3.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '17950453', '2024', 2.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '19357651', '2024', 2.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OSZSE', '19453565', '2023', 2.9);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OSZSE', '19468189', '2024', 4.3);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OSZSE', '19469939', '2024', 3.4);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '23555321', '2024', 2.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '3229015', '2024', 2.6);                           
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '38231716', '2024', 4.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '39562888', '2024', 3.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OSZSE', '39797876', '2023', 4.3);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '46357157', '2024', 4.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '51598505', '2024', 3.7);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '5174301', '2023', 3.1);                           
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '51798670', '2023', 3.5);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '51871941', '2024', 3.1);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OSZSE', '51881112', '2024', 3.8);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '52056163', '2023', 4.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '52226938', '2023', 4.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '52263924', '2024', 2.6);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '52282030', '2024', 4.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+     VALUES ('OSZSE', '52438489', '2024', 4.1);                         
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '52727991', '2023', 4.4);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '53011852', '2024', 2.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '79708766', '2023', 3.8);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '79979294', '2024', 4);                            
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '80229200', '2023', 4.9);                          
+    INSERT INTO P390.NOTASFIN (CURSO, DNI_ESTUDIANTE, AAAA, NOTA)       
+    VALUES ('OSZSE', '9533075', '2023', 4.1);                           
+       COMMIT;                                                          
+--  ERR NADA SOLO PARA PROBAR                                           
