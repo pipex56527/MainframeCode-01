@@ -1,0 +1,268 @@
+      *************************************************************
+      *  PROGRAMA DE PRUEBA DE CICS-COBOL CON TABLA DB2
+      *************************************************************
+       IDENTIFICATION DIVISION.
+         PROGRAM-ID. PTSK1.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      *==============================================================
+      * LA COPY DEL MAPA DE LOGON
+      *==============================================================
+       COPY CTSK1.
+      *===============================================================
+      * FIN DE LA COPY DEL MAPA GENERADO
+      *===============================================================
+       01  MSG-FIN-SESION  PIC X(23) VALUE "FIN DE SESION".
+      *
+       01  COD-RETORNO     PIC 9.
+       01  RESPUESTA       PIC S9(08) COMP.
+      *
+       01  MI-COMMAREA.
+           05 TRANS           PIC X(04).
+           05 TERM            PIC X(04).
+           05 CICLO           PIC X(02).
+           05 PARAM-DNI       PIC X(09).
+           05 PARAM-TIPOUSUA  PIC X(05).
+           05 PARAM-NOMBRE    PIC X(20).
+           05 PARAM-APELLIDOS PIC X(20).
+           05 FILLER          PIC X(31).
+
+      ***************************************************************
+      *    DEFINICION AREA LINKED RUTINA
+      ***************************************************************
+       01  AREA-LINK         PIC X(155).
+       01  AREA-LINK-R       REDEFINES AREA-LINK.
+           05 WS-COD-RET      PIC 9(01).
+           05 WS-COD-OPE      PIC 9(01).
+           05 WS-US-DNI       PIC X(09).
+           05 WS-US-TIPOUSUA  PIC X(05).
+      *    05 WS-US-CLAVE     PIC X(08).
+           05 WS-US-CLAVE     PIC X(05).
+           05 WS-US-NOMBRE    PIC X(20).
+           05 WS-US-APELLIDOS PIC X(20).
+           05 WS-US-EMAIL     PIC X(35).
+           05 WS-US-DIRECCION PIC X(35).
+           05 WS-US-CARGO     PIC X(20).
+           05 WS-US-ESTADO    PIC X(01).
+      *
+       01  WS-MJES-LOG.
+           03 WS-USER-ERR  PIC X(23) VALUE "USUARIO NO EXISTE.     ".
+           03 WS-PASS-ERR  PIC X(23) VALUE "CLAVE INVALIDA.        ".
+           03 WS-DATO-ERR  PIC X(23) VALUE "INGRESE USUARIO Y CLAVE".
+           03 WS-LOGIN-OK  PIC X(23) VALUE "AUTENTICACION EXITOSA. ".
+
+      *============================================================
+      * COPIAMOS AYUDAS DE BMS PARA HACER BONITO EL TERMINAL
+      *============================================================
+       COPY DFHAID.
+       COPY DFHBMSCA.
+      *=================================================================
+       LINKAGE SECTION.
+       01  DFHCOMMAREA    PIC X(95).
+      *=================================================================
+       PROCEDURE DIVISION.
+      *=================================================================
+      ******************************************************************
+      * 0000-RAIZ
+      ******************************************************************
+       0000-RAIZ.
+
+           PERFORM RECIBIR-TXN
+           PERFORM PROCESAR-TXN
+           PERFORM RETORNAR-TXN
+           .
+      ******************************************************************
+      * RECIBIR-TXN
+      ******************************************************************
+       RECIBIR-TXN.
+           MOVE DFHCOMMAREA  TO MI-COMMAREA
+           DISPLAY "PTSK1: " MI-COMMAREA
+           IF EIBCALEN > 0 THEN
+              EXEC CICS RECEIVE MAP('MTSK1')
+                        INTO(MTSK1I)
+                        NOHANDLE
+              END-EXEC
+
+              EXEC CICS
+                   IGNORE CONDITION MAPFAIL
+              END-EXEC
+           END-IF
+           .
+      ******************************************************************
+      * PROCESAR-TXN
+      ******************************************************************
+       PROCESAR-TXN.
+           IF EIBCALEN = 0 THEN
+              PERFORM PRIMERA-VEZ
+           ELSE
+              EVALUATE CICLO
+                 WHEN "00"
+                    PERFORM CICLO-LOG
+                 WHEN OTHER
+      *             DISPLAY "CICLO INVALIDO: " CICLO
+                    PERFORM TERMINAR-PRG
+              END-EVALUATE
+           END-IF
+           .
+      ******************************************************************
+      * RETORNAR-TXN
+      ******************************************************************
+       RETORNAR-TXN.
+           DISPLAY "ENVIAR-MAPA"
+           DISPLAY "MSGLOGO: " MSGLOGO
+      *
+           EXEC CICS SEND MAP('MTSK1')
+                     FROM(MTSK1O)
+                     ERASE
+           END-EXEC
+      *
+           MOVE EIBTRNID    TO TRANS
+           MOVE EIBTRMID    TO TERM
+           DISPLAY "TERMINAR TRANSACCION "
+      *
+           EXEC CICS RETURN
+                     TRANSID(EIBTRNID)
+                     COMMAREA(MI-COMMAREA)
+                     LENGTH(95)
+           END-EXEC
+      *    LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO
+      *    O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN
+           GOBACK
+           .
+      ******************************************************************
+      * TERMINAR-PRG
+      ******************************************************************
+       TERMINAR-PRG.
+           DISPLAY "TERMINA PROGRAMA"
+      *
+           EXEC CICS
+                SEND TEXT FROM(MSG-FIN-SESION)
+                ERASE
+                FREEKB
+           END-EXEC
+      *
+           EXEC CICS RETURN END-EXEC
+      *    LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO
+      *    O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN
+           GOBACK
+           .
+      ******************************************************************
+      * PRIMERA-VEZ
+      ******************************************************************
+       PRIMERA-VEZ.
+      *    PROGRAMA LLAMADO POR PRIMERA VEZ
+           DISPLAY "ENTRO A PROGRAMA X PRIMERA VEZ "
+      *    INICIALIZO MI-COMMAREA
+           MOVE EIBTRNID     TO TRANS
+           MOVE EIBTRMID     TO TERM
+           MOVE "00"         TO CICLO
+      *    PERFORM PANTALLA-INICIAL
+           DISPLAY "ENVIAR-MAPA PRIMERA VEZ"
+           MOVE LOW-VALUES TO MTSK1I
+
+           EXEC CICS SEND MAP('MTSK1')
+                     MAPONLY
+                     ERASE
+                     NOHANDLE
+           END-EXEC
+      *
+           DISPLAY "TERMINAR TRANSACCION PRIMERA VEZ"
+           EXEC CICS RETURN
+                     TRANSID(EIBTRNID)
+                     COMMAREA(MI-COMMAREA)
+                     LENGTH(LENGTH OF MI-COMMAREA)
+           END-EXEC
+      *    LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO
+      *    O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN
+           GOBACK
+           .
+      ******************************************************************
+      * CICLO-LOG
+      ******************************************************************
+       CICLO-LOG.
+           DISPLAY "CICLO LOG"
+           EVALUATE EIBAID
+              WHEN DFHENTER
+      *          DISPLAY "ENTER"
+                 PERFORM VALIDAR-LOGIN
+              WHEN DFHPF3
+      *          DISPLAY "F3"
+                 PERFORM TERMINAR-PRG
+              WHEN OTHER
+      *          DISPLAY "TECLA INVALIDA"
+                 MOVE SPACES         TO MSGLOGO
+                 MOVE "TECLA INVALIDA" TO MSGLOGO
+           END-EVALUATE
+           .
+      ******************************************************************
+      * VALIDAR-LOGIN
+      ******************************************************************
+       VALIDAR-LOGIN.
+           DISPLAY "LOGIN"
+           IF IDUSRI EQUAL LOW-VALUES OR "_________" OR SPACES OR
+              CLAVEI EQUAL LOW-VALUES OR SPACES THEN
+              MOVE SPACES TO IDUSRO
+              MOVE SPACES TO CLAVEO
+              MOVE SPACES TO MSGLOGO
+              MOVE WS-DATO-ERR TO MSGLOGO
+           ELSE
+              PERFORM CONFIRMAR-USUARIO
+           END-IF
+           .
+      **************************************************************
+      * CONFIRMAR-USUARIO
+      **************************************************************
+       CONFIRMAR-USUARIO.
+           DISPLAY "CONFIRMAR USUARIO: " IDUSRI
+           MOVE SPACES   TO MSGLOGO
+           MOVE SPACES   TO AREA-LINK
+           MOVE 9        TO WS-COD-RET
+           MOVE 1        TO WS-COD-OPE
+           MOVE IDUSRI   TO WS-US-DNI
+      *    MOVE CLAVEI   TO WS-US-CLAVE
+
+           DISPLAY "INVOCO RUTINA RTSK1"
+           DISPLAY "AREA-LINK: " AREA-LINK
+
+           EXEC CICS LINK
+                     PROGRAM('RTSK1')
+                     COMMAREA(AREA-LINK)
+                     LENGTH(LENGTH OF AREA-LINK)
+                     RESP(RESPUESTA)
+           END-EXEC
+
+           DISPLAY "RETORNO RUTINA RTSK1"
+           DISPLAY "AREA-LINK: " AREA-LINK
+
+           EVALUATE WS-COD-RET
+              WHEN 0
+                 IF CLAVEI = WS-US-CLAVE THEN
+                    MOVE "TSK2"        TO TRANS
+                    MOVE "99"          TO CICLO
+                    MOVE WS-US-DNI     TO PARAM-DNI
+                    MOVE WS-US-NOMBRE  TO PARAM-NOMBRE
+                    EXEC CICS
+                         SET TERMINAL(EIBTRMID) UCTRAN
+                    END-EXEC
+
+                    EXEC CICS XCTL
+                         PROGRAM('PTSK2')
+                         COMMAREA(MI-COMMAREA)
+                         LENGTH(LENGTH OF MI-COMMAREA)
+                         RESP(RESPUESTA)
+                    END-EXEC
+                    DISPLAY "INVOQUE PTSK2"
+                 ELSE
+                    MOVE WS-PASS-ERR   TO MSGLOGO
+                 END-IF
+              WHEN 1
+                 MOVE WS-US-DNI     TO IDUSRO
+                 MOVE SPACES        TO CLAVEO
+                 MOVE WS-USER-ERR   TO MSGLOGO
+              WHEN OTHER
+      *          PERFORM TERMINAR-PRG
+                 MOVE "ERROR DB2"   TO MSGLOGO
+           END-EVALUATE
+           .
+      ***************************************************************

@@ -1,0 +1,50 @@
+DEFINICION Mapset
+-------------------                                                                               
+ Mapset         : MTSK1                                      
+ Group          : GTSK1                                      
+ Description    : PRUEBA CONCEPTO ENCAPSULADOR               
+   
+DEFINICION Program
+-------------------                                                                               
+ PROGram        : PTSK1                         
+ Group          : GTSK1                         
+ DEscription    : PRUEBA CONCEPTO ENCAPSULADOR   
+
+DEFINICION Program
+-------------------                                                                               
+ PROGram        : RTSK1                           
+ Group          : GTSK1                           
+ DEscription    : PRUEBA CONCEPTO ENCAPSULADOR    
+
+DEFINICION Transaccion CICS (inicial)
+---------------------------                                                                               
+ TRANSaction    : TSK1                             
+ Group          : GTSK1                            
+ DEscription    : PRUEBA CONCEPTO ENCAPSULADOR     
+ PROGram        : PTSK1                                                         
+
+DEFINICION Transaccion CICS 
+---------------------------                                                                               
+ TRANSaction    : TSK2                             
+ Group          : GTSK1                            
+ DEscription    : PRUEBA CONCEPTO ENCAPSULADOR     
+ PROGram        : PTSK2                                                         
+
+
+DEFINICION DB2Emtry
+-------------------                                                                               
+ DB2Entry       : EGTSK1                                                 
+ Group          : GTSK1                                                 
+ DEscription    : PRUEBA CONCEPTO ENCAPSULADOR                                                   
+ ACcountrec     : TXid           
+ AUTHId         : P390                                                    
+ PLAN           : PLDTSK1                                                  
+
+DEFINICION DB2Tran
+-------------------                                                                               
+  DB2Tran        : TGTSK1        
+  Group          : GTSK1      
+  Description    : PRUEBA CONCEPTO ENCAPSULADOR         
+  Entry          : EGTSK1        
+  Transid        : TSK1   
+

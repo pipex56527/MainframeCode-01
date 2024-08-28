@@ -1,0 +1,11 @@
+Les comparto una prueba de concepto que hice.
+Utilizo la tabla original de usuarios que yo tenia.
+
+MTSK1: Mapa para el login.
+PTSK1: Programa que valida el usuario
+RTSK1: Rutina que accesa la tabla de usuarios. Solo la consulta.
+MTSK2: Mapa de opciones.
+PTSK2: Programa que muestra el menu de opciones del documento enviado por Claudia
+
+BPKRTSK1: Bind del package para RTSK1
+BPLDTSK1: Bind del plan PLDTSK1

@@ -1,0 +1,14 @@
+-- ELIMINA TODAS TABLAS USUARIOS, PERMISOS, PERFILES, CURSOS Y NOTASFIN 
+-- ElimIna Todas las tablas  POR SI NECESITO REPETIR SPUESTU03         
+-- ELIMINAR TABLA  PERMISOS                                           
+   DROP TABLE P390.PERMISOS;                                          
+-- ELIMINAR TABLA PERFILES                                            
+   DROP TABLE P390.PERFILES;	                                      
+-- ELIMINAR TABLA USUARIOS                                            
+   DROP TABLE P390.USUARIOS;                                          
+-- ELIMINAR TABLA CURSOS
+   DROP TABLE P390.CURSOS;
+-- ELIMINAR TABLA NOTASFIN
+   DROP TABLE P390.NOTASFIN;
+
+
