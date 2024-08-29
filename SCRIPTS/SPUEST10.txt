@@ -1,0 +1,16 @@
+-- CREAR TABLE SPACE PARA LA TABLA DE  PERMISOS 
+   CREATE TABLESPACE PERMITS                                            00012001
+       IN P390DB                                                        00013001
+     USING STOGROUP P390SG                                              00014001
+     PRIQTY 250                                                         00015001
+     SECQTY 100                                                         00016001
+     ERASE NO                                                           00017001
+     FREEPAGE 10                                                        00018001
+     PCTFREE 10                                                         00019001
+     BUFFERPOOL BP1                                                     00019101
+     COMPRESS NO                                                        00019201
+     LOCKSIZE ANY                                                       00019301
+     LOCKMAX SYSTEM                                                     00019401
+     CLOSE YES;                                                         00019501
+-- BORRAR TABLE SPACE                                                   00019601
+-- DROP TABLESPACE P390DB.PERMITS;                                      00019701

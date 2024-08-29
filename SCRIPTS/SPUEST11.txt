@@ -1,0 +1,18 @@
+--                                                                      00019801
+-- CREAR TABLE SPACE PARA LA TABLA DE PERFILES                          00019901
+   CREATE TABLESPACE PERFILTS                                           00020001
+       IN P390DB                                                        00020101
+     USING STOGROUP P390SG                                              00020201
+     PRIQTY 250                                                         00020301
+     SECQTY 100                                                         00020401
+     ERASE NO                                                           00020501
+     FREEPAGE 10                                                        00020601
+     PCTFREE 10                                                         00020701
+     BUFFERPOOL BP1                                                     00020801
+     COMPRESS NO                                                        00020901
+     LOCKSIZE ANY                                                       00021001
+     LOCKMAX SYSTEM                                                     00021101
+     CLOSE YES;                                                         00021201
+-- BORRAR TABLE SPACE                                                   00021301
+-- DROP TABLESPACE P390DB.PERFILTS;                                     00021401
+--                                                                      00021501
