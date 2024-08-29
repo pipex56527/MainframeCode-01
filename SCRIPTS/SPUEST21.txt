@@ -1,0 +1,2 @@
+-- ELIMINAR TABLA USUARIOS                                            
+   DROP TABLE P390.USUARIOS;                                          
