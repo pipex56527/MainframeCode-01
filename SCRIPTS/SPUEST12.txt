@@ -1,0 +1,18 @@
+--                                                                      00021602
+-- CREAR TABLE SPACE PARA LA TABLA DE USUARIOS                          00021702
+   CREATE TABLESPACE USUARITS                                           00021802
+       IN P390DB                                                        00021902
+     USING STOGROUP P390SG                                              00022002
+     PRIQTY 250                                                         00022102
+     SECQTY 100                                                         00022202
+     ERASE NO                                                           00022302
+     FREEPAGE 10                                                        00022402
+     PCTFREE 10                                                         00022502
+     BUFFERPOOL BP1                                                     00022602
+     COMPRESS NO                                                        00022702
+     LOCKSIZE ANY                                                       00022802
+     LOCKMAX SYSTEM                                                     00022902
+     CLOSE YES;                                                         00023002
+-- BORRAR TABLE SPACE                                                   00023102
+-- DROP TABLESPACE P390DB.USUARITS;                                     00023202
+--                                                                      00023302
