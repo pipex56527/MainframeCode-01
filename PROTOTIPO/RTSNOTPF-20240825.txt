@@ -1,0 +1,240 @@
+      *************************************************************
+      *   ENCAPSULADOR TABLA PERFILES
+      *************************************************************
+       IDENTIFICATION DIVISION.
+         PROGRAM-ID. RTSNOTPF.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      *===============================================================
+      * MODSQL - DEFINICON TABLA PERFILES SQL Y COBOL
+           EXEC SQL
+                INCLUDE PERFILES
+           END-EXEC.
+      *===============================================================
+      * MODSQL - SE TIENE QUE UTILIZAR SQLCA
+           EXEC SQL
+                INCLUDE SQLCA
+           END-EXEC.
+      *===============================================================
+      * MODSQL CAMPOS PARA ERROR DE DB2
+       01  DB2-ERR.
+           03  DB2-SQLCODE                PIC S9(9).
+           03  DB2-SQLCODE-Z              PIC -ZZZZZZZZ9.
+           03  DB2-ERROR.
+               05  DB2-ERR-MSG            PIC X(50).
+               05  DB2-ERR-CODE           PIC X(20).
+
+      *============================================================
+       LINKAGE SECTION.
+       01  DFHCOMMAREA        PIC X(37).
+       01  AREA-LINK          REDEFINES DFHCOMMAREA.
+           05 WS-COD-RET         PIC 9(01).
+           05 WS-COD-OPE         PIC 9(01).
+           05 WS-PF-TRAN         PIC X(04).
+           05 WS-PF-IDPERFIL     PIC X(03).
+           05 WS-PF-NOMBRE       PIC X(20).
+           05 WS-PF-CONSUL       PIC X(02).
+           05 WS-PF-BORRAR       PIC X(02).
+           05 WS-PF-INGRESAR     PIC X(02).
+           05 WS-PF-MODIF        PIC X(02).
+
+      *=================================================================
+       PROCEDURE DIVISION USING DFHCOMMAREA.
+      *=================================================================
+      ******************************************************************
+      * 0000-RAIZ
+      ******************************************************************
+       0000-RAIZ.
+      *    MODSQL EXCEPCIONES SQL DB2
+           EXEC SQL
+                WHENEVER  SQLERROR    CONTINUE
+           END-EXEC
+
+           EXEC SQL
+                WHENEVER  SQLWARNING  CONTINUE
+           END-EXEC
+
+           EXEC SQL
+                WHENEVER  NOT FOUND   CONTINUE
+           END-EXEC
+
+           PERFORM 0100-INICIO
+           PERFORM 0200-EJECUTAR-OPERACION
+           PERFORM 0300-FIN
+           .
+      ******************************************************************
+      * 0100-INICIO
+      ******************************************************************
+       0100-INICIO.
+           DISPLAY "ENTRO A RUTINA RTSNOTPF"
+           DISPLAY "AREA-LINK INP: " AREA-LINK
+           .
+      ******************************************************************
+      * 0200-EJECUTAR-OPERACION
+      ******************************************************************
+       0200-EJECUTAR-OPERACION.
+           DISPLAY "WS-COD-OPE: " WS-COD-OPE
+           EVALUATE WS-COD-OPE
+              WHEN 1
+      *          DISPLAY "CONSULTA"
+                 PERFORM 0210-CONSULTAR-PERFIL
+              WHEN 2
+      *          DISPLAY "ADICION"
+                 PERFORM 0220-INSERTAR-PERFIL
+              WHEN 3
+      *          DISPLAY "DELETE"
+                 PERFORM 0230-BORRAR-PERFIL
+              WHEN 4
+      *          DISPLAY "UPDATE"
+                 PERFORM 0240-MODIFICAR-PERFIL
+              WHEN OTHER
+                 DISPLAY "OPCION NO IMPLEMENTADA"
+                 MOVE 9                        TO WS-COD-RET
+           END-EVALUATE
+           .
+      **************************************************************
+      * 0210-CONSULTAR-PERFIL
+      **************************************************************
+       0210-CONSULTAR-PERFIL.
+           MOVE 1              TO WS-COD-RET
+           MOVE WS-PF-TRAN     TO PF-TRAN
+           MOVE WS-PF-IDPERFIL TO PF-IDPERFIL
+      *
+           EXEC SQL
+             SELECT
+                NOMBRE, CONSUL, BORRAR, INGRESAR, MODIF
+             INTO
+                :PF-NOMBRE, :PF-CONSUL, :PF-BORRAR,
+                :PF-INGRESAR, :PF-MODIF
+             FROM PERFILES
+             WHERE TRAN = :PF-TRAN  AND  IDPERFIL = :PF-IDPERFIL
+           END-EXEC
+
+           IF SQLCODE = 0 THEN
+              MOVE 0             TO  WS-COD-RET
+              MOVE PF-NOMBRE     TO  WS-PF-NOMBRE
+              MOVE PF-CONSUL     TO  WS-PF-CONSUL
+              MOVE PF-BORRAR     TO  WS-PF-BORRAR
+              MOVE PF-INGRESAR   TO  WS-PF-INGRESAR
+              MOVE PF-MODIF      TO  WS-PF-MODIF
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1 TO  WS-COD-RET
+              ELSE
+                 MOVE 2 TO  WS-COD-RET
+                 PERFORM ERROR-DB2
+              END-IF
+           END-IF
+           .
+      ***************************************************
+      * INSERTA LOS DATOS EN LA TABLA                   *
+      ***************************************************
+       0220-INSERTAR-PERFIL.
+           MOVE WS-PF-TRAN       TO  PF-TRAN
+           MOVE WS-PF-IDPERFIL   TO  PF-IDPERFIL
+           MOVE WS-PF-NOMBRE     TO  PF-NOMBRE
+           MOVE WS-PF-CONSUL     TO  PF-CONSUL
+           MOVE WS-PF-BORRAR     TO  PF-BORRAR
+           MOVE WS-PF-INGRESAR   TO  PF-INGRESAR
+           MOVE WS-PF-MODIF      TO  PF-MODIF
+
+           EXEC SQL
+             INSERT INTO PERFILES
+                (
+                 TRAN, IDPERFIL, NOMBRE, CONSUL, BORRAR,
+                 INGRESAR, MODIF
+                )
+             VALUES
+                (
+                 :PF-TRAN, :PF-IDPERFIL, :PF-NOMBRE, :PF-CONSUL,
+                 :PF-BORRAR, :PF-INGRESAR, :PF-MODIF
+                )
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO WS-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  WS-COD-RET
+             ELSE
+                MOVE 2      TO  WS-COD-RET
+                PERFORM ERROR-DB2
+             END-IF
+           END-IF
+           .
+      ***************************************************
+      * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *
+      ***************************************************
+       0230-BORRAR-PERFIL.
+           MOVE WS-PF-TRAN       TO  PF-TRAN
+           MOVE WS-PF-IDPERFIL   TO  PF-IDPERFIL
+
+           EXEC SQL
+             DELETE FROM PERFILES
+               WHERE TRAN = :PF-TRAN  AND  IDPERFIL = :PF-IDPERFIL
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO WS-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  WS-COD-RET
+             ELSE
+                MOVE 2      TO  WS-COD-RET
+                PERFORM ERROR-DB2
+             END-IF
+           END-IF
+           .
+      ***************************************************
+      * ACTUALIZA LOS DATOS EN LA TABLA                 *
+      ***************************************************
+       0240-MODIFICAR-PERFIL.
+           MOVE WS-PF-TRAN       TO  PF-TRAN
+           MOVE WS-PF-IDPERFIL   TO  PF-IDPERFIL
+           MOVE WS-PF-NOMBRE     TO  PF-NOMBRE
+           MOVE WS-PF-CONSUL     TO  PF-CONSUL
+           MOVE WS-PF-BORRAR     TO  PF-BORRAR
+           MOVE WS-PF-INGRESAR   TO  PF-INGRESAR
+           MOVE WS-PF-MODIF      TO  PF-MODIF
+
+           EXEC SQL
+              UPDATE PERFILES
+              SET NOMBRE      = :PF-NOMBRE,
+                  CONSUL      = :PF-CONSUL,
+                  BORRAR      = :PF-BORRAR,
+                  INGRESAR    = :PF-INGRESAR,
+                  MODIF       = :PF-MODIF
+              WHERE TRAN = :PF-TRAN  AND  IDPERFIL = :PF-IDPERFIL
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO WS-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  WS-COD-RET
+             ELSE
+                MOVE 2      TO  WS-COD-RET
+                PERFORM ERROR-DB2
+             END-IF
+           END-IF
+           .
+      ******************************************************************
+      * ERROR-DB2
+      ******************************************************************
+       ERROR-DB2.
+           DISPLAY "ERROR DB2 EN RUTINA: "
+           DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
+           DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
+           DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG
+           DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE
+           .
+      ******************************************************************
+      * FIN SESION
+      ******************************************************************
+       0300-FIN.
+           DISPLAY "AREA-LINK OUT: " AREA-LINK
+           DISPLAY "SALGO DE RUTINA RTSNOTPF"
+           GOBACK
+           .
+      ******************************************************************

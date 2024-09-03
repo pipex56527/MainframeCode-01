@@ -1,0 +1,233 @@
+      *************************************************************
+      *   ENCAPSULADOR TABLA PERMISOS
+      *************************************************************
+       IDENTIFICATION DIVISION.
+         PROGRAM-ID. RTSNOTPM.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      *===============================================================
+      * MODSQL - DEFINICON TABLA PERMISOS SQL Y COBOL
+           EXEC SQL
+                INCLUDE PERMISOS
+           END-EXEC.
+      *===============================================================
+      * MODSQL - SE TIENE QUE UTILIZAR SQLCA
+           EXEC SQL
+                INCLUDE SQLCA
+           END-EXEC.
+      *===============================================================
+      * MODSQL CAMPOS PARA ERROR DE DB2
+       01  DB2-ERR.
+           03  DB2-SQLCODE                PIC S9(9).
+           03  DB2-SQLCODE-Z              PIC -ZZZZZZZZ9.
+           03  DB2-ERROR.
+               05  DB2-ERR-MSG            PIC X(50).
+               05  DB2-ERR-CODE           PIC X(20).
+
+      *============================================================
+       LINKAGE SECTION.
+       01  DFHCOMMAREA        PIC X(42).
+       01  AREA-LINK          REDEFINES DFHCOMMAREA.
+           05 WS-COD-RET         PIC 9(02).
+           05 WS-COD-OPE         PIC 9(02).
+           05 WS-PM-TRAN         PIC X(04).
+           05 WS-PM-DNI          PIC X(09).
+           05 WS-PM-IDPERFIL     PIC X(03).
+           05 WS-PM-NROACCESOS   PIC S9(9) USAGE COMP.
+           05 WS-PM-FECHAUL      PIC X(10).
+           05 WS-PM-HORAUL       PIC X(08).
+
+      *=================================================================
+       PROCEDURE DIVISION USING DFHCOMMAREA.
+      *=================================================================
+      ******************************************************************
+      * 0000-RAIZ
+      ******************************************************************
+       0000-RAIZ.
+      *    MODSQL EXCEPCIONES SQL DB2
+           EXEC SQL
+                WHENEVER  SQLERROR    CONTINUE
+           END-EXEC
+
+           EXEC SQL
+                WHENEVER  SQLWARNING  CONTINUE
+           END-EXEC
+
+           EXEC SQL
+                WHENEVER  NOT FOUND   CONTINUE
+           END-EXEC
+
+           PERFORM 0100-INICIO
+           PERFORM 0200-EJECUTAR-OPERACION
+           PERFORM 0300-FIN
+           .
+      ******************************************************************
+      * 0100-INICIO
+      ******************************************************************
+       0100-INICIO.
+           DISPLAY "ENTRO A RUTINA RTSNOTPM"
+           DISPLAY "AREA-LINK INP: " AREA-LINK
+           .
+      ******************************************************************
+      * 0200-EJECUTAR-OPERACION
+      ******************************************************************
+       0200-EJECUTAR-OPERACION.
+           DISPLAY "WS-COD-OPE: " WS-COD-OPE
+           EVALUATE WS-COD-OPE
+              WHEN 1
+      *          DISPLAY "CONSULTA"
+                 PERFORM 0210-CONSULTAR-PERMISO
+              WHEN 2
+      *          DISPLAY "ADICION"
+                 PERFORM 0220-INSERTAR-PERMISO
+              WHEN 3
+      *          DISPLAY "DELETE"
+                 PERFORM 0230-BORRAR-PERMISO
+              WHEN 4
+      *          DISPLAY "UPDATE"
+                 PERFORM 0240-MODIFICAR-PERMISO
+              WHEN OTHER
+                 DISPLAY "OPCION NO IMPLEMENTADA"
+                 MOVE 9                        TO WS-COD-RET
+           END-EVALUATE
+           .
+      **************************************************************
+      * 0210-CONSULTAR-PERMISO
+      **************************************************************
+       0210-CONSULTAR-PERMISO.
+           MOVE 1           TO WS-COD-RET
+           MOVE WS-PM-TRAN  TO PM-TRAN
+           MOVE WS-PM-DNI   TO PM-DNI
+      *
+           EXEC SQL
+             SELECT
+                IDPERFIL, NROACCESOS, FECHAUL, HORAUL
+             INTO
+                :PM-IDPERFIL, :PM-NROACCESOS, :PM-FECHAUL, :PM-HORAUL
+             FROM PERMISOS
+             WHERE TRAN = :PM-TRAN  AND  DNI = :PM-DNI
+           END-EXEC
+
+           IF SQLCODE = 0 THEN
+              MOVE 0             TO  WS-COD-RET
+              MOVE PM-IDPERFIL   TO  WS-PM-IDPERFIL
+              MOVE PM-NROACCESOS TO  WS-PM-NROACCESOS
+              MOVE PM-FECHAUL    TO  WS-PM-FECHAUL
+              MOVE PM-HORAUL     TO  WS-PM-HORAUL
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1 TO  WS-COD-RET
+              ELSE
+                 MOVE 2 TO  WS-COD-RET
+                 PERFORM ERROR-DB2
+              END-IF
+           END-IF
+           .
+      ***************************************************
+      * INSERTA LOS DATOS EN LA TABLA                   *
+      ***************************************************
+       0220-INSERTAR-PERMISO.
+           MOVE WS-PM-TRAN       TO  PM-TRAN
+           MOVE WS-PM-DNI        TO  PM-DNI
+           MOVE WS-PM-IDPERFIL   TO  PM-IDPERFIL
+           MOVE WS-PM-NROACCESOS TO  PM-NROACCESOS
+           MOVE WS-PM-FECHAUL    TO  PM-FECHAUL
+           MOVE WS-PM-HORAUL     TO  PM-HORAUL
+
+           EXEC SQL
+             INSERT INTO PERMISOS
+                (
+                 TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL
+                )
+             VALUES
+                (
+                 :PM-TRAN, :PM-DNI, :PM-IDPERFIL,
+                 :PM-NROACCESOS, :PM-FECHAUL, :PM-HORAUL
+                )
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO WS-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  WS-COD-RET
+             ELSE
+                MOVE 2      TO  WS-COD-RET
+                PERFORM ERROR-DB2
+             END-IF
+           END-IF
+           .
+      ***************************************************
+      * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *
+      ***************************************************
+       0230-BORRAR-PERMISO.
+           MOVE WS-PM-TRAN       TO  PM-TRAN
+           MOVE WS-PM-DNI        TO  PM-DNI
+
+           EXEC SQL
+             DELETE FROM PERMISOS
+               WHERE TRAN = :PM-TRAN  AND  DNI = :PM-DNI
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO WS-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  WS-COD-RET
+             ELSE
+                MOVE 2      TO  WS-COD-RET
+                PERFORM ERROR-DB2
+             END-IF
+           END-IF
+           .
+      ***************************************************
+      * ACTUALIZA LOS DATOS EN LA TABLA                 *
+      ***************************************************
+       0240-MODIFICAR-PERMISO.
+           MOVE WS-PM-TRAN       TO  PM-TRAN
+           MOVE WS-PM-DNI        TO  PM-DNI
+           MOVE WS-PM-IDPERFIL   TO  PM-IDPERFIL
+           MOVE WS-PM-NROACCESOS TO  PM-NROACCESOS
+           MOVE WS-PM-FECHAUL    TO  PM-FECHAUL
+           MOVE WS-PM-HORAUL     TO  PM-HORAUL
+
+           EXEC SQL
+              UPDATE PERMISOS
+              SET IDPERFIL    = :PM-IDPERFIL,
+                  NROACCESOS  = :PM-NROACCESOS,
+                  FECHAUL     = :PM-FECHAUL,
+                  HORAUL      = :PM-HORAUL
+              WHERE TRAN = :PM-TRAN  AND  DNI = :PM-DNI
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO WS-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  WS-COD-RET
+             ELSE
+                MOVE 2      TO  WS-COD-RET
+                PERFORM ERROR-DB2
+             END-IF
+           END-IF
+           .
+      ******************************************************************
+      * ERROR-DB2
+      ******************************************************************
+       ERROR-DB2.
+           DISPLAY "ERROR DB2 EN RUTINA: "
+           DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
+           DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
+           DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG
+           DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE
+           .
+      ******************************************************************
+      * FIN SESION
+      ******************************************************************
+       0300-FIN.
+           DISPLAY "AREA-LINK OUT: " AREA-LINK
+           DISPLAY "SALGO DE RUTINA RTSNOTPM"
+           GOBACK
+           .
+      ******************************************************************
