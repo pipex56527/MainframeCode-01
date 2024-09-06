@@ -1,0 +1,1063 @@
+      ***********************************************************       00010000
+      *    SCROLL DE ESTUDIANTES Y PERMITE LLAMAR AL PROGRAMA   *       00020005
+      *    DEL CRUD                                             *       00030005
+      ***********************************************************       00050000
+       IDENTIFICATION DIVISION.                                         00060000
+       PROGRAM-ID. PCICS55.                                             00070000
+       ENVIRONMENT DIVISION.                                            00080000
+       DATA DIVISION.                                                   00090000
+       WORKING-STORAGE SECTION.                                         00100000
+       COPY CCICS66.                                                    00110000
+       COPY CCICS67.                                                    00120000
+      *COMMAREA                                                         00120104
+      *COMMAREA                                                         00131000
+       01 MI-COMMAREA.                                                  00131106
+          03 TRANS             PIC X(04).                               00131206
+          03 TERM              PIC X(04).                               00131306
+          03 CICLO             PIC X(02).                               00131406
+          03 TIPOUSUA          PIC X(05).                               00131506
+          03 USU               PIC X(09).                               00131606
+          03 NOMUSU            PIC X(20).                               00131714
+          03 APEUSU            PIC X(20).                               00131814
+          03 PAS               PIC X(08).                               00131906
+          03 PERFIL            PIC X(16).                               00132006
+          03 CED               PIC X(09).                               00132106
+          03 CLAVE             PIC X(8).                                00132206
+          03 NOM               PIC X(20).                               00132306
+          03 APE               PIC X(20).                               00132406
+          03 DIR               PIC X(35).                               00132506
+          03 CARGO             PIC X(20).                               00132606
+          03 ESTADO            PIC X.                                   00132706
+          03 TIPO              PIC X(06).                               00132806
+          03 SUB-TIPO          PIC XX.                                  00132906
+          03 EXISTE            PIC X.                                   00133006
+          03 NUM-REGISTRO      PIC 9(5).                                00133106
+          03 CONTADOR-REGISTRO PIC S9(5).                               00133206
+          03 CODIGO-CURSOR     PIC XX.                                  00133306
+          03 MLIKE             PIC X(35).                               00133406
+       01 RC-COMMAREA.                                                  00133516
+          03 RTRANS             PIC X(04).                              00133616
+          03 RTERM              PIC X(04).                              00133716
+          03 RCICLO             PIC X(02).                              00133816
+          03 RTIPOUSUA          PIC X(05).                              00133916
+          03 RUSU               PIC X(09).                              00134016
+          03 RNOMUSU            PIC X(20).                              00134116
+          03 RAPEUSU            PIC X(20).                              00134216
+          03 RPAS               PIC X(08).                              00134316
+          03 RPERFIL            PIC X(16).                              00134416
+          03 RCED               PIC X(09).                              00134516
+          03 RCLAVE             PIC X(8).                               00134616
+          03 RNOM               PIC X(20).                              00134716
+          03 RAPE               PIC X(20).                              00134816
+          03 RDIR               PIC X(35).                              00134916
+          03 RCARGO             PIC X(20).                              00135016
+          03 RESTADO            PIC X.                                  00135116
+          03 RTIPO              PIC X(06).                              00135216
+          03 RSUB-TIPO          PIC XX.                                 00135316
+          03 REXISTE            PIC X.                                  00135416
+          03 RNUM-REGISTRO      PIC 9(5).                               00135516
+          03 RCONTADOR-REGISTRO PIC S9(5).                              00135616
+          03 RCODIGO-CURSOR     PIC XX.                                 00135716
+          03 RMLIKE             PIC X(35).                              00135816
+       01 WS-PERFIL.                                                    00501001
+          02 WS-TRAN         PIC X(4).                                  00502001
+          02 WS-IDPERFIL     PIC X(3).                                  00503001
+          02 WS-CONSUL       PIC X(2).                                  00504001
+          02 WS-BORRAR       PIC X(2).                                  00505001
+          02 WS-INGRESAR     PIC X(2).                                  00506001
+          02 WS-MODIF        PIC X(2).                                  00507001
+          02 WS-FILLER       PIC X.                                     00508001
+      *COMMAREA HOL                                                     00510000
+       01 CH-COMMAREA-HOL.                                              00520000
+          03 CH-HOLS.                                                   00530000
+             05  CH-S-CODIGO-CURSOR      PIC X(2).                      00540000
+             05  CH-S-BUSCAR             PIC X(35).                     00550000
+             05  CH-S-COMIENZA           PIC X.                         00560000
+             05  CH-S-CONTIENE           PIC X.                         00570000
+             05  CH-S-DNI-SELECCION      PIC X(9).                      00580000
+             05  CH-S-DNI1               PIC X(9).                      00590000
+             05  CH-S-DNI4               PIC X(9).                      00600000
+             05  CH-S-NOMBRE1            PIC X(25).                     00610000
+             05  CH-S-NOMBRE4            PIC X(25).                     00620000
+             05  CH-S-APELLIDOS1         PIC X(25).                     00630000
+             05  CH-S-APELLIDOS4         PIC X(25).                     00640000
+             05  CH-S-UP-MORE            PIC X(1).                      00650000
+             05  CH-S-DOWN-MORE          PIC X(1).                      00660000
+      *VARIABLES                                                        00670000
+       01 MSG-FIN-SESION PIC X(40) VALUE '          FIN SESION'.        00680000
+       01  WC-CONSTANTES.                                               00690000
+          03 SW-HAY-FILTRO-COMIENZA       PIC X    VALUE 'N'.           00700000
+             88 HAY-FILTRO-COMIENZA                VALUE 'S'.           00710000
+      *                                                                 00720000
+          03 SW-HAY-FILTRO-CONTIENE       PIC X    VALUE 'N'.           00730000
+             88 HAY-FILTRO-CONTIENE                VALUE 'S'.           00740000
+       01 WC-CONSTANTES.                                                00750000
+          03 WC-MAP               PIC X(8)  VALUE 'HOLSMP'.             00780000
+          03 WC-CURPOS            PIC S9(4) VALUE +172.                 00800000
+          03 WC-LONGITUD-TITULO   PIC 99    VALUE 55.                   00810000
+      *                                                                 00820000
+          03 WC-CUR-TEXTO         PIC S9(4) COMP VALUE +172.            00830000
+          03 WC-CUR-COMIENZA      PIC S9(4) COMP VALUE +219.            00840000
+          03 WC-CUR-CONTIENE      PIC S9(4) COMP VALUE +234.            00850000
+          03 WC-CUR-ORD-DNI       PIC S9(4) COMP VALUE +325.            00860000
+          03 WC-CUR-ORD-NOMBRE    PIC S9(4) COMP VALUE +338.            00870000
+          03 WC-CUR-ORD-APELLIDOS PIC S9(4) COMP VALUE +367.            00880000
+          03 WC-CUR-SEL1          PIC S9(4) COMP VALUE +485.            00890000
+          03 WC-CUR-SEL2          PIC S9(4) COMP VALUE +725.            00900000
+          03 WC-CUR-SEL3          PIC S9(4) COMP VALUE +965.            00910000
+          03 WC-CUR-SEL4          PIC S9(4) COMP VALUE +1205.           00920000
+      *ESTA COLA LA USO PARA LLEVAR LOS REGISTROS LEIDOS EN TABLA       00930000
+      *DE ESTUDIANTES Y DESPUES MOSTRAR POR CONSULTA ESTOS DATOS        00940000
+       01 COLA-ESTUD.                                                   00950000
+          05 C-DNI       PIC X(09).                                     00960000
+          05 C-NOMBRE    PIC X(20).                                     00970000
+          05 C-APELLIDOS PIC X(20).                                     00980000
+          05 C-DIRECCION PIC X(35).                                     00990000
+      *ESTA COLA LA USO COMO UN DEBUG PARA LEER DATOS EN CUALQUIER      01000000
+      *PARTE DEL PROGRAMA                                               01010000
+       01 COLA-TRABAJO.                                                 01020000
+          05 T-TRANS     PIC X(04).                                     01030000
+          05 T-TERM      PIC X(04).                                     01040000
+          05 T-CICLO     PIC X(02).                                     01050000
+          05 T-USU       PIC X(09).                                     01060000
+          05 T-PAS       PIC X(08).                                     01070000
+          05 T-SEL       PIC X.                                         01080000
+          05 T-DNIFILLER PIC X(8).                                      01090000
+          05 T-DNI       PIC X(09).                                     01100000
+          05 T-DNIO      PIC X(09).                                     01110000
+          05 T-FILLER0   PIC X(8).                                      01120000
+          05 T-NOMBRE    PIC X(25).                                     01130000
+          05 T-FILLER1   PIC X(8).                                      01140000
+          05 T-APELLIDOS PIC X(25).                                     01150000
+          05 T-FILLER2   PIC X(8).                                      01160000
+          05 T-DIRECCION PIC X(35).                                     01170000
+          05 T-PAS1      PIC X(08).                                     01180000
+          05 T-SEL1      PIC X.                                         01190000
+          05 T-DNIFILLER1 PIC X(8).                                     01200000
+          05 T-DNI1      PIC X(09).                                     01210000
+          05 T-FILLER01  PIC X(8).                                      01220000
+          05 T-NOMBRE1   PIC X(25).                                     01230000
+          05 T-FILLER12  PIC X(8).                                      01240000
+          05 T-APELLIDOS1 PIC X(25).                                    01250000
+          05 T-FILLER22  PIC X(8).                                      01260000
+          05 T-DIRECCION1 PIC X(35).                                    01270000
+          05 T-FILLER32  PIC X(8).                                      01280000
+          05 T-TIPO      PIC X(06).                                     01290000
+          05 T-SUB-TIPO  PIC XX.                                        01300000
+          05 T-ESTADO    PIC X.                                         01310000
+          05 T-FILLER    PIC X(500).                                    01320000
+      *01 FILLER PIC X(20) VALUE 'TABLA678901234567890'.                01330000
+                                                                        01340000
+           EXEC SQL                                                     01350000
+               INCLUDE USUARIOS                                         01360000
+           END-EXEC                                                     01370000
+      *01 FILLER PIC X(20) VALUE 'SQLCA678901234567890'.                01380000
+           EXEC SQL                                                     01390000
+               INCLUDE SQLCA                                            01400000
+           END-EXEC                                                     01410000
+                                                                        01420000
+       01 DB2-ERR.                                                      01430000
+          03 DB2-SQLCODE              PIC S9(9).                        01440000
+          03 DB2-SQLCODE-Z            PIC -ZZZZZZZZ9.                   01450000
+          03 DB2-ERROR.                                                 01460000
+             05 DB2-ERR-MSG           PIC X(50).                        01470000
+             05 DB2-ERR-CODE          PIC X(20).                        01480000
+       01 RESPUESTA      PIC S9(08) COMP.                               01490000
+       01 SW-CICLO       PIC X(02).                                     01500000
+          88 CICLO-0     VALUE '00'.                                    01510000
+          88 CICLO-1     VALUE '01'.                                    01520000
+          88 CICLO-99    VALUE '99'.                                    01530000
+       01 SW-ERROR-VALIDACION          PIC X    VALUE 'N'.              01540000
+          88 ERROR-VALIDACION                   VALUE 'S'.              01550000
+      * AYUSASA COLATS                                                  01560000
+       77 WS-TRANS             PIC X(4)  VALUE 'TR55'.                  01570017
+       77 WS-NOMBRECOLA        PIC X(08) VALUE 'KCICS03'.               01580000
+       77 WS-TRABAJOCOLA       PIC X(08) VALUE 'KCICS55'.               01590017
+       77 WS-NUM-REGISTRO      PIC S9(4) COMP.                          01600000
+       77 WS-PRIMER-REGISTRO   PIC S9(4) COMP.                          01610000
+       77 WS-CONTADOR-REGISTRO PIC S9(5) COMP.                          01620000
+       77 WS-SCROLL            PIC 9(2) VALUE 4.                        01630000
+       77 WS-RESULTADO         PIC 9(2).                                01640000
+       77 WS-COCIENTE          PIC S9(2).                               01650000
+       77 WS-RESIDUO           PIC S9(2).                               01660000
+       77 WS-ITEM              PIC X(5) VALUE SPACES.                   01670000
+       77 WS-NUM               PIC 99.                                  01680041
+       77 WS-ACCION            PIC X.                                   01690041
+       77 WS-LONG              PIC 9(5) VALUE ZEROS.                    01700041
+       77 WS-LIKE              PIC X(35) VALUE  SPACES.                 01710041
+       77 WS-EOF               PIC X VALUE SPACES.                      01720000
+       77 WS-EXISTE            PIC 9 VALUE ZEROS.                       01730000
+       77 WS-PROXIMO      PIC 9    VALUE ZEROS.                         01740000
+       77 WS-CEDI-PREV    PIC X(9) VALUE SPACES.                        01750000
+       77 WS-CEDI-PROXIMO PIC X(9) VALUE SPACES.                        01760000
+       77 WS-OPERACION   PIC 9.                                         01770000
+      * AYUDAS DE MBS                                                   01780000
+       COPY DFHAID.                                                     01790000
+       COPY DFHBMSCA.                                                   01800000
+       LINKAGE SECTION.                                                 01810000
+       01 DFHCOMMAREA    PIC X(257).                                    01820014
+                                                                        01830000
+       PROCEDURE DIVISION.                                              01840000
+                                                                        01850000
+      *EXCEPCIONES DB2                                                  01860000
+           PERFORM 0100-INICIO                                          01870000
+           PERFORM 0200-PROCESO                                         01880000
+           MOVE '99' TO CICLO                                           01890000
+           PERFORM 0300-FIN                                             01900000
+           .                                                            01910000
+      **********************************************************        01920000
+      *INICIO DEL PROGRAMA, LA COMMAREA TRAE EL CICLO EN QUE   *        01930000
+      * ESTAMOS TRABAJANDO Y NOS LLEVA A CONTINUAR EN ESE CICLO*        01940000
+      **********************************************************        01950000
+       0100-INICIO.                                                     01960000
+           EVALUATE TRUE                                                01970000
+            WHEN EIBCALEN = 0                                           01980000
+              SET CICLO-0 TO TRUE                                       01990000
+            WHEN OTHER                                                  02000000
+               MOVE DFHCOMMAREA       TO MI-COMMAREA                    02010000
+               MOVE PERFIL            TO  WS-PERFIL                     02011002
+               MOVE NUM-REGISTRO      TO WS-NUM-REGISTRO                02020000
+               MOVE CONTADOR-REGISTRO TO WS-CONTADOR-REGISTRO           02030000
+               EVALUATE CICLO                                           02040000
+                 WHEN '00'                                              02050000
+                   SET CICLO-0 TO TRUE                                  02060000
+                 WHEN '01'                                              02070000
+                   SET CICLO-1 TO TRUE                                  02080000
+                 WHEN '99'                                              02090000
+                   SET CICLO-0 TO TRUE                                  02100000
+                 WHEN OTHER                                             02110000
+                   MOVE "                  CICLO NO PROGRAMADO"         02120000
+                                             TO MSG-FIN-SESION          02130000
+                   MOVE '99' TO CICLO                                   02140000
+                   PERFORM 0300-FIN                                     02150000
+               END-EVALUATE                                             02160000
+           END-EVALUATE                                                 02170000
+           .                                                            02180000
+      ***************************************************               02190000
+      *   CICLO-1 DIGITACION DE USUARIO Y CONTRASEÑA    *               02200000
+      *   SI ES VALIDA ACTIVA EL CICLO-2                *               02210000
+      ***************************************************               02220000
+       0200-PROCESO.                                                    02230000
+           EVALUATE TRUE                                                02240000
+               WHEN CICLO-0                                             02250000
+                 PERFORM 0201-CICLO-0                                   02260000
+               WHEN CICLO-1                                             02270000
+                 PERFORM 0202-CICLO-1                                   02280000
+           END-EVALUATE                                                 02310000
+             .                                                          02320000
+      ********************************************************          02330000
+      * FIN DE LA TRANSACCION, LLAMA O RETORNA AL PROGRAMA DE*          02340000
+      *                SEGURIDAD                             *          02350000
+      ********************************************************          02360000
+       0300-FIN.                                                        02370000
+           MOVE 'XCTL'     TO TRANS                                     02380000
+           EXEC CICS XCTL                                               02390000
+                PROGRAM('PCICS54')                                      02400011
+                COMMAREA(MI-COMMAREA)                                   02410000
+                LENGTH(LENGTH OF MI-COMMAREA)                           02420000
+                RESP(RESPUESTA)                                         02430000
+           END-EXEC                                                     02440000
+           EXEC CICS RETURN                                             02450000
+           END-EXEC                                                     02460000
+           GOBACK                                                       02470000
+           .                                                            02480000
+      ***************************************************               02490000
+      *   CICLO INICIAL MUESTRA EN PANTALLA EL MENU DEL *               02500000
+      *   CRUD                                          *               02510000
+      ***************************************************               02520000
+       0201-CICLO-0.                                                    02530000
+      *    EXEC CICS DELETEQ TS                                         02540051
+      *         QUEUE (WS-TRABAJOCOLA)                                  02550000
+      *         RESP (RESPUESTA)                                        02560000
+      *    END-EXEC                                                     02570000
+           MOVE 'DA' TO CODIGO-CURSOR                                   02571030
+           MOVE '01'     TO CICLO                                       02580000
+           MOVE 'CURSOR' TO TIPO                                        02590000
+           MOVE '01'     TO SUB-TIPO                                    02600000
+           PERFORM 9000-PROCESE-CRUD                                    02610000
+           MOVE LOW-VALUE          TO MCICS66O                          02620000
+      *    MOVE USU                TO LOG13O                            02630000
+           MOVE CONTADOR-REGISTRO TO NUMCO                              02640000
+           MOVE 0 TO NUM-REGISTRO WS-NUM-REGISTRO                       02650000
+           MOVE 8 TO WS-PROXIMO                                         02660000
+           PERFORM 0130-LIMPIA-SELECCION                                02670000
+           PERFORM 3200-PRESENTA                                        02680000
+           PERFORM 0224-SEND-MAP                                        02690000
+           MOVE '01'     TO CICLO                                       02700000
+           PERFORM 8200-RETORNO-TRANS                                   02710000
+           .                                                            02720000
+      ***************************************************               02730000
+      *   EN ESTE CICLO REALIZAMOS LAS CONSULTAS YA SEA *               02740000
+      * INDIVIDUAL , SIGUIENTE O ANTERIOR               *               02750000
+      ***************************************************               02760000
+       0202-CICLO-1.                                                    02770000
+           PERFORM 0225-RECIBE-MAP                                      02780000
+           EVALUATE EIBAID                                              02800000
+             WHEN DFHENTER                                              02810000
+                PERFORM 0250-PROCESE-TRAN                               02820000
+             WHEN DFHPF5                                                02830000
+                PERFORM 1300-PROCESO-ORDENAR                            02840000
+             WHEN DFHPF8                                                02850000
+                MOVE 8 TO WS-PROXIMO                                    02860000
+                PERFORM 0251-PROCESE-PROXIMO                            02870000
+             WHEN DFHPF7                                                02880000
+                MOVE 7 TO WS-PROXIMO                                    02890000
+                PERFORM 0252-PROCESE-ANTERIOR                           02900000
+      *--- F9: Buscamos los registros que cumplen los filtros           02910000
+      *                                                                 02920000
+             WHEN DFHPF9                                                02930000
+                   PERFORM 1700-PROCESO-BUSCAR                          02940000
+             WHEN OTHER                                                 02950000
+                PERFORM 0230-VALIDE-PF3                                 02960000
+           END-EVALUATE                                                 02970000
+           .                                                            02980000
+       0251-PROCESE-PROXIMO.                                            03240000
+           IF WS-NUM-REGISTRO >= CONTADOR-REGISTRO                      03260048
+             MOVE DFHGREEN                   TO MSGC                    03260153
+             MOVE 'NO HAY MAS PAGINAS    '   TO MSGO                    03260253
+             MOVE CONTADOR-REGISTRO TO WS-NUM-REGISTRO                  03261542
+             DIVIDE CONTADOR-REGISTRO  BY   WS-SCROLL                   03261638
+                 GIVING WS-COCIENTE REMAINDER WS-RESIDUO                03262038
+             IF WS-RESIDUO = 0                                          03263038
+               COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE - 1) * WS-SCROLL  03270038
+             ELSE                                                       03271038
+               COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE) * WS-SCROLL      03271138
+             END-IF                                                     03272038
+           END-IF                                                       03280000
+      *    MOVE LOW-VALUE          TO MCICS66O                          03290051
+           PERFORM 0130-LIMPIA-SELECCION                                03300000
+           PERFORM 3200-PRESENTA                                        03310000
+           MOVE CONTADOR-REGISTRO TO NUMCO                              03311035
+           PERFORM 0224-SEND-MAP                                        03320000
+           MOVE '01'     TO CICLO                                       03330000
+           PERFORM 8200-RETORNO-TRANS                                   03340000
+              .                                                         03350000
+      *                                                                 03360000
+       0252-PROCESE-ANTERIOR.                                           03370000
+           IF WS-NUM-REGISTRO >= CONTADOR-REGISTRO                      03380049
+              COMPUTE WS-NUM-REGISTRO = CONTADOR-REGISTRO               03390000
+           END-IF                                                       03400000
+           MOVE LOW-VALUE          TO MCICS66O                          03410000
+           DIVIDE WS-NUM-REGISTRO BY   WS-SCROLL                        03530000
+                  GIVING WS-COCIENTE REMAINDER WS-RESIDUO               03540039
+           IF WS-RESIDUO > 0                                            03670000
+             COMPUTE WS-NUM-REGISTRO = WS-NUM-REGISTRO - WS-SCROLL      03680000
+                                                       - WS-RESIDUO     03690000
+           ELSE                                                         03700000
+             COMPUTE WS-NUM-REGISTRO = WS-NUM-REGISTRO - 2 * WS-SCROLL  03710000
+           END-IF                                                       03720000
+           IF WS-NUM-REGISTRO  < 1                                      03820000
+             MOVE 0 TO NUM-REGISTRO WS-NUM-REGISTRO                     03830000
+             MOVE DFHGREEN                   TO MSGC                    03840000
+             MOVE 'PAGINA INICIAL        '   TO MSGO                    03850000
+           END-IF                                                       03860000
+           MOVE 8 TO WS-PROXIMO                                         03870000
+           PERFORM 0130-LIMPIA-SELECCION                                03880000
+           PERFORM 3200-PRESENTA                                        03890000
+           MOVE CONTADOR-REGISTRO TO NUMCO                              03900000
+           PERFORM 0224-SEND-MAP                                        03910000
+           MOVE '01'     TO CICLO                                       03920000
+           PERFORM 8200-RETORNO-TRANS                                   03930000
+              .                                                         03940000
+      *                                                                 03950000
+      *****************************************                         03960000
+      * EN ESTE MAPA ESTA LA INFORMACION DEL  *                         03970000
+      * ESTUDIANTE                            *                         03980000
+      *****************************************                         03990000
+       0224-SEND-MAP.                                                   04000000
+           EXEC CICS                                                    04020000
+                SEND MAP('MCICS66') MAPSET('MCICS66')                   04030000
+                     ERASE                                              04040000
+                     FROM(MCICS66O)                                     04050000
+                     NOHANDLE                                           04060000
+           END-EXEC.                                                    04070000
+      **********************************************                    04080000
+      * ENVIA EL MAPA                              *                    04090000
+      **********************************************                    04100000
+       0224-SEND-MAP1.                                                  04110000
+           EXEC CICS                                                    04170000
+                SEND MAP('MCICS66') MAPSET('MCICS66')                   04180000
+                     ERASE                                              04190000
+                     FROM(MCICS66O)                                     04200000
+                     NOHANDLE                                           04210000
+           END-EXEC.                                                    04220000
+       0225-RECIBE-MAP.                                                 04230000
+      ********************************************                      04240000
+      * RECIBIMOS EL MAP CON LOS DATOS DEL CRUD Y *                     04250000
+      * LO LLEVAMOS AL COMMAREA PARA QUE NO SE NOS*                     04260000
+      * SI SE DEBE RETORNAR LA TRANSACCION        *                     04270000
+      *********************************************                     04280000
+           EXEC CICS RECEIVE MAP('MCICS66')                             04290000
+                INTO(MCICS66I)                                          04300000
+                NOHANDLE                                                04310000
+           END-EXEC                                                     04320000
+           EXEC CICS                                                    04330000
+                IGNORE CONDITION MAPFAIL                                04340000
+           END-EXEC                                                     04350000
+           .                                                            04360000
+      *                                                                 04370000
+      *****************************************                         04380000
+      * FIN DE TODO LO RELACIONADOS CON LOS   *                         04390000
+      * MAPAS                                 *                         04400000
+      *****************************************                         04410000
+      *                                                                 04420000
+      ********************************************                      04430000
+      * EN ESTA SECCION VERIFICAMOS SI ESCOGIO    *                     04440000
+      * LA TECLA PF3 PARA RETORNAR A LA OPERACION *                     04450000
+      * ANTERIOR                                  *                     04460000
+      *********************************************                     04470000
+      *                                                                 04480000
+      ********************************************                      04490000
+      * SE SALE DEL TODO DEL SISTEMA              *                     04500000
+      *********************************************                     04510000
+       0230-VALIDE-PF3.                                                 04520000
+              IF EIBAID EQUAL DFHPF3   THEN                             04530000
+                MOVE '99'     TO CICLO                                  04540000
+                PERFORM 0300-FIN                                        04550000
+              END-IF                                                    04590000
+              .                                                         04600000
+      *                                                                 04610000
+      *****************************************                         04620000
+      * DEVUELVE EL CONTROL A LA TRANSACCION  *                         04630000
+      *****************************************                         04640000
+       8200-RETORNO-TRANS.                                              04650000
+           MOVE EIBTRMID             TO TERM                            04660000
+           MOVE 'TR55'               TO TRANS                           04670039
+           MOVE WS-NUM-REGISTRO      TO NUM-REGISTRO                    04680000
+           EXEC CICS RETURN                                             04690000
+                TRANSID('TR55')                                         04700012
+                COMMAREA(MI-COMMAREA)                                   04710000
+                LENGTH(LENGTH OF MI-COMMAREA)                           04720000
+           END-EXEC                                                     04730000
+           GOBACK                                                       04740000
+           .                                                            04750000
+      ************************************************************      04760000
+      * LLAMAMOS AL PROGRAMA QUE REALIZA LAS OPERACIONES DEL CRUD*      04770000
+      ************************************************************      04780000
+       9000-PROCESE-CRUD.                                               04790000
+           MOVE ZEROS TO CONTADOR-REGISTRO                              04800000
+           MOVE 'ESTUD' TO TIPOUSUA                                     04801007
+           MOVE MI-COMMAREA TO RC-COMMAREA                              04810000
+           MOVE LOW-VALUES  TO MI-COMMAREA                              04820000
+           MOVE 'LINK'      TO TRANS                                    04830000
+           EXEC CICS LINK                                               04840000
+                PROGRAM('PCICS56')                                      04850007
+                COMMAREA(RC-COMMAREA)                                   04860000
+                LENGTH(LENGTH OF MI-COMMAREA)                           04870000
+                RESP(RESPUESTA)                                         04880000
+           END-EXEC                                                     04890000
+           IF RESPUESTA = DFHRESP(NORMAL) THEN                          04900000
+             MOVE RC-COMMAREA TO    MI-COMMAREA                         04910000
+           END-IF                                                       05100000
+           .                                                            05110000
+      ************************************************************      05120000
+      *---------------------------------------------------------------- 05130000
+      *--- LIMPIA LOS CAMPOS DE SELECCION DE FILA                       05140000
+                                                                        05150000
+      *---------------------------------------------------------------- 05160000
+       0130-LIMPIA-SELECCION.                                           05170000
+      *                                                                 05180000
+           SET L                           TO 1                         05190000
+           PERFORM UNTIL L > 4                                          05200000
+              MOVE SPACE                   TO SEL-VALOR(L)              05210000
+              SET L                        UP BY 1                      05220000
+           END-PERFORM                                                  05230000
+           .                                                            05240000
+      *                                                                 05250000
+       0130-LIMPIA-SELECCION-EXIT.                                      05260000
+           EXIT.                                                        05270000
+      ************************************************************      05280000
+      *--- IMPORTANTE: ESTA PENDIENTE CONTAR REGISTROS F(FILTROS)*      05290000
+      *--- ESTO SE HAR A SOBRE EL DATO DB2-COUNT1 *                     05300000
+      *--- SI NU HUBIERA NO SE PODR A MOSRTAR NADA -> MENSAJE *         05310000
+      *--- POR AHORA FORZAMOS... *                                      05320000
+      *                                                                 05330000
+       3200-PRESENTA.                                                   05340000
+      *                                                                 05350000
+           SET L    TO 1                                                05450000
+           MOVE 'N' TO WS-EOF                                           05460000
+           IF WS-NUM-REGISTRO - 4 < 0                                   05470000
+             MOVE '-' TO MUPO                                           05480000
+           ELSE                                                         05490000
+             MOVE '+' TO MUPO                                           05500000
+           END-IF                                                       05510000
+           IF WS-NUM-REGISTRO + 4 < CONTADOR-REGISTRO                   05520000
+             MOVE '+' TO MDOWNO                                         05530000
+           ELSE                                                         05540000
+             MOVE '-' TO MDOWNO                                         05550000
+           END-IF                                                       05560000
+           MOVE 'N' TO WS-EOF                                           05570000
+           PERFORM 3090-PROCESA-SCROLL UNTIL WS-EOF = 'Y' OR L > 4      05580000
+      *    IF WS-EOF = 'Y' AND L < 4                                    05590043
+           IF WS-EOF = 'Y'                                              05591043
+             PERFORM 3100-NO-HAY-MAS                                    05600000
+           .                                                            05610000
+      ***************************************************               05620000
+      *--- PROCESA SCROLL                               *               05630000
+      ***************************************************               05640000
+       3090-PROCESA-SCROLL.                                             05650000
+           IF WS-PROXIMO = 8                                            05660000
+                COMPUTE WS-NUM-REGISTRO = WS-NUM-REGISTRO + 1           05670000
+           ELSE                                                         05680000
+             IF WS-PROXIMO = 7                                          05690000
+                 COMPUTE WS-NUM-REGISTRO = WS-NUM-REGISTRO - 1          05700000
+             END-IF                                                     05710000
+           END-IF                                                       05720000
+           EXEC CICS READQ  TS                                          05730000
+                ITEM(WS-NUM-REGISTRO)                                   05740000
+                QUEUE (WS-NOMBRECOLA)                                   05750000
+                INTO (COLA-ESTUD)                                       05760000
+                RESP (RESPUESTA)                                        05770000
+           END-EXEC                                                     05780000
+           IF RESPUESTA = DFHRESP(NORMAL) AND                           05790000
+              WS-NUM-REGISTRO <= CONTADOR-REGISTRO                      05800000
+             PERFORM 3100-PRESENTA-LINEA                                05810000
+             SET L UP BY 1                                              05820000
+           ELSE                                                         05830000
+             MOVE 'Y' TO WS-EOF                                         05840000
+           END-IF                                                       05850000
+           .                                                            05860000
+      ***************************************************               05870000
+      *--- PRESENTA LA LINEA DEFINIDA POR EL INDICE L EN*               05880000
+      *    PANTALLA                                     *               05890000
+      ***************************************************               05900000
+       3100-PRESENTA-LINEA.                                             05910000
+      *                                                                 05920000
+           MOVE ' '                       TO SEL-VALOR(L)               05930000
+           MOVE C-DNI                     TO DNI-VALOR(L)               05940000
+           MOVE C-NOMBRE                  TO NOM-VALOR(L)               05950000
+           MOVE C-APELLIDOS               TO APE-VALOR(L)               05960000
+           MOVE C-DIRECCION               TO DIR-VALOR(L)               05970000
+           MOVE DFHBMUNP                  TO SEL-ATTR(L).               05980000
+      *                                                                 05990000
+      *--- INFORMAR PRIMER Y ULTIMO REGISTRO DE CA                      06000000
+      *                                                                 06010000
+           IF L = 1                                                     06020000
+             MOVE WS-NUM-REGISTRO TO WS-PRIMER-REGISTRO                 06030000
+             MOVE C-DNI                  TO CH-S-DNI1                   06040000
+             MOVE C-DNI                  TO CH-S-DNI4                   06050000
+             MOVE C-NOMBRE               TO CH-S-NOMBRE1                06060000
+             MOVE C-NOMBRE               TO CH-S-NOMBRE4                06070000
+             MOVE C-APELLIDOS            TO CH-S-APELLIDOS1             06080000
+             MOVE C-APELLIDOS            TO CH-S-APELLIDOS4             06090000
+           ELSE                                                         06100000
+             MOVE C-DNI                  TO CH-S-DNI4                   06110000
+             MOVE C-NOMBRE               TO CH-S-NOMBRE4                06120000
+             MOVE C-APELLIDOS            TO CH-S-APELLIDOS4             06130000
+           END-IF.                                                      06140000
+       3100-PRESENTA-LINEA-EXIT.                                        06150000
+           EXIT.                                                        06160000
+      *---------------------------------------------------------------- 06170000
+      *--- NO HAY MAS CLIENTES EN EL CURSOR ACTUAL                      06180000
+       3100-NO-HAY-MAS.                                                 06190000
+      *                                                                 06200000
+           PERFORM UNTIL L > 4                                          06280000
+             MOVE DFHBMPRO                TO SEL-ATTR(L)                06290000
+             MOVE SPACES                  TO DNI-VALOR(L)               06300000
+             MOVE SPACES                  TO NOM-VALOR(L)               06310000
+             MOVE SPACES                  TO APE-VALOR(L)               06320000
+             MOVE SPACES                  TO DIR-VALOR(L)               06330000
+             SET L                        UP BY 1                       06340000
+           END-PERFORM                                                  06350000
+           MOVE DFHGREEN                   TO MSGC                      06360000
+           MOVE 'NO HAY MAS PAGINAS    '   TO MSGO                      06370000
+           .                                                            06380000
+      *                                                                 06390000
+       3100-NO-HAY-MAS-EXIT.                                            06400000
+           EXIT.                                                        06410000
+      *---------------------------------------------------------------- 06970000
+      *--- Procesa la tecla F5                                      --- 06980000
+      *---    Cambiamos la ordenacion seg n cambio criterios        --- 06990000
+      *---------------------------------------------------------------- 07000000
+       1300-PROCESO-ORDENAR.                                            07010000
+      *                                                                 07020000
+      *                                                                 07030000
+      *--- Utilizamos el SW de Error de Validacion para saber si se     07040000
+      *--- cambia alguna ordenacion en esta seccion. Por defecto TRUE   07050000
+      *                                                                 07060000
+      *                                                                 07070000
+      *--- Ordenaciones por DNI                                         07080000
+      *      MOVE LOW-VALUE          TO MCICS66O                        07090000
+             SET ERROR-VALIDACION    TO TRUE                            07091026
+           MOVE '01'     TO CICLO                                       07190000
+           MOVE 'CURSOR' TO TIPO                                        07200000
+           IF EIBCPOSN = WC-CUR-ORD-DNI                                 07210000
+      *--- De Ascendente a Descendente                                  07220000
+              IF ORDI = '*' AND ADDI = 'A'                              07230000
+                 MOVE 'DD'                 TO CH-S-CODIGO-CURSOR        07240000
+                 MOVE 'D'                  TO ADDO                      07250000
+                 MOVE '*'                  TO ORDO                      07260000
+                 MOVE SPACES               TO ORNO                      07270000
+                 MOVE SPACES               TO ADNO                      07280000
+                 MOVE SPACES               TO ORAO                      07290000
+                 MOVE SPACES               TO ADAO                      07300000
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION       07310000
+                 MOVE 02 TO SUB-TIPO                                    07320000
+              ELSE                                                      07330000
+      *--- De Descendente a Ascendente                                  07340000
+                 MOVE 'DA'                 TO CH-S-CODIGO-CURSOR        07350000
+                 MOVE 'A'                  TO ADDO                      07360000
+                 MOVE '*'                  TO ORNO                      07370000
+                 MOVE SPACES               TO ORNO                      07380000
+                 MOVE SPACES               TO ADNO                      07390000
+                 MOVE SPACES               TO ORAO                      07400000
+                 MOVE SPACES               TO ADAO                      07410000
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION       07420000
+                 MOVE 01 TO SUB-TIPO                                    07430000
+              END-IF                                                    07440000
+           END-IF                                                       07450000
+      *                                                                 07460000
+      *--- Ordenaciones por NOMBRE                                      07470000
+           IF EIBCPOSN = WC-CUR-ORD-NOMBRE                              07480000
+      *--- De Ascendente a Descendente                                  07490000
+              IF ORNI = '*' AND ADNI = 'A'                              07500000
+                 MOVE 'ND'                 TO CH-S-CODIGO-CURSOR        07510000
+                 MOVE 'D'                  TO ADNO                      07520000
+                 MOVE '*'                  TO ORNO                      07530000
+                 MOVE SPACES               TO ORDO                      07540000
+                 MOVE SPACES               TO ADDO                      07550000
+                 MOVE SPACES               TO ORAO                      07560000
+                 MOVE SPACES               TO ADAO                      07570000
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION       07580000
+                 MOVE 04 TO SUB-TIPO                                    07590000
+              ELSE                                                      07600000
+      *--- De Descendente a Ascendente                                  07610000
+                 MOVE 'NA'                 TO CH-S-CODIGO-CURSOR        07620000
+                 MOVE 'A'                  TO ADNO                      07630000
+                 MOVE '*'                  TO ORNO                      07640000
+                 MOVE SPACES               TO ORDO                      07650000
+                 MOVE SPACES               TO ADDO                      07660000
+                 MOVE SPACES               TO ORAO                      07670000
+                 MOVE SPACES               TO ADAO                      07680000
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION       07690000
+                 MOVE 03 TO SUB-TIPO                                    07700000
+              END-IF                                                    07710000
+           END-IF                                                       07720000
+      *                                                                 07730000
+      *--- Ordenaciones por APELLIDOS                                   07740000
+           IF EIBCPOSN = WC-CUR-ORD-APELLIDOS                           07750000
+      *--- De Ascendente a Descendente                                  07760000
+              IF ORAI = '*' AND ADAI = 'A'                              07770000
+                 MOVE 'AD'                 TO CH-S-CODIGO-CURSOR        07780000
+                 MOVE 'D'                  TO ADAO                      07790000
+                 MOVE '*'                  TO ORAO                      07800000
+                 MOVE SPACES               TO ORDO                      07810000
+                 MOVE SPACES               TO ADDO                      07820000
+                 MOVE SPACES               TO ORNO                      07830000
+                 MOVE SPACES               TO ADNO                      07840000
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION       07850000
+                 MOVE 06 TO SUB-TIPO                                    07860000
+              ELSE                                                      07870000
+      *--- De Descendente a Ascendente                                  07880000
+                 MOVE 'AA'                 TO CH-S-CODIGO-CURSOR        07890000
+                 MOVE 'A'                  TO ADAO                      07900000
+                 MOVE '*'                  TO ORAO                      07910000
+                 MOVE SPACES               TO ORDO                      07920000
+                 MOVE SPACES               TO ADDO                      07930000
+                 MOVE SPACES               TO ORNO                      07940000
+                 MOVE SPACES               TO ADNO                      07950000
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION       07960000
+                 MOVE 05 TO SUB-TIPO                                    07970000
+              END-IF                                                    07980000
+           END-IF                                                       07990000
+      *                                                                 08000000
+      *                                                                 08010000
+           IF NOT ERROR-VALIDACION                                      08020000
+                                                                        08021030
+              MOVE DFHGREEN                TO MSGC                      08030000
+              IF CH-S-CODIGO-CURSOR = 'DA'                              08040000
+                 MOVE 'OK - Orden cambiado a DNI ascendente '           08050000
+                   TO MSGO                                              08060000
+              END-IF                                                    08070000
+              IF CH-S-CODIGO-CURSOR = 'DD'                              08080000
+                 MOVE 'OK - Orden cambiado a DNI descendente'           08090000
+                   TO MSGO                                              08100000
+              END-IF                                                    08110000
+              IF CH-S-CODIGO-CURSOR = 'NA'                              08120000
+                 MOVE 'OK - Orden cambiado a NOMBRE ascendente '        08130000
+                   TO MSGO                                              08140000
+              END-IF                                                    08150000
+              IF CH-S-CODIGO-CURSOR = 'ND'                              08160000
+                 MOVE 'OK - Orden cambiado a NOMBRE descendente'        08170000
+                   TO MSGO                                              08180000
+              END-IF                                                    08190000
+              IF CH-S-CODIGO-CURSOR = 'AA'                              08200000
+                 MOVE 'OK - Orden cambiado a APELLIDOS ascendente'      08210000
+                   TO MSGO                                              08220000
+              END-IF                                                    08230000
+              IF CH-S-CODIGO-CURSOR = 'AD'                              08240000
+                 MOVE 'OK - Orden cambiado a APELLIDOS descendente'     08250000
+                   TO MSGO                                              08260000
+              END-IF                                                    08270000
+              MOVE CH-S-CODIGO-CURSOR TO CODIGO-CURSOR                  08280000
+              PERFORM 9000-PROCESE-CRUD                                 08290000
+              MOVE 0 TO NUM-REGISTRO WS-NUM-REGISTRO                    08300000
+              MOVE 8 TO WS-PROXIMO                                      08310000
+              PERFORM 0130-LIMPIA-SELECCION                             08320000
+              PERFORM 3200-PRESENTA                                     08330000
+              MOVE CONTADOR-REGISTRO TO NUMCO                           08331034
+              PERFORM 0224-SEND-MAP                                     08340000
+              MOVE '01'     TO CICLO                                    08350000
+              PERFORM 8200-RETORNO-TRANS                                08360000
+           ELSE                                                         08361027
+             DIVIDE WS-NUM-REGISTRO BY   WS-SCROLL                      08362028
+                  GIVING WS-COCIENTE REMAINDER WS-RESIDUO               08363028
+             IF WS-RESIDUO > 0                                          08364028
+              COMPUTE WS-NUM-REGISTRO = WS-COCIENTE * WS-SCROLL         08365028
+             ELSE                                                       08366028
+              COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE - 1) * WS-SCROLL   08367028
+             END-IF                                                     08368028
+             MOVE 8 TO WS-PROXIMO                                       08369028
+             PERFORM 0130-LIMPIA-SELECCION                              08369128
+             PERFORM 3200-PRESENTA                                      08369228
+             MOVE 'Continua mismo orden                 '               08369328
+                   TO MSGO                                              08369427
+             MOVE CONTADOR-REGISTRO TO NUMCO                            08369535
+             PERFORM 0224-SEND-MAP                                      08369628
+             MOVE '01'     TO CICLO                                     08369728
+             PERFORM 8200-RETORNO-TRANS                                 08369828
+           END-IF                                                       08370000
+           .                                                            08380000
+       1300-PROCESO-ORDENAR-EXIT.                                       08390000
+           EXIT.                                                        08400000
+      *---------------------------------------------------------------- 08410000
+      *--- Procesa la tecla F9                                      --- 08420000
+      *---    Rellenamos la pantalla con nuevos datos por cambio    --- 08430000
+      *---    de filtros o texto de busqueda                        --- 08440000
+      *---------------------------------------------------------------- 08450000
+       1700-PROCESO-BUSCAR.                                             08460000
+      *                                                                 08470000
+      *--- Validamos los filtros que el usuario ha podido cambiar       08480000
+      *                                                                 08490000
+           MOVE INII                       TO SW-HAY-FILTRO-COMIENZA    08500000
+           MOVE CONI                       TO SW-HAY-FILTRO-CONTIENE    08510000
+      *                                                                 08520000
+           IF ((HAY-FILTRO-COMIENZA OR HAY-FILTRO-CONTIENE)     AND     08530000
+              (BUSI NOT = SPACES AND BUSI NOT = HIGH-VALUES     AND     08540000
+               BUSI NOT = LOW-VALUES))                                  08550033
+      *        BUSI NOT = LOW-VALUES))                          OR      08551033
+      *       ((NOT HAY-FILTRO-COMIENZA AND NOT HAY-FILTRO-CONTIENE)    08560033
+      *        AND (BUSI = SPACES OR BUSI = LOW-VALUES          OR      08570033
+      *             BUSI = HIGH-VALUES))                                08580033
+      *                                                                 08590000
+              IF HAY-FILTRO-COMIENZA AND HAY-FILTRO-CONTIENE            08591037
+                DIVIDE WS-NUM-REGISTRO BY   WS-SCROLL                   08591136
+                  GIVING WS-COCIENTE REMAINDER WS-RESIDUO               08591236
+                IF WS-RESIDUO > 0                                       08591336
+                 COMPUTE WS-NUM-REGISTRO = WS-COCIENTE * WS-SCROLL      08591436
+                ELSE                                                    08591536
+                 COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE - 1) * WS-SCROLL08591636
+                END-IF                                                  08591736
+                MOVE 8 TO WS-PROXIMO                                    08591836
+                PERFORM 0130-LIMPIA-SELECCION                           08591936
+                PERFORM 3200-PRESENTA                                   08592036
+                MOVE DFHRED               TO MSGC                       08592136
+                MOVE 'Revise o es comienza o es contiene no ambos'      08592236
+                   TO MSGO                                              08592336
+                MOVE CONTADOR-REGISTRO TO NUMCO                         08592436
+                PERFORM 0224-SEND-MAP                                   08592536
+                MOVE '01'     TO CICLO                                  08592636
+                PERFORM 8200-RETORNO-TRANS                              08592736
+              ELSE                                                      08593036
+               MOVE BUSI                   TO CH-S-BUSCAR               08600000
+               MOVE INII                   TO CH-S-COMIENZA             08610000
+               MOVE CONI                   TO CH-S-CONTIENE             08620000
+               PERFORM 00100-REFRESCA-MAPA                              08630000
+              END-IF                                                    08631036
+           ELSE                                                         08640000
+             DIVIDE WS-NUM-REGISTRO BY   WS-SCROLL                      08641031
+                  GIVING WS-COCIENTE REMAINDER WS-RESIDUO               08642031
+             IF WS-RESIDUO > 0                                          08643031
+              COMPUTE WS-NUM-REGISTRO = WS-COCIENTE * WS-SCROLL         08644031
+             ELSE                                                       08645031
+              COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE - 1) * WS-SCROLL   08646031
+             END-IF                                                     08647031
+             MOVE 8 TO WS-PROXIMO                                       08648031
+             PERFORM 0130-LIMPIA-SELECCION                              08649031
+             PERFORM 3200-PRESENTA                                      08649131
+             MOVE DFHRED               TO MSGC                          08649232
+             MOVE 'Revise bien el filtro,comienza y contiene'           08649332
+                   TO MSGO                                              08649431
+             MOVE CONTADOR-REGISTRO TO NUMCO                            08649534
+             PERFORM 0224-SEND-MAP                                      08649631
+             MOVE '01'     TO CICLO                                     08649731
+             PERFORM 8200-RETORNO-TRANS                                 08649831
+           END-IF                                                       08670029
+           .                                                            08679129
+      *                                                                 08680000
+       1700-PROCESO-BUSCAR-EXIT.                                        08690000
+           EXIT.                                                        08700000
+      *---------------------------------------------------------------- 08710000
+      *--- Refrescamos mapa segun la CA que tengamos                --- 08720000
+      *---------------------------------------------------------------- 08730000
+       00100-REFRESCA-MAPA.                                             08740000
+      *                                                                 08750000
+           MOVE CH-S-COMIENZA              TO SW-HAY-FILTRO-COMIENZA    08760000
+           MOVE CH-S-CONTIENE              TO SW-HAY-FILTRO-CONTIENE    08770000
+      *                                                                 08780000
+      *--- Filtros                                                      08790000
+      *--- Filtro Comienza por texto a buscar                           08800000
+      *                                                                 08810000
+           IF HAY-FILTRO-COMIENZA                                       08820000
+              MOVE CH-S-BUSCAR             TO BUSO                      08830000
+              MOVE CH-S-COMIENZA           TO INIO                      08840000
+              PERFORM 0110-LIKE-COMIENZA                                08850000
+           ELSE                                                         08860000
+              MOVE 'N'                     TO INIO                      08870000
+           END-IF                                                       08880000
+      *                                                                 08890000
+      *--- Filtro Contiene el texto a buscar                            08900000
+      *                                                                 08910000
+           IF HAY-FILTRO-CONTIENE                                       08920000
+              MOVE CH-S-BUSCAR             TO BUSO                      08930000
+              MOVE CH-S-CONTIENE           TO CONO                      08940000
+              PERFORM 0120-LIKE-CONTIENE                                08950000
+           ELSE                                                         08960000
+              MOVE 'N'                     TO CONO                      08970000
+           END-IF                                                       08980000
+      *                                                                 08990000
+      *--- Ordenacion a partir del codigo cursor de CA                  09000000
+      *                                                                 09010000
+           MOVE CODIGO-CURSOR TO CH-S-CODIGO-CURSOR                     09020000
+           EVALUATE TRUE                                                09030000
+              WHEN CH-S-CODIGO-CURSOR = 'DA'                            09040000
+                   MOVE '*'                TO ORDO                      09050000
+                   MOVE 'A'                TO ADDO                      09060000
+                   MOVE SPACE              TO ORNO                      09070000
+                   MOVE SPACE              TO ADNO                      09080000
+                   MOVE SPACE              TO ORAO                      09090000
+                   MOVE SPACE              TO ADAO                      09100000
+                   MOVE '07'               TO SUB-TIPO                  09110000
+              WHEN CH-S-CODIGO-CURSOR = 'DD'                            09120000
+                   MOVE '*'                TO ORDO                      09130000
+                   MOVE 'D'                TO ADDO                      09140000
+                   MOVE SPACE              TO ORNO                      09150000
+                   MOVE SPACE              TO ADNO                      09160000
+                   MOVE SPACE              TO ORAO                      09170000
+                   MOVE SPACE              TO ADAO                      09180000
+                   MOVE '08'               TO SUB-TIPO                  09190000
+              WHEN CH-S-CODIGO-CURSOR = 'NA'                            09200000
+                   MOVE SPACE              TO ORDO                      09210000
+                   MOVE SPACE              TO ADDO                      09220000
+                   MOVE '*'                TO ORNO                      09230000
+                   MOVE 'A'                TO ADNO                      09240000
+                   MOVE SPACE              TO ORAO                      09250000
+                   MOVE SPACE              TO ADAO                      09260000
+                   MOVE '09'               TO SUB-TIPO                  09270000
+              WHEN CH-S-CODIGO-CURSOR = 'ND'                            09280000
+                   MOVE SPACE              TO ORDO                      09290000
+                   MOVE SPACE              TO ADDO                      09300000
+                   MOVE '*'                TO ORNO                      09310000
+                   MOVE 'D'                TO ADNO                      09320000
+                   MOVE SPACE              TO ORAO                      09330000
+                   MOVE SPACE              TO ADAO                      09340000
+                   MOVE '10'               TO SUB-TIPO                  09350000
+              WHEN CH-S-CODIGO-CURSOR = 'AA'                            09360000
+                   MOVE SPACE              TO ORDO                      09370000
+                   MOVE SPACE              TO ADDO                      09380000
+                   MOVE SPACE              TO ORNO                      09390000
+                   MOVE SPACE              TO ADNO                      09400000
+                   MOVE '*'                TO ORAO                      09410000
+                   MOVE 'A'                TO ADAO                      09420000
+                   MOVE '11'               TO SUB-TIPO                  09430000
+              WHEN CH-S-CODIGO-CURSOR = 'AD'                            09440000
+                   MOVE SPACE              TO ORDO                      09450000
+                   MOVE SPACE              TO ADDO                      09460000
+                   MOVE SPACE              TO ORNO                      09470000
+                   MOVE SPACE              TO ADNO                      09480000
+                   MOVE '*'                TO ORAO                      09490000
+                   MOVE 'D'                TO ADAO                      09500000
+                   MOVE '12'               TO SUB-TIPO                  09510000
+              WHEN OTHER                                                09520000
+                   MOVE DFHRED             TO MSGC                      09530000
+                   MOVE 'Error de Orden en refresco de pantalla'        09540000
+                     TO MSGO                                            09550000
+           END-EVALUATE                                                 09560000
+           PERFORM 9000-PROCESE-CRUD                                    09570000
+           MOVE 0 TO NUM-REGISTRO WS-NUM-REGISTRO                       09580000
+           MOVE 8 TO WS-PROXIMO                                         09590000
+           PERFORM 0130-LIMPIA-SELECCION                                09600000
+           PERFORM 3200-PRESENTA                                        09610000
+           MOVE CONTADOR-REGISTRO TO NUMCO                              09620000
+           PERFORM 0224-SEND-MAP                                        09630000
+           MOVE '01'     TO CICLO                                       09640000
+           PERFORM 8200-RETORNO-TRANS                                   09650000
+           .                                                            09660000
+      *                                                                 09670000
+       0100-REFRESCA-MAPA-EXIT.                                         09680000
+           EXIT.                                                        09690000
+      *---------------------------------------------------------------- 09700000
+      *--- Calculamos el LIKE para los cursores Comienza por        --- 09710000
+      *---------------------------------------------------------------- 09720000
+       0110-LIKE-COMIENZA.                                              09730000
+      *                                                                 09740000
+           MOVE 35                         TO WS-LONG                   09750041
+      *                                                                 09760000
+           PERFORM                                                      09770000
+              UNTIL WS-LONG = 0                               OR        09780041
+                    (CH-S-BUSCAR(WS-LONG:1) NOT = SPACE       AND       09790041
+                     CH-S-BUSCAR(WS-LONG:1) NOT = LOW-VALUES  AND       09800041
+                     CH-S-BUSCAR(WS-LONG:1) NOT = HIGH-VALUES)          09810041
+                    SUBTRACT 1             FROM WS-LONG                 09820041
+           END-PERFORM                                                  09830000
+      *                                                                 09840000
+           IF WS-LONG NOT = 0                                           09850041
+              ADD 1                        TO WS-LONG                   09860041
+              MOVE CH-S-BUSCAR             TO WS-LIKE                   09870041
+              MOVE '%'                     TO WS-LIKE(WS-LONG:1)        09880041
+              ADD 1                        TO WS-LONG                   09890041
+              IF WS-LONG < 35                                           09900041
+                 MOVE ALL '%'              TO WS-LIKE(WS-LONG:)         09910041
+              END-IF                                                    09920000
+              move WS-LIKE TO MLIKE                                     09930041
+           END-IF                                                       09940000
+      *                                                                 09950000
+           MOVE FUNCTION UPPER-CASE(WS-LIKE) TO WS-LIKE.                09960041
+      *                                                                 09970000
+       0110-LIKE-COMIENZA-EXIT.                                         09980000
+           EXIT.                                                        09990000
+      *---------------------------------------------------------------- 10000000
+      *--- Calculamos el LIKE para los cursores Comienza por        --- 10010000
+      *---------------------------------------------------------------- 10020000
+       0120-LIKE-CONTIENE.                                              10030000
+      *                                                                 10040000
+           MOVE 35                         TO WS-LONG                   10050041
+      *                                                                 10060000
+           PERFORM                                                      10070000
+              UNTIL WS-LONG = 0                               OR        10080041
+                    (CH-S-BUSCAR(WS-LONG:1) NOT = SPACE       AND       10090041
+                     CH-S-BUSCAR(WS-LONG:1) NOT = LOW-VALUES  AND       10100041
+                     CH-S-BUSCAR(WS-LONG:1) NOT = HIGH-VALUES)          10110041
+                    SUBTRACT 1             FROM WS-LONG                 10120041
+           END-PERFORM                                                  10130000
+      *                                                                 10140000
+           IF WS-LONG NOT = 0                                           10150041
+              ADD 1                        TO WS-LONG                   10160041
+              MOVE '%'                     TO WS-LIKE(1:1)              10170041
+              MOVE CH-S-BUSCAR(1:WS-LONG)  TO WS-LIKE(2:)               10180041
+              ADD 1                        TO WS-LONG                   10190041
+              MOVE ALL '%'                 TO WS-LIKE(WS-LONG:)         10200041
+           END-IF                                                       10210000
+           MOVE WS-LIKE TO MLIKE                                        10220041
+      *                                                                 10230000
+           MOVE FUNCTION UPPER-CASE(WS-LIKE) TO WS-LIKE.                10240041
+      *                                                                 10250000
+       0120-LIKE-CONTIENE-EXIT.                                         10260000
+           EXIT.                                                        10270000
+      *---------------------------------------------------------------- 10280000
+      *--- Ver si el usuario selecciona fila y accion               --- 10290000
+      *---------------------------------------------------------------- 10300000
+       0250-PROCESE-TRAN.                                               10312000
+      *                                                                 10320000
+           MOVE 0                          TO WS-NUM                    10330041
+           move spaces                     to WS-accion                 10340041
+           MOVE SPACES                     TO CED                       10350000
+           SET L                           TO 1                         10360000
+      *                                                                 10370000
+           PERFORM UNTIL L > 4                                          10380000
+           EVALUATE TRUE                                                10380108
+             WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'SI' AND             10380208
+                  WS-INGRESAR = 'SI' AND WS-MODIF = 'SI'                10380308
+                IF SEL-VALOR(L) = 'S' OR                                10400013
+                   SEL-VALOR(L) = 'C' OR                                10410013
+                   SEL-VALOR(L) = 'M' OR                                10420013
+                   SEL-VALOR(L) = 'A' OR                                10430013
+                   SEL-VALOR(L) = 'R'                                   10440000
+                   ADD 1                     TO WS-NUM                  10450041
+                   MOVE DNI-VALOR(L)         TO CED                     10460000
+                   MOVE SEL-VALOR(L)         TO WS-ACCION               10470041
+                END-IF                                                  10480000
+             WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'NO' AND             10490108
+                  WS-INGRESAR = 'NO' AND WS-MODIF = 'SI'                10490208
+                  IF SEL-VALOR(L) = 'S'        OR                       10510000
+                      SEL-VALOR(L) = 'C'        OR                      10520000
+                      SEL-VALOR(L) = 'M'                                10530000
+                      ADD 1                     TO WS-NUM               10540041
+                      MOVE DNI-VALOR(L)         TO CED                  10550000
+                      MOVE SEL-VALOR(L)         TO WS-ACCION            10560041
+                  END-IF                                                10570000
+             WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'NO' AND             10580008
+                  WS-INGRESAR = 'NO' AND WS-MODIF = 'NO'                10590008
+                  IF SEL-VALOR(L) = 'S'        OR                       10591008
+                      SEL-VALOR(L) = 'C'                                10592008
+                      ADD 1                   TO WS-NUM                 10620041
+                      MOVE DNI-VALOR(L)       TO CED                    10630000
+                      MOVE SEL-VALOR(L)       TO WS-ACCION              10640041
+                    END-IF                                              10650000
+             WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'NO' AND             10660008
+                  WS-INGRESAR = 'SI' AND WS-MODIF = 'NO'                10670008
+                    IF SEL-VALOR(L) = 'S' OR SEL-VALOR(L) = 's' OR      10680008
+                      SEL-VALOR(L) = 'C' OR SEL-VALOR(L) = 'c' OR       10681008
+                      SEL-VALOR(L) = 'A'                                10681108
+                      ADD 1                   TO WS-NUM                 10682041
+                      MOVE DNI-VALOR(L)       TO CED                    10683008
+                      MOVE SEL-VALOR(L)       TO WS-ACCION              10684041
+                    END-IF                                              10685008
+             WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'SI' AND             10686008
+                  WS-INGRESAR = 'NO' AND WS-MODIF = 'NO'                10687008
+                    IF SEL-VALOR(L) = 'S' OR SEL-VALOR(L) = 's' OR      10688008
+                      SEL-VALOR(L) = 'C' OR SEL-VALOR(L) = 'c' OR       10689008
+                      SEL-VALOR(L) = 'R' OR SEL-VALOR(L) = 'r'          10689115
+                      ADD 1                   TO WS-NUM                 10689241
+                      MOVE DNI-VALOR(L)       TO CED                    10689308
+                      MOVE SEL-VALOR(L)       TO WS-ACCION              10689441
+                    END-IF                                              10689508
+            END-EVALUATE                                                10689618
+            SET L                        UP BY 1                        10690018
+           END-PERFORM                                                  10700000
+      *                                                                 10710000
+           EVALUATE TRUE                                                10820000
+             WHEN WS-NUM = 0                                            10830041
+               MOVE 'Digite "A" "C" "S" "M" o "R" a nivel de fila'      10840024
+                     To MSGO                                            10850020
+             WHEN WS-NUM = 1                                            10860041
+               PERFORM 1422-PROCESO-PCICS54                             10870039
+             WHEN WS-NUM > 1                                            10880041
+               MOVE 'Solo se puede seleccionar una fila'                10890020
+                     TO MSGO                                            10900000
+             WHEN OTHER                                                 10910020
+               MOVE 'Solo "A" "C" "S" "M" o "R" a nivel de fila'        10920024
+                     TO MSGO                                            10930000
+           END-EVALUATE                                                 10940000
+           DIVIDE WS-NUM-REGISTRO BY   WS-SCROLL                        10942023
+                  GIVING WS-COCIENTE REMAINDER WS-RESIDUO.              10942121
+           IF WS-RESIDUO > 0                                            10942223
+              COMPUTE WS-NUM-REGISTRO = WS-COCIENTE * WS-SCROLL         10942323
+           ELSE                                                         10942423
+              COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE - 1) * WS-SCROLL   10942523
+           END-IF                                                       10942623
+           MOVE 8 TO WS-PROXIMO                                         10942723
+           PERFORM 0130-LIMPIA-SELECCION                                10942823
+           PERFORM 3200-PRESENTA                                        10942923
+           MOVE CONTADOR-REGISTRO TO NUMCO                              10943034
+           PERFORM 0224-SEND-MAP                                        10943123
+           MOVE '01'     TO CICLO                                       10944023
+           PERFORM 8200-RETORNO-TRANS                                   10945023
+           .                                                            10950000
+      *                                                                 10960000
+       0250-PROCESE-TRAN-EXIT.                                          10970000
+           EXIT.                                                        10980000
+      *---------------------------------------------------------------- 10990000
+      *--- Llamamos al programa Accion sobre un Estudiante PCICS54  --- 11000039
+      *---------------------------------------------------------------- 11010000
+       1422-PROCESO-PCICS54.                                            11020039
+      *                                                                 11030000
+           IF WS-ACCION = 'S'  OR WS-ACCION = 'C' or                    11040041
+              WS-ACCION = 's'  OR WS-accion = 'c'                       11050041
+              MOVE 'C'      TO WS-ACCION                                11060041
+              MOVE '20'     TO CICLO                                    11070000
+           END-IF                                                       11080000
+      *                                                                 11090000
+           IF WS-ACCION = 'M' OR WS-ACCION = 'm'                        11100041
+              MOVE '30'     TO CICLO                                    11110000
+           END-IF                                                       11120000
+           IF WS-ACCION = 'A' OR WS-ACCION = 'a'                        11130041
+              MOVE '50'     TO CICLO                                    11140000
+           END-IF                                                       11150000
+           IF WS-ACCION = 'R' OR WS-ACCION = 'r'                        11160041
+              MOVE '70'     TO CICLO                                    11170000
+           END-IF                                                       11180000
+           PERFORM 0300-FIN.                                            11290000
+      *                                                                 11300000
+       1422-PROCESO-HOLX-EXIT.                                          11310000
+
