@@ -1,0 +1,19 @@
+ CEDA  View DB2Entry( EDB253   ) 
+  DB2Entry       : EDB253        
+  Group          : GCICS53       
+  DEscription    :               
+ THREAD SELECTION ATTRIBUTES     
+  TRansid        :               
+ THREAD OPERATION ATTRIBUTES     
+  ACcountrec     : TXid          
+  AUTHId         : P390          
+  AUTHType       :               
+                                 
+  DRollback      : Yes           
+  PLAN           : PDB275        
+  PLANExitname   :               
+  PRIority       : High          
+  PROtectnum     : 0000          
+  THREADLimit    : 0000          
+  THREADWait     : Pool          
+                                 

@@ -1,0 +1,35 @@
+MCICS95  DFHMSD TYPE=DSECT,MODE=INOUT,TERM=ALL,STORAGE=AUTO,LANG=COBOL  00010002
+MCICS95  DFHMDI SIZE=(24,80),LINE=1,COLUMN=1,COLOR=GREEN,HILIGHT=OFF,  X00020002
+               MAPATTS=(COLOR,HILIGHT),DSATTS=HILIGHT,CTRL=FREEKB       00030002
+         DFHMDF POS=(01,01),LENGTH=15,INITIAL='COBOL LEGENDS',         X00040002
+               COLOR=BLUE,ATTRB=(ASKIP,NORM)                            00050002
+LOG95    DFHMDF POS=(01,18),LENGTH=09,                                 X00051005
+               COLOR=BLUE,ATTRB=(ASKIP,NORM,PROT)                       00052005
+LNOM95   DFHMDF POS=(01,29),LENGTH=20,                                 X00053005
+               COLOR=BLUE,ATTRB=(ASKIP,NORM,PROT)                       00054005
+LAPE95   DFHMDF POS=(01,50),LENGTH=20,                                 X00055005
+               COLOR=BLUE,ATTRB=(ASKIP,NORM,PROT)                       00056005
+         DFHMDF POS=(01,72),LENGTH=07,INITIAL='MCICS95',               X00080004
+               COLOR=BLUE,ATTRB=(ASKIP,NORM)                            00090002
+         DFHMDF POS=(03,10),LENGTH=43,                                 X00100002
+               INITIAL='MENU DE ESTUDIANTES     ',                     X00110002
+               COLOR=RED,ATTRB=(ASKIP,NORM,PROT)                        00120002
+         DFHMDF POS=(05,01),LENGTH=70,INITIAL='MENU OPCIONES:',        X00130002
+               ATTRB=(ASKIP,NORM,PROT)                                  00140002
+         DFHMDF POS=(07,01),LENGTH=70,INITIAL='1. CONSULTA',           X00170003
+               ATTRB=(ASKIP,NORM,PROT)                                  00180002
+         DFHMDF POS=(08,01),LENGTH=70,INITIAL='2. SCROLL',             X00190003
+               ATTRB=(ASKIP,NORM,PROT)                                  00200002
+         DFHMDF POS=(09,01),LENGTH=70,INITIAL='F3.SALIR',              X00210002
+               ATTRB=(ASKIP,NORM,PROT)                                  00220002
+         DFHMDF POS=(10,01),LENGTH=18,ATTRB=(ASKIP,NORM,PROT),         X00230002
+               COLOR=GREEN,INITIAL='DIGITE LA OPCION:'                  00240002
+OPC95    DFHMDF POS=(10,20),LENGTH=01,ATTRB=(UNPROT,NORM,FSET,IC),     X00250002
+               COLOR=YELLOW,INITIAL='_'                                 00260002
+         DFHMDF POS=(10,22),ATTRB=(ASKIP,NORM,PROT)                     00270002
+MSG95    DFHMDF POS=(23,01),LENGTH=60,ATTRB=(BRT,PROT),COLOR=NEUTRAL    00280002
+         DFHMDF POS=(24,01),LENGTH=10,ATTRB=(NORM,PROT),COLOR=BLUE,    X00290002
+               INITIAL='F3=SALIR'                                       00300002
+         DFHMSD TYPE=FINAL                                              00310002
+         END                                                            00320002
+

@@ -1,0 +1,133 @@
+//CCICSDB2 JOB MALSOF,'COMP-CICS-DB2',NOTIFY=&SYSUID,                   00010002
+//            MSGCLASS=A,CLASS=A,MSGLEVEL=(1,1),REGION=0M               00020002
+//*================================================================     00030002
+//* PLEASE, SET YOU PARAMETER 'PGM'                                     00040002
+//*================================================================     00050002
+//SETP    SET PGM=PCICS54                                               00060099
+//SETP    SET PLN=ESTPLAN                                               00061085
+//SETP    SET BIND=PCICS54                                              00070099
+//*----------------------------------------------------------------     00080002
+//*                                                                     00090002
+//*       DB2 PRECOMPILER                                               00100002
+//*----------------------------------------------------------------     00110002
+//DB2      EXEC PGM=DSNHPC,                                             00120002
+//         PARM='HOST(IBMCOB),XREF,SOURCE,FLAG(W),APOST',               00130002
+//         REGION=0M                                                    00140002
+//*                                                                     00150002
+//STEPLIB  DD  DISP=SHR,DSN=DSN610.SDSNEXIT                             00160002
+//         DD  DISP=SHR,DSN=DSN610.SDSNLOAD                             00170002
+//SYSIN    DD  DSN=P390.CICS.SOURCE(&PGM),DISP=SHR                      00180002
+//DBRMLIB  DD  DSN=P390.DB2.DBRMLIB(&PGM),DISP=SHR                      00190002
+//SYSCIN   DD  DSN=P390.DB2.DSNHOUT(&PGM),DISP=SHR                      00200002
+//SYSLIB   DD  DSN=P390.CICS.COPY,DISP=SHR                              00210002
+//         DD  DSN=P390.DB2.DCLGEN,DISP=SHR                             00220002
+//         DD  DSN=P390.CICS.SOURCE,DISP=SHR                            00230002
+//         DD  DSN=CICSTS13.CICS.SDFHCOB,DISP=SHR                       00240002
+//SYSPRINT DD  SYSOUT=A                                                 00250002
+//SYSTERM  DD  SYSOUT=A                                                 00260002
+//SYSUT1   DD  SPACE=(CYL,(5,1)),UNIT=SYSDA                             00270002
+//SYSUT2   DD  SPACE=(CYL,(5,1)),UNIT=SYSDA                             00280002
+//*                                                                     00290002
+//*       CICS TRANSLATOR                                               00300002
+//*----------------------------------------------------------------     00310002
+//CICS    EXEC PGM=DFHECP1$,REGION=0M,                                  00320002
+//        PARM=(COBOL3,NOSOURCE,SP),                                    00330002
+//        COND=(0,NE,DB2)                                               00340002
+//*                                                                     00350002
+//STEPLIB  DD  DISP=SHR,DSN=CICSTS13.CICS.SDFHLOAD                      00360002
+//DSCTLIB  DD  DISP=SHR,DSN=CICSTS13.CICS.SDFHCOB                       00370002
+//SYSIN    DD  DSN=P390.DB2.DSNHOUT(&PGM),DISP=SHR                      00380002
+//SYSPUNCH DD  DISP=(NEW,PASS),DSN=&&CICSOUT0,UNIT=SYSDA,               00390002
+//             SPACE=(800,(500,500)),DCB=BLKSIZE=400                    00400002
+//SYSPRINT DD  SYSOUT=A                                                 00410002
+//SYSOUT   DD  SYSOUT=A                                                 00420002
+//*                                                                     00430002
+//*       COBOL COMPILER                                                00440002
+//*----------------------------------------------------------------     00450002
+//COB    EXEC PGM=IGYCRCTL,REGION=0M,                                   00460002
+//       PARM=(APOST,LIB,XREF,MAP,RENT,BUF(32760),DYNAM,                00470002
+//       SSRANGE,OFFSET,TRUNC(OPT)),                                    00480002
+//       COND=((0,NE,DB2),(0,NE,CICS))                                  00490002
+//*                                                                     00500002
+//STEPLIB  DD DSN=IGY210.SIGYCOMP,DISP=SHR                              00510002
+//SYSLIB   DD DSN=CICSTS13.CICS.SDFHCOB,DISP=SHR                        00520002
+//*                                                                     00530002
+//         DD DSN=P390.CICS.SOURCE,DISP=SHR                             00540002
+//         DD DSN=P390.CICS.COPY,DISP=SHR                               00550002
+//         DD DSN=P390.CICS.MAPS,DISP=SHR                               00560002
+//         DD DSN=P390.DB2.DCLGEN,DISP=SHR                              00570002
+//SYSPRINT DD SYSOUT=A                                                  00580002
+//SYSIN    DD DSN=&&CICSOUT0,DISP=(OLD,DELETE)                          00590002
+//SYSLIN   DD DSN=&&LOADSET,DISP=(NEW,PASS),UNIT=SYSDA,                 00600002
+//            SPACE=(800,(500,500))                                     00610002
+//SYSUT1   DD UNIT=SYSDA,SPACE=(460,(350,100))                          00620002
+//SYSUT2   DD UNIT=SYSDA,SPACE=(460,(350,100))                          00630002
+//SYSUT3   DD UNIT=SYSDA,SPACE=(460,(350,100))                          00640002
+//SYSUT4   DD UNIT=SYSDA,SPACE=(460,(350,100))                          00650002
+//SYSUT5   DD UNIT=SYSDA,SPACE=(460,(350,100))                          00660002
+//SYSUT6   DD UNIT=SYSDA,SPACE=(460,(350,100))                          00670002
+//SYSUT7   DD UNIT=SYSDA,SPACE=(460,(350,100))                          00680002
+//*                                                                     00690002
+//*      COPYLINK                                                       00700002
+//*----------------------------------------------------------------     00710002
+//CPLK     EXEC PGM=IEBGENER,REGION=0M,                                 00720002
+//*      COND=((0,NE,DB2),(0,NE,CICS),(0,NE,COB))                       00730003
+//       COND=((0,NE,DB2),(0,NE,CICS))                                  00731003
+//*                                                                     00740002
+//SYSUT1   DD DSN=P390.USERLIB.JCL(DFHEILID),DISP=SHR                   00750002
+//SYSUT2   DD DSN=&&COPYLINK,DISP=(NEW,PASS),                           00760002
+//            DCB=(LRECL=80,BLKSIZE=400,RECFM=FB),                      00770002
+//            UNIT=SYSDA,SPACE=(400,(20,20))                            00780002
+//SYSPRINT DD SYSOUT=A                                                  00790002
+//SYSIN    DD DUMMY                                                     00800002
+//**********************************************************************00810002
+//*     LINK EDITION: CREA EL OBJETO LOAD                               00820002
+//**********************************************************************00830002
+//LKED   EXEC PGM=IEWL,REGION=0M,                                       00840002
+//            PARM='LIST,XREF,CALL,AMODE=31,RMODE=ANY',                 00850002
+//*      COND=((0,NE,DB2),(0,NE,CICS),(0,NE,COB),(0,NE,CPLK))           00860004
+//       COND=((0,NE,DB2),(0,NE,CICS),(0,NE,CPLK))                      00861004
+//*                                                                     00870002
+//SYSLIB   DD  DSN=CICSTS13.CICS.SDFHLOAD,DISP=SHR                      00880002
+//         DD  DSN=CEE.SCEELKED,DISP=SHR                                00890002
+//         DD  DSN=DSN610.SDSNEXIT,DISP=SHR                             00900002
+//         DD  DSN=DSN610.SDSNLOAD,DISP=SHR                             00910002
+//*        DD  DSN=CEE.SCEERUN,DISP=SHR                                 00920002
+//*        DD  DSN=SYS1.LINKLIB,DISP=SHR                                00930002
+//         DD  DSN=TCPIP.SEZATCP,DISP=SHR                               00940002
+//         DD  DISP=SHR,DSN=ISP.SISPLOAD                                00950002
+//         DD  DISP=SHR,DSN=GDDM.SADMMOD                                00960002
+//SYSLIN   DD  DSN=&&COPYLINK,DISP=(OLD,DELETE)                         00970002
+//         DD  DSN=&&LOADSET,DISP=(OLD,DELETE)                          00980002
+//         DD  DDNAME=SYSIN                                             00990002
+//SYSLMOD  DD DSN=IBMUSER.CICS.LOAD(&PGM),DISP=SHR                      01000002
+//SYSUT1   DD UNIT=SYSDA,DCB=BLKSIZE=1024,                              01010002
+//            SPACE=(1024,(200,20))                                     01020002
+//SYSPRINT DD SYSOUT=A                                                  01030002
+//*                                                                     01031085
+//**********************************************************************01032085
+//*EJECUTA EL BIND                                                      01033085
+//**********************************************************************01034085
+//BINDPK   EXEC PGM=IKJEFT01,COND=(0,NE,LKED)                           01035085
+//STEPLIB  DD DSN=DSN610.SDSNLOAD,DISP=SHR                              01036085
+//         DD DSN=DSN610.SDSNEXIT,DISP=SHR                              01037085
+//DBRMLIB  DD DSN=P390.DB2.DBRMLIB(&PGM),DISP=SHR                       01038085
+//SYSTSIN  DD DSN=P390.DB2.BIND(&BIND),DISP=SHR                         01039085
+//SYSPRINT DD SYSOUT=A                                                  01039185
+//SYSTSPRT DD SYSOUT=A                                                  01039285
+//SYSOUT   DD SYSOUT=A                                                  01039385
+//REPORT   DD SYSOUT=A                                                  01039485
+//*                                                                     01040002
+//**********************************************************************01050002
+//*EJECUTA EL BIND                                                      01060002
+//**********************************************************************01070002
+//BINDPL   EXEC PGM=IKJEFT01,COND=(0,NE,LKED)                           01080002
+//STEPLIB  DD DSN=DSN610.SDSNLOAD,DISP=SHR                              01090002
+//         DD DSN=DSN610.SDSNEXIT,DISP=SHR                              01100002
+//         DD DSN=P390.CICS.LOAD,DISP=SHR                               01101086
+//DBRMLIB  DD DSN=P390.DB2.DBRMLIB(&PGM),DISP=SHR                       01110002
+//SYSTSIN  DD DSN=P390.DB2.BIND(&PLN),DISP=SHR                          01120087
+//SYSPRINT DD SYSOUT=A                                                  01130002
+//SYSTSPRT DD SYSOUT=A                                                  01140002
+//                                                                      01160002
+
