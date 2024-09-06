@@ -1,0 +1,8 @@
+OBJECT CHARACTERISTICS              
+ CEDA  View DB2Tran( TDB254   )     
+  DB2Tran        : TDB254           
+  Group          : GCICS53          
+  Description    :                  
+  Entry          : EDB253           
+  Transid        : TR54             
+                                    

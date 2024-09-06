@@ -1,0 +1,13 @@
+ EDIT       P390.DB2.BIND(PCICS54) - 0
+ Command ===>                         
+ ****** ***************************** 
+ 000100 DSN    SYSTEM     (DSN1)      
+ 000200 BIND   PACKAGE    (PKESTUD) - 
+ 000300        MEMBER     (PCICS54) - 
+ 000400        ACTION     (REPLACE) - 
+ 000500        ISOLATION  (CS)      - 
+ 000600        VALIDATE   (BIND)    - 
+ 000700        RELEASE    (COMMIT)  - 
+ 000800        OWNER      (P390)    - 
+ 000900        QUALIFIER  (P390)      
+ 001000 END                           
