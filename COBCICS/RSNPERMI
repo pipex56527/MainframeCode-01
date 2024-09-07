@@ -1,0 +1,223 @@
+      *************************************************************     00011099
+      *   ENCAPSULADOR TABLA PERMISOS                                   00012099
+      *   RUTINA QUE EJECUTA LAS SENTENCIAS DE LA BASE DE DATOS A       00013099
+      *   PARTIR DE UN TIPO Y SUBTIPO DE OPERACION QUE ENVIA            00014099
+      *   EL PROGRAMA QUE LA INVOCA.                                    00015099
+      *   TIPO 1: CONSULTA - SELECT                                     00016099
+      *      SUBTIPO 1: CONSULTA POR TRANSACCION Y DNI                  00017099
+      *        2: ADICION - INSERT                                      00019199
+      *        3: BORRAR - DELETE                                       00019299
+      *        4: MODIFICAR - UPDATE                                    00019399
+      *************************************************************     00030099
+       IDENTIFICATION DIVISION.                                         00040099
+         PROGRAM-ID. RSNPERMI.                                          00050099
+       ENVIRONMENT DIVISION.                                            00060099
+       DATA DIVISION.                                                   00070099
+       WORKING-STORAGE SECTION.                                         00080099
+      *===============================================================  00090099
+      * MODSQL - DEFINICION TABLA PERMISOS SQL Y COBOL                  00100099
+           EXEC SQL                                                     00110099
+                INCLUDE PERMISOS                                        00120099
+           END-EXEC.                                                    00130099
+      *===============================================================  00140099
+      * MODSQL - SE TIENE QUE UTILIZAR SQLCA                            00150099
+           EXEC SQL                                                     00160099
+                INCLUDE SQLCA                                           00170099
+           END-EXEC.                                                    00180099
+                                                                        00270099
+      *============================================================     00280099
+       LINKAGE SECTION.                                                 00290099
+       01  DFHCOMMAREA           PIC X(59).                             00300099
+       01  AREA-LINK          REDEFINES DFHCOMMAREA.                    00310099
+           05 LK-PM-TIPO-OPE     PIC 9(01).                             00330099
+           05 LK-PM-SUBTIPO-OPE  PIC 9(02).                             00331099
+           05 LK-PM-TRAN         PIC X(04).                             00340099
+           05 LK-PM-DNI          PIC X(09).                             00350099
+           05 LK-PM-IDPERFIL     PIC X(03).                             00360099
+           05 LK-PM-NROACCESOS   PIC S9(9) USAGE COMP.                  00370099
+           05 LK-PM-FECHAUL      PIC X(10).                             00380099
+           05 LK-PM-HORAUL       PIC X(08).                             00390099
+           05 LK-PM-COD-RET      PIC 9(02).                             00391099
+           05 LK-PM-SQLCODE      PIC S9(9).                             00396099
+                                                                        00400099
+      *=================================================================00410099
+       PROCEDURE DIVISION USING DFHCOMMAREA.                            00420099
+      *=================================================================00430099
+      ******************************************************************00440099
+      * 0000-RAIZ                                                       00450099
+      ******************************************************************00460099
+       0000-RAIZ.                                                       00470099
+      *    MODSQL EXCEPCIONES SQL DB2                                   00480099
+           EXEC SQL                                                     00490099
+                WHENEVER  SQLERROR    CONTINUE                          00500099
+           END-EXEC                                                     00510099
+                                                                        00520099
+           EXEC SQL                                                     00530099
+                WHENEVER  SQLWARNING  CONTINUE                          00540099
+           END-EXEC                                                     00550099
+                                                                        00560099
+           EXEC SQL                                                     00570099
+                WHENEVER  NOT FOUND   CONTINUE                          00580099
+           END-EXEC                                                     00590099
+                                                                        00600099
+      *    PERFORM 0100-INICIO                                          00610099
+           PERFORM 0200-EJECUTAR-OPERACION                              00620099
+           PERFORM 0900-FIN                                             00630099
+           .                                                            00640099
+      ******************************************************************00650099
+      * 0100-INICIO                                                     00660099
+      ******************************************************************00670099
+      *0100-INICIO.                                                     00680099
+      *.                                                                00710099
+      ******************************************************************00720099
+      * 0200-EJECUTAR-OPERACION                                         00730099
+      ******************************************************************00740099
+       0200-EJECUTAR-OPERACION.                                         00750099
+           EVALUATE LK-PM-TIPO-OPE                                      00770099
+              WHEN 1                                                    00780099
+                 PERFORM 0210-CONSULTAR-PERMISO                         00790099
+              WHEN 2                                                    00810099
+                 PERFORM 0220-INSERTAR-PERMISO                          00830099
+              WHEN 3                                                    00840099
+                 PERFORM 0230-BORRAR-PERMISO                            00860099
+              WHEN 4                                                    00870099
+                 PERFORM 0240-MODIFICAR-PERMISO                         00890099
+              WHEN OTHER                                                00900099
+                 DISPLAY "OPCION NO IMPLEMENTADA"                       00910099
+                 MOVE 9                        TO LK-PM-COD-RET         00920099
+           END-EVALUATE                                                 00930099
+           .                                                            00940099
+      **************************************************************    00950099
+      * 0210-CONSULTAR-PERMISO                                          00960099
+      **************************************************************    00970099
+       0210-CONSULTAR-PERMISO.                                          00980099
+           MOVE 1          TO LK-PM-COD-RET                             00990099
+           MOVE LK-PM-TRAN TO PM-TRAN                                   01000099
+           MOVE LK-PM-DNI  TO PM-DNI                                    01010099
+      *                                                                 01020099
+           EXEC SQL                                                     01030099
+             SELECT                                                     01040099
+                IDPERFIL, NROACCESOS, FECHAUL, HORAUL                   01050099
+             INTO                                                       01060099
+                :PM-IDPERFIL, :PM-NROACCESOS, :PM-FECHAUL, :PM-HORAUL   01070099
+             FROM PERMISOS                                              01080099
+             WHERE TRAN = :PM-TRAN  AND  DNI = :PM-DNI                  01090099
+           END-EXEC                                                     01100099
+                                                                        01110099
+           IF SQLCODE = 0 THEN                                          01120099
+              MOVE 0             TO  LK-PM-COD-RET                      01130099
+              MOVE PM-IDPERFIL   TO  LK-PM-IDPERFIL                     01140099
+              MOVE PM-NROACCESOS TO  LK-PM-NROACCESOS                   01150099
+              MOVE PM-FECHAUL    TO  LK-PM-FECHAUL                      01160099
+              MOVE PM-HORAUL     TO  LK-PM-HORAUL                       01170099
+           ELSE                                                         01180099
+              IF SQLCODE = +100 THEN                                    01190099
+                 MOVE 1 TO  LK-PM-COD-RET                               01200099
+              ELSE                                                      01210099
+                 MOVE 2 TO  LK-PM-COD-RET                               01220099
+                 PERFORM 0900-ERROR-DB2                                 01230099
+              END-IF                                                    01240099
+           END-IF                                                       01250099
+           .                                                            01260099
+      ***************************************************               01270099
+      * INSERTA LOS DATOS EN LA TABLA                   *               01280099
+      ***************************************************               01290099
+       0220-INSERTAR-PERMISO.                                           01300099
+           MOVE LK-PM-TRAN       TO  PM-TRAN                            01310099
+           MOVE LK-PM-DNI        TO  PM-DNI                             01320099
+           MOVE LK-PM-IDPERFIL TO PM-IDPERFIL                           01330099
+           MOVE LK-PM-NROACCESOS TO PM-NROACCESOS                       01340099
+           MOVE LK-PM-FECHAUL TO     PM-FECHAUL                         01350099
+           MOVE LK-PM-HORAUL     TO  PM-HORAUL                          01360099
+                                                                        01370099
+           EXEC SQL                                                     01380099
+             INSERT INTO PERMISOS                                       01390099
+                (                                                       01400099
+                 TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL       01410099
+                )                                                       01420099
+             VALUES                                                     01430099
+                (                                                       01440099
+                 :PM-TRAN, :PM-DNI, :PM-IDPERFIL,                       01450099
+                 :PM-NROACCESOS, :PM-FECHAUL, :PM-HORAUL                01460099
+                )                                                       01470099
+           END-EXEC                                                     01480099
+                                                                        01490099
+           IF SQLCODE = 0                                               01500099
+             MOVE 0         TO LK-PM-COD-RET                            01510099
+           ELSE                                                         01520099
+             IF SQLCODE = +100 THEN                                     01530099
+                MOVE 1      TO  LK-PM-COD-RET                           01540099
+             ELSE                                                       01550099
+                MOVE 2      TO  LK-PM-COD-RET                           01560099
+                PERFORM 0900-ERROR-DB2                                  01570099
+             END-IF                                                     01580099
+           END-IF                                                       01590099
+           .                                                            01600099
+      ***************************************************               01610099
+      * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *               01620099
+      ***************************************************               01630099
+       0230-BORRAR-PERMISO.                                             01640099
+           MOVE LK-PM-TRAN       TO  PM-TRAN                            01650099
+           MOVE LK-PM-DNI        TO  PM-DNI                             01660099
+                                                                        01670099
+           EXEC SQL                                                     01680099
+             DELETE FROM PERMISOS                                       01690099
+               WHERE TRAN = :PM-TRAN  AND  DNI = :PM-DNI                01700099
+           END-EXEC                                                     01710099
+                                                                        01720099
+           IF SQLCODE = 0                                               01730099
+             MOVE 0         TO LK-PM-COD-RET                            01740099
+           ELSE                                                         01750099
+             IF SQLCODE = +100 THEN                                     01760099
+                MOVE 1      TO  LK-PM-COD-RET                           01770099
+             ELSE                                                       01780099
+                MOVE 2      TO  LK-PM-COD-RET                           01790099
+                PERFORM 0900-ERROR-DB2                                  01800099
+             END-IF                                                     01810099
+           END-IF                                                       01820099
+           .                                                            01830099
+      ***************************************************               01840099
+      * ACTUALIZA LOS DATOS EN LA TABLA                 *               01850099
+      ***************************************************               01860099
+       0240-MODIFICAR-PERMISO.                                          01870099
+           MOVE LK-PM-TRAN       TO  PM-TRAN                            01880099
+           MOVE LK-PM-DNI        TO  PM-DNI                             01890099
+           MOVE LK-PM-IDPERFIL TO PM-IDPERFIL                           01900099
+           MOVE LK-PM-NROACCESOS TO PM-NROACCESOS                       01910099
+           MOVE LK-PM-FECHAUL TO     PM-FECHAUL                         01920099
+           MOVE LK-PM-HORAUL     TO  PM-HORAUL                          01930099
+                                                                        01940099
+           EXEC SQL                                                     01950099
+              UPDATE PERMISOS                                           01960099
+              SET IDPERFIL    = :PM-IDPERFIL,                           01970099
+                  NROACCESOS  = :PM-NROACCESOS,                         01980099
+                  FECHAUL     = :PM-FECHAUL,                            01990099
+                  HORAUL      = :PM-HORAUL                              02000099
+              WHERE TRAN = :PM-TRAN  AND  DNI = :PM-DNI                 02010099
+           END-EXEC                                                     02020099
+                                                                        02030099
+           IF SQLCODE = 0                                               02040099
+             MOVE 0         TO LK-PM-COD-RET                            02050099
+           ELSE                                                         02060099
+             IF SQLCODE = +100 THEN                                     02070099
+                MOVE 1      TO  LK-PM-COD-RET                           02080099
+             ELSE                                                       02090099
+                MOVE 2      TO  LK-PM-COD-RET                           02100099
+                PERFORM 0900-ERROR-DB2                                  02110099
+             END-IF                                                     02120099
+           END-IF                                                       02130099
+           .                                                            02140099
+      ******************************************************************02150099
+      * 0900-ERROR-DB2                                                  02160099
+      ******************************************************************02170099
+       0900-ERROR-DB2.                                                  02180099
+           MOVE SQLCODE        TO LK-PM-SQLCODE                         02200099
+           .                                                            02240099
+      ******************************************************************02250099
+      * FIN SESION                                                      02260099
+      ******************************************************************02270099
+       0900-FIN.                                                        02280099
+           GOBACK                                                       02310099
+           .                                                            02320099
+      ******************************************************************02330099
+
