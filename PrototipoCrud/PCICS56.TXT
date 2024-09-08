@@ -1,0 +1,972 @@
+      ********************************************************          00010000
+      *MODELO TABLA USUARIOS OPERACIONES DE.INSERT,UPDATE,SELECT,*      00020000
+      *DELETE RECIBE COMO PARAMETROS EN EL COMAREA LOS DATOS  *         00030000
+      *A ACTUALIZAR                                           *         00040000
+      *********************************************************         00050000
+       IDENTIFICATION DIVISION.                                         00060000
+       PROGRAM-ID. PCICS56.                                             00070000
+       ENVIRONMENT DIVISION.                                            00080000
+       DATA DIVISION.                                                   00090000
+       WORKING-STORAGE SECTION.                                         00100000
+      *COMMAREA                                                         00101008
+       01 MI-COMMAREA.                                                  00102008
+          03 TRANS             PIC X(04).                               00103008
+          03 TERM              PIC X(04).                               00104008
+          03 CICLO             PIC X(02).                               00105008
+          03 TIPOUSUA          PIC X(05).                               00106008
+          03 USU               PIC X(09).                               00107008
+          03 NOMUSU            PIC X(20).                               00108008
+          03 APEUSU            PIC X(20).                               00109008
+          03 PAS               PIC X(08).                               00109108
+          03 PERFIL            PIC X(16).                               00109208
+          03 CED               PIC X(09).                               00109308
+          03 CLAVE             PIC X(8).                                00109408
+          03 NOM               PIC X(20).                               00109508
+          03 APE               PIC X(20).                               00109608
+          03 DIR               PIC X(35).                               00109708
+          03 CARGO             PIC X(20).                               00109808
+          03 ESTADO            PIC X.                                   00109908
+          03 TIPO              PIC X(06).                               00110008
+          03 SUB-TIPO          PIC XX.                                  00110108
+          03 EXISTE            PIC X.                                   00110208
+          03 NUM-REGISTRO      PIC 9(5).                                00110308
+          03 CONTADOR-REGISTRO PIC S9(5).                               00110408
+          03 CODIGO-CURSOR     PIC XX.                                  00110508
+          03 MLIKE             PIC X(35).                               00110608
+      *COMMAREA                                                         00300000
+       01 RCICS02-COMMAREA.                                             00310000
+          03 RTRANS       PIC X(04).                                    00320000
+          03 RTERM        PIC X(04).                                    00330000
+          03 RFECHA       PIC X(10).                                    00340000
+          03 RHORA        PIC X(08).                                    00350000
+      *VARIABLES                                                        00360000
+       01 MSG-FIN-SESION PIC X(40) VALUE '          FIN SESION'.        00370000
+      *ESTA COLA LA USO PARA LLEVAR LOS REGISTROS LEIDOS EN TABLA       00380000
+      *DE USUARIOSIANTES Y DESPUES MOSTRAR POR CONSULTA ESTOS DATOS     00390000
+       01 COLA-USUARIOS.                                                00400000
+          05 C-DNI       PIC X(09).                                     00410000
+          05 C-NOMBRE    PIC X(20).                                     00420000
+          05 C-APELLIDOS PIC X(20).                                     00430000
+          05 C-DIRECCION PIC X(35).                                     00440000
+      *ESTA COLA LA USO COMO UN DEBUG PARA LEER DATOS EN CUALQUIER      00450000
+      *PARTE DEL PROGRAMA                                               00460000
+       01 COLA-TRABAJO.                                                 00470000
+          05 T-TRANS     PIC X(04).                                     00480000
+          05 T-TERM      PIC X(04).                                     00490000
+          05 T-CICLO     PIC X(02).                                     00500000
+          05 T-USU       PIC X(09).                                     00510000
+          05 T-PAS       PIC X(08).                                     00520000
+          05 T-DNI       PIC X(09).                                     00530000
+          05 T-NOMBRE    PIC X(20).                                     00540000
+          05 T-APELLIDOS PIC X(20).                                     00550000
+          05 T-DIRECCION PIC X(35).                                     00560000
+          05 T-TIPO      PIC X(06).                                     00570000
+          05 T-SUB-TIPO  PIC XX.                                        00580000
+          05 T-EXISTE    PIC X.                                         00590006
+          05 T-LIKE      PIC X(35).                                     00600000
+      *01 FILLER PIC X(20) VALUE 'TABLA678901234567890'.                00610000
+           EXEC SQL                                                     00620000
+               INCLUDE USUARIOS                                         00630000
+           END-EXEC                                                     00640000
+      *01 FILLER PIC X(20) VALUE 'SQLCA678901234567890'.                00650000
+           EXEC SQL                                                     00660000
+               INCLUDE SQLCA                                            00670000
+           END-EXEC                                                     00680000
+           EXEC SQL                                                     00690000
+              DECLARE CSR1 CURSOR FOR                                   00700000
+                   SELECT                                               00710000
+                        DNI                                             00720000
+                       ,NOMBRE                                          00730000
+                       ,APELLIDOS                                       00740000
+                       ,DIRECCION                                       00750000
+                   FROM                                                 00760000
+                       USUARIOS                                         00770000
+                   WHERE                                                00771009
+                       TIPOUSUA = :TIPOUSUA                             00772009
+                   ORDER BY DNI ASC                                     00780000
+           END-EXEC                                                     00790000
+           EXEC SQL                                                     00800000
+           DECLARE CSR2 CURSOR FOR                                      00810000
+                   SELECT                                               00820000
+                        DNI                                             00830000
+                       ,NOMBRE                                          00840000
+                       ,APELLIDOS                                       00850000
+                       ,DIRECCION                                       00860000
+                   FROM                                                 00870000
+                       USUARIOS                                         00880000
+                   WHERE                                                00881010
+                       TIPOUSUA = :TIPOUSUA                             00882010
+                   ORDER BY DNI DESC                                    00890000
+           END-EXEC                                                     00900000
+           EXEC SQL                                                     00910000
+              DECLARE CSR3 CURSOR FOR                                   00920000
+                   SELECT                                               00930000
+                        DNI                                             00940000
+                       ,NOMBRE                                          00950000
+                       ,APELLIDOS                                       00960000
+                       ,DIRECCION                                       00970000
+                   FROM                                                 00980000
+                       USUARIOS                                         00990000
+                   WHERE                                                00991010
+                       TIPOUSUA = :TIPOUSUA                             00992010
+                   ORDER BY NOMBRE ASC                                  01000000
+           END-EXEC                                                     01010000
+           EXEC SQL                                                     01020000
+           DECLARE CSR4 CURSOR FOR                                      01030000
+                   SELECT                                               01040000
+                        DNI                                             01050000
+                       ,NOMBRE                                          01060000
+                       ,APELLIDOS                                       01070000
+                       ,DIRECCION                                       01080000
+                   FROM                                                 01090000
+                       USUARIOS                                         01100000
+                   WHERE                                                01101010
+                       TIPOUSUA = :TIPOUSUA                             01102010
+                   ORDER BY NOMBRE  DESC                                01110000
+           END-EXEC                                                     01120000
+           EXEC SQL                                                     01130000
+              DECLARE CSR5 CURSOR FOR                                   01140000
+                   SELECT                                               01150000
+                        DNI                                             01160000
+                       ,NOMBRE                                          01170000
+                       ,APELLIDOS                                       01180000
+                       ,DIRECCION                                       01190000
+                   FROM                                                 01200000
+                       USUARIOS                                         01210000
+                   WHERE                                                01211010
+                       TIPOUSUA = :TIPOUSUA                             01212010
+                   ORDER BY APELLIDOS ASC                               01220000
+           END-EXEC                                                     01230000
+           EXEC SQL                                                     01240000
+           DECLARE CSR6 CURSOR FOR                                      01250000
+                   SELECT                                               01260000
+                        DNI                                             01270000
+                       ,NOMBRE                                          01280000
+                       ,APELLIDOS                                       01290000
+                       ,DIRECCION                                       01300000
+                   FROM                                                 01310000
+                       USUARIOS                                         01320000
+                   WHERE                                                01321010
+                       TIPOUSUA = :TIPOUSUA                             01322010
+                   ORDER BY APELLIDOS  DESC                             01330000
+           END-EXEC                                                     01340000
+           EXEC SQL                                                     01350000
+              DECLARE CSR7 CURSOR FOR                                   01360000
+                   SELECT                                               01370000
+                        DNI                                             01380000
+                       ,NOMBRE                                          01390000
+                       ,APELLIDOS                                       01400000
+                       ,DIRECCION                                       01410000
+                   FROM                                                 01420000
+                       USUARIOS                                         01430000
+                   WHERE                                                01440000
+                      (DNI LIKE :MLIKE                                  01450010
+                       OR  UPPER(NOMBRE) LIKE :MLIKE                    01460000
+                       OR  UPPER(APELLIDOS) LIKE :MLIKE                 01470000
+                       OR  UPPER(DIRECCION) LIKE :MLIKE) AND            01480010
+                      (TIPOUSUA = :TIPOUSUA)                            01482010
+                   ORDER BY DNI ASC                                     01490000
+           END-EXEC                                                     01500000
+           EXEC SQL                                                     01510000
+           DECLARE CSR8 CURSOR FOR                                      01520000
+                   SELECT                                               01530000
+                        DNI                                             01540000
+                       ,NOMBRE                                          01550000
+                       ,APELLIDOS                                       01560000
+                       ,DIRECCION                                       01570000
+                   FROM                                                 01580000
+                       USUARIOS                                         01590000
+                   WHERE                                                01600000
+                      (TIPOUSUA = :TIPOUSUA) AND                        01601010
+                      (DNI LIKE :MLIKE                                  01610010
+                       OR  UPPER(NOMBRE) LIKE :MLIKE                    01620000
+                       OR  UPPER(APELLIDOS) LIKE :MLIKE                 01630000
+                       OR  UPPER(DIRECCION) LIKE :MLIKE)                01640010
+                   ORDER BY DNI DESC                                    01650000
+           END-EXEC                                                     01660000
+           EXEC SQL                                                     01670000
+              DECLARE CSR9 CURSOR FOR                                   01680000
+                   SELECT                                               01690000
+                        DNI                                             01700000
+                       ,NOMBRE                                          01710000
+                       ,APELLIDOS                                       01720000
+                       ,DIRECCION                                       01730000
+                   FROM                                                 01740000
+                       USUARIOS                                         01750000
+                   WHERE                                                01760000
+                      (TIPOUSUA = :TIPOUSUA) AND                        01761010
+                      (DNI LIKE :MLIKE                                  01762010
+                       OR  UPPER(NOMBRE) LIKE :MLIKE                    01763010
+                       OR  UPPER(APELLIDOS) LIKE :MLIKE                 01764010
+                       OR  UPPER(DIRECCION) LIKE :MLIKE)                01765010
+                   ORDER BY NOMBRE ASC                                  01810000
+           END-EXEC                                                     01820000
+           EXEC SQL                                                     01830000
+           DECLARE CSR10 CURSOR FOR                                     01840000
+                   SELECT                                               01850000
+                        DNI                                             01860000
+                       ,NOMBRE                                          01870000
+                       ,APELLIDOS                                       01880000
+                       ,DIRECCION                                       01890000
+                   FROM                                                 01900000
+                       USUARIOS                                         01910000
+                   WHERE                                                01920000
+                      (TIPOUSUA = :TIPOUSUA) AND                        01921010
+                      (DNI LIKE :MLIKE                                  01922010
+                       OR  UPPER(NOMBRE) LIKE :MLIKE                    01923010
+                       OR  UPPER(APELLIDOS) LIKE :MLIKE                 01924010
+                       OR  UPPER(DIRECCION) LIKE :MLIKE)                01925010
+                   ORDER BY NOMBRE  DESC                                01970000
+           END-EXEC                                                     01980000
+           EXEC SQL                                                     01990000
+              DECLARE CSR11 CURSOR FOR                                  02000000
+                   SELECT                                               02010000
+                        DNI                                             02020000
+                       ,NOMBRE                                          02030000
+                       ,APELLIDOS                                       02040000
+                       ,DIRECCION                                       02050000
+                   FROM                                                 02060000
+                       USUARIOS                                         02070000
+                   WHERE                                                02080000
+                      (TIPOUSUA = :TIPOUSUA) AND                        02081010
+                      (DNI LIKE :MLIKE                                  02082010
+                       OR  UPPER(NOMBRE) LIKE :MLIKE                    02083010
+                       OR  UPPER(APELLIDOS) LIKE :MLIKE                 02084010
+                       OR  UPPER(DIRECCION) LIKE :MLIKE)                02085010
+                   ORDER BY APELLIDOS ASC                               02130000
+           END-EXEC                                                     02140000
+           EXEC SQL                                                     02150000
+           DECLARE CSR12 CURSOR FOR                                     02160000
+                   SELECT                                               02170000
+                        DNI                                             02180000
+                       ,NOMBRE                                          02190000
+                       ,APELLIDOS                                       02200000
+                       ,DIRECCION                                       02210000
+                   FROM                                                 02220000
+                       USUARIOS                                         02230000
+                   WHERE                                                02240000
+                      (TIPOUSUA = :TIPOUSUA) AND                        02241010
+                      (DNI LIKE :MLIKE                                  02242010
+                       OR  UPPER(NOMBRE) LIKE :MLIKE                    02243010
+                       OR  UPPER(APELLIDOS) LIKE :MLIKE                 02244010
+                       OR  UPPER(DIRECCION) LIKE :MLIKE)                02245010
+                   ORDER BY APELLIDOS  DESC                             02290000
+           END-EXEC                                                     02300000
+       01 DB2-ERR.                                                      02310000
+          03 DB2-SQLCODE              PIC S9(9).                        02320000
+          03 DB2-SQLCODE-Z            PIC -ZZZZZZZZ9.                   02330000
+          03 DB2-ERROR.                                                 02340000
+             05 DB2-ERR-MSG           PIC X(50).                        02350000
+             05 DB2-ERR-CODE          PIC X(20).                        02360000
+       01 RESPUESTA      PIC S9(08) COMP.                               02370000
+       77 WS-NOMBRECOLA  PIC X(08) VALUE 'KCICS03'.                     02380000
+       77 WS-TRABAJOCOLA PIC X(08) VALUE 'KCICS76'.                     02390000
+       77 WS-CONTADOR-REGISTRO PIC S9(5) VALUE ZEROS.                   02400000
+       77 WS-EOF         PIC X VALUE SPACES.                            02410000
+       LINKAGE SECTION.                                                 02420000
+       01 DFHCOMMAREA    PIC X(257).                                    02430008
+                                                                        02440000
+       PROCEDURE DIVISION.                                              02450000
+       0000-RAIZ.                                                       02460000
+      *EXCEPCIONES DB2                                                  02470000
+           EXEC SQL                                                     02480000
+                WHENEVER SQLERROR   CONTINUE                            02490000
+           END-EXEC                                                     02500000
+                                                                        02510000
+           EXEC SQL                                                     02520000
+                WHENEVER SQLWARNING CONTINUE                            02530000
+           END-EXEC                                                     02540000
+                                                                        02550000
+           EXEC SQL                                                     02560000
+                WHENEVER NOT FOUND  CONTINUE                            02570000
+           END-EXEC                                                     02580000
+           PERFORM 0100-INICIO                                          02590000
+           PERFORM 0300-FIN                                             02600000
+           .                                                            02610000
+      **********************************************************        02620000
+      *INICIO DEL PROGRAMA, LA COMMAREA TRAE EL CICLO EN QUE   *        02630000
+      * ESTAMOS TRABAJANDO Y NOS LLEVA A CONTINUAR EN ESE CICLO*        02640000
+      **********************************************************        02650000
+       0100-INICIO.                                                     02660000
+           MOVE DFHCOMMAREA TO  MI-COMMAREA                             02670000
+           EVALUATE TIPO                                                02800000
+             WHEN 'INSERT'                                              02810000
+               EVALUATE SUB-TIPO                                        02820000
+                 WHEN '01'                                              02830000
+                   PERFORM 0110-INSERT-01                               02840000
+               END-EVALUATE                                             02850000
+             WHEN 'UPDATE'                                              02860000
+               EVALUATE SUB-TIPO                                        02870000
+                 WHEN '01'                                              02880000
+                   PERFORM 0120-UPDATE-01                               02890000
+               END-EVALUATE                                             02900000
+             WHEN 'SELECT'                                              02910000
+               EVALUATE SUB-TIPO                                        02920000
+                 WHEN '01'                                              02930000
+                   PERFORM 0130-SELECT-01                               02940000
+               END-EVALUATE                                             02950000
+                                                                        02960000
+             WHEN 'DELETE'                                              02970000
+               EVALUATE SUB-TIPO                                        02980000
+                 WHEN '01'                                              02990000
+                   PERFORM 0140-DELETE-01                               03000000
+               END-EVALUATE                                             03010000
+             WHEN 'CURSOR'                                              03020000
+               EVALUATE SUB-TIPO                                        03030000
+                 WHEN '01'                                              03040000
+                   PERFORM 0150-CURSOR-01                               03050000
+                 WHEN '02'                                              03060000
+                   PERFORM 0150-CURSOR-02                               03150000
+                 WHEN '03'                                              03160000
+                   PERFORM 0150-CURSOR-03                               03250000
+                 WHEN '04'                                              03260000
+                   PERFORM 0150-CURSOR-04                               03350000
+                 WHEN '05'                                              03360000
+                   PERFORM 0150-CURSOR-05                               03450000
+                 WHEN '06'                                              03460000
+                   PERFORM 0150-CURSOR-06                               03550000
+                 WHEN '07'                                              03560000
+                   PERFORM 0150-CURSOR-07                               03650000
+                 WHEN '08'                                              03660000
+                   PERFORM 0150-CURSOR-08                               03750000
+                 WHEN '09'                                              03760000
+                   PERFORM 0150-CURSOR-09                               03850000
+                 WHEN '10'                                              03860000
+                   PERFORM 0150-CURSOR-10                               03950000
+                 WHEN '11'                                              03960000
+                   PERFORM 0150-CURSOR-11                               04050000
+                 WHEN '12'                                              04060000
+                   PERFORM 0150-CURSOR-12                               04150000
+               END-EVALUATE                                             04160000
+           END-EVALUATE                                                 04170000
+           .                                                            04180000
+      ********************************************************          04190000
+      * FIN DE LA TRANSACCION, LLAMA O RETORNA AL PROGRAMA DE*          04200000
+      *                SEGURIDAD                             *          04210000
+      ********************************************************          04220000
+       0300-FIN.                                                        04230000
+           MOVE WS-CONTADOR-REGISTRO TO CONTADOR-REGISTRO               04240000
+           MOVE MI-COMMAREA          TO DFHCOMMAREA                     04250000
+           EXEC CICS RETURN                                             04340000
+           END-EXEC                                                     04350000
+           GOBACK                                                       04360000
+           .                                                            04370000
+      *                                                                 04380000
+      ***************************************************               04390000
+      * EN ESTA SECCION SE ENCUENTRA LAS OPERACIONES DE *               04400000
+      * CRUD                                            *               04410000
+      * PARA REALIZAR SELECT,UPDATE,INSERT O DELETE     *               04420000
+      * LOS DATOS A ACTUALIZAR ESTAN EN EL COMMAREA     *               04430000
+      ***************************************************               04440000
+      *                                                                 04450000
+      ***************************************************               04460000
+      * INSERTA LOS DATOS EN LA TABLA                   *               04470000
+      ***************************************************               04480000
+       0110-INSERT-01.                                                  04490000
+           MOVE TIPOUSUA       TO US-TIPOUSUA                           04491003
+           MOVE CED       TO US-DNI                                     04500000
+           MOVE CLAVE     TO US-CLAVE                                   04501007
+           MOVE NOM       TO US-NOMBRE                                  04510000
+           MOVE APE       TO US-APELLIDOS                               04520000
+           MOVE DIR       TO US-DIRECCION                               04530000
+           MOVE CARGO     TO US-CARGO                                   04531007
+           MOVE ESTADO    TO US-ESTADO                                  04532007
+           EXEC SQL                                                     04540000
+            INSERT INTO                                                 04550003
+              USUARIOS(TIPOUSUA,DNI,CLAVE,NOMBRE,APELLIDOS,             04551007
+                       DIRECCION,CARGO,ESTADO)                          04552007
+            VALUES(:US-TIPOUSUA,:US-DNI,:US-CLAVE,:US-NOMBRE,           04560007
+                   :US-APELLIDOS,:US-DIRECCION,:US-CARGO,:US-ESTADO)    04561007
+           END-EXEC                                                     04570000
+           IF SQLCODE = 0                                               04580000
+             MOVE '0'                TO EXISTE                          04590006
+           ELSE                                                         04600000
+             MOVE '9'                TO EXISTE                          04610006
+           END-IF                                                       04620000
+           .                                                            04630000
+      *                                                                 04640000
+      ***************************************************               04650000
+      * REALIZA EL UPDATE                               *               04660000
+      ***************************************************               04670000
+      *                                                                 04680000
+       0120-UPDATE-01.                                                  04690000
+           MOVE TIPOUSUA       TO US-TIPOUSUA                           04691001
+           MOVE CED            TO US-DNI                                04700000
+           MOVE NOM            TO US-NOMBRE                             04710000
+           MOVE APE            TO US-APELLIDOS                          04720000
+           MOVE DIR            TO US-DIRECCION                          04730000
+           EXEC SQL                                                     04740000
+                  UPDATE USUARIOS                                       04750000
+                     SET NOMBRE = :US-NOMBRE,                           04760000
+                       APELLIDOS = :US-APELLIDOS,                       04770000
+                       DIRECCION = :US-DIRECCION                        04780000
+                   WHERE                                                04790000
+                       TIPOUSUA = :US-TIPOUSUA  AND                     04791004
+                       DNI = :US-DNI                                    04800000
+           END-EXEC                                                     04810000
+           IF SQLCODE = 0                                               04820000
+             MOVE '0'                TO EXISTE                          04830006
+           ELSE                                                         04840000
+             MOVE '9'                TO EXISTE                          04850006
+           END-IF                                                       04860000
+           .                                                            04870000
+      *                                                                 04880000
+      ***************************************************               04890000
+      * LEE UN SOLO REGISTRO CON NUMERO CLAVE           *               04900000
+      ***************************************************               04910000
+      *                                                                 04920000
+       0130-SELECT-01.                                                  04930000
+           MOVE TIPOUSUA       TO US-TIPOUSUA                           04931001
+           MOVE CED       TO US-DNI                                     04940000
+           EXEC SQL                                                     04950000
+              SELECT                                                    04960000
+                   DNI,                                                 04970000
+                   NOMBRE,                                              04980000
+                   APELLIDOS,                                           04990000
+                   DIRECCION                                            05000000
+                   INTO                                                 05010000
+                       :US-DNI                                          05020000
+                      ,:US-NOMBRE                                       05030000
+                      ,:US-APELLIDOS                                    05040000
+                      ,:US-DIRECCION                                    05050000
+                   FROM                                                 05060000
+                       USUARIOS                                         05070000
+                   WHERE                                                05080000
+                       TIPOUSUA = :US-TIPOUSUA AND                      05081004
+                       DNI = :US-DNI                                    05090000
+           END-EXEC                                                     05100000
+                                                                        05110000
+           IF SQLCODE = +100                                            05120000
+               MOVE '1'                   TO EXISTE                     05130006
+               MOVE SPACES                TO NOM                        05140000
+               MOVE SPACES                TO APE                        05150000
+               MOVE SPACES                TO DIR                        05160000
+           ELSE                                                         05170000
+              IF SQLCODE = 0                                            05180000
+                  MOVE '0'                TO EXISTE                     05190006
+                  MOVE US-DNI             TO CED                        05200000
+                  MOVE US-NOMBRE          TO NOM                        05210000
+                  MOVE US-APELLIDOS       TO APE                        05220000
+                  MOVE US-DIRECCION       TO DIR                        05230000
+              ELSE                                                      05240000
+                  MOVE '9'                TO EXISTE                     05250006
+                  MOVE SPACES             TO CED                        05260000
+                  MOVE SPACES             TO NOM                        05270000
+                  MOVE SPACES             TO APE                        05280000
+                  MOVE SPACES             TO DIR                        05290000
+              END-IF                                                    05300000
+           END-IF                                                       05310000
+           .                                                            05320000
+      *                                                                 05330000
+      ***************************************************               05340000
+      * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *               05350000
+      ***************************************************               05360000
+      *                                                                 05370000
+       0140-DELETE-01.                                                  05380000
+           MOVE TIPOUSUA       TO US-TIPOUSUA                           05381001
+           MOVE CED       TO US-DNI                                     05390000
+           EXEC SQL                                                     05400000
+             DELETE FROM USUARIOS                                       05410000
+                   WHERE                                                05420000
+                       TIPOUSUA = :US-TIPOUSUA AND                      05421004
+                       DNI = :US-DNI                                    05430000
+             END-EXEC                                                   05440000
+           IF SQLCODE = 0                                               05450000
+             MOVE '0'                TO EXISTE                          05460006
+           ELSE                                                         05470000
+             MOVE '9'                TO EXISTE                          05480006
+           END-IF                                                       05490000
+           .                                                            05500000
+       0150-CURSOR-01.                                                  05510000
+           EXEC CICS DELETEQ TS                                         05520000
+                QUEUE (WS-NOMBRECOLA)                                   05530000
+                RESP (RESPUESTA)                                        05540000
+           END-EXEC                                                     05550000
+           EXEC SQL                                                     05560000
+                OPEN CSR1                                               05570000
+           END-EXEC                                                     05580000
+           IF SQLCODE EQUAL ZERO                                        05590000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          05600000
+            PERFORM 0263-FECTCH-USUARIOS-DETA01                         05610000
+                UNTIL SQLCODE NOT EQUAL 0                               05620000
+           END-IF                                                       05630000
+                                                                        05640000
+           EXEC SQL                                                     05650000
+                CLOSE CSR1                                              05660000
+           END-EXEC                                                     05670000
+           .                                                            05680000
+       0263-FECTCH-USUARIOS-DETA01.                                     05690000
+           EXEC SQL                                                     05700000
+           FETCH CSR1                                                   05710000
+                   INTO                                                 05720000
+                       :US-DNI                                          05730000
+                      ,:US-NOMBRE                                       05740000
+                      ,:US-APELLIDOS                                    05750000
+                      ,:US-DIRECCION                                    05760000
+           END-EXEC                                                     05770000
+           IF SQLCODE = +100                                            05780000
+            MOVE 'Y' TO WS-EOF                                          05790000
+           END-IF                                                       05800000
+           IF SQLCODE = 0                                               05810000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  05820000
+             MOVE US-DNI       TO C-DNI                                 05830000
+             MOVE US-NOMBRE    TO C-NOMBRE                              05840000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           05850000
+             MOVE US-DIRECCION TO C-DIRECCION                           05860000
+             EXEC CICS WRITEQ TS                                        05870000
+                QUEUE (WS-NOMBRECOLA)                                   05880000
+                FROM (COLA-USUARIOS)                                    05890000
+             END-EXEC                                                   05900000
+             .                                                          05910000
+       0150-CURSOR-02.                                                  05920000
+           EXEC CICS DELETEQ TS                                         05930000
+                QUEUE (WS-NOMBRECOLA)                                   05940000
+                RESP (RESPUESTA)                                        05950000
+           END-EXEC                                                     05960000
+           EXEC SQL                                                     05970000
+                OPEN CSR2                                               05980000
+           END-EXEC                                                     05990000
+           IF SQLCODE EQUAL ZERO                                        06000000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          06010000
+            PERFORM 0263-FECTCH-USUARIOS-DETA02                         06020000
+                UNTIL SQLCODE NOT EQUAL 0                               06030000
+           END-IF                                                       06040000
+                                                                        06050000
+           EXEC SQL                                                     06060000
+                CLOSE CSR2                                              06070000
+           END-EXEC                                                     06080000
+           .                                                            06090000
+       0263-FECTCH-USUARIOS-DETA02.                                     06100000
+           EXEC SQL                                                     06110000
+           FETCH CSR2                                                   06120000
+                   INTO                                                 06130000
+                       :US-DNI                                          06140000
+                      ,:US-NOMBRE                                       06150000
+                      ,:US-APELLIDOS                                    06160000
+                      ,:US-DIRECCION                                    06170000
+           END-EXEC                                                     06180000
+           IF SQLCODE = +100                                            06190000
+            MOVE 'Y' TO WS-EOF                                          06200000
+           .                                                            06210000
+           IF SQLCODE = 0                                               06220000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  06230000
+             MOVE US-DNI       TO C-DNI                                 06320000
+             MOVE US-NOMBRE    TO C-NOMBRE                              06330000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           06340000
+             MOVE US-DIRECCION TO C-DIRECCION                           06350000
+             EXEC CICS WRITEQ TS                                        06360000
+                QUEUE (WS-NOMBRECOLA)                                   06370000
+                FROM (COLA-USUARIOS)                                    06380000
+             END-EXEC                                                   06390000
+             .                                                          06400000
+       0150-CURSOR-03.                                                  06410000
+           EXEC CICS DELETEQ TS                                         06420000
+                QUEUE (WS-NOMBRECOLA)                                   06430000
+                RESP (RESPUESTA)                                        06440000
+           END-EXEC                                                     06450000
+           EXEC SQL                                                     06460000
+                OPEN CSR3                                               06470000
+           END-EXEC                                                     06480000
+           IF SQLCODE EQUAL ZERO                                        06490000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          06500000
+            PERFORM 0263-FECTCH-USUARIOS-DETA03                         06510000
+                UNTIL SQLCODE NOT EQUAL 0                               06520000
+           END-IF                                                       06530000
+                                                                        06540000
+           EXEC SQL                                                     06550000
+                CLOSE CSR3                                              06560000
+           END-EXEC                                                     06570000
+           .                                                            06580000
+       0263-FECTCH-USUARIOS-DETA03.                                     06590000
+           EXEC SQL                                                     06600000
+           FETCH CSR3                                                   06610000
+                   INTO                                                 06620000
+                       :US-DNI                                          06630000
+                      ,:US-NOMBRE                                       06640000
+                      ,:US-APELLIDOS                                    06650000
+                      ,:US-DIRECCION                                    06660000
+           END-EXEC                                                     06670000
+           IF SQLCODE = +100                                            06680000
+            MOVE 'Y' TO WS-EOF                                          06690000
+           .                                                            06700000
+           IF SQLCODE = 0                                               06710000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  06720000
+             MOVE US-DNI       TO C-DNI                                 06810000
+             MOVE US-NOMBRE    TO C-NOMBRE                              06820000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           06830000
+             MOVE US-DIRECCION TO C-DIRECCION                           06840000
+             EXEC CICS WRITEQ TS                                        06850000
+                QUEUE (WS-NOMBRECOLA)                                   06860000
+                FROM (COLA-USUARIOS)                                    06870000
+             END-EXEC                                                   06880000
+             .                                                          06890000
+       0150-CURSOR-04.                                                  06900000
+           EXEC CICS DELETEQ TS                                         06910000
+                QUEUE (WS-NOMBRECOLA)                                   06920000
+                RESP (RESPUESTA)                                        06930000
+           END-EXEC                                                     06940000
+           EXEC SQL                                                     06950000
+                OPEN CSR4                                               06960000
+           END-EXEC                                                     06970000
+           IF SQLCODE EQUAL ZERO                                        06980000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          06990000
+            PERFORM 0263-FECTCH-USUARIOS-DETA04                         07000000
+                UNTIL SQLCODE NOT EQUAL 0                               07010000
+           END-IF                                                       07020000
+                                                                        07030000
+           EXEC SQL                                                     07040000
+                CLOSE CSR4                                              07050000
+           END-EXEC                                                     07060000
+           .                                                            07070000
+       0263-FECTCH-USUARIOS-DETA04.                                     07080000
+           EXEC SQL                                                     07090000
+           FETCH CSR4                                                   07100000
+                   INTO                                                 07110000
+                       :US-DNI                                          07120000
+                      ,:US-NOMBRE                                       07130000
+                      ,:US-APELLIDOS                                    07140000
+                      ,:US-DIRECCION                                    07150000
+           END-EXEC                                                     07160000
+           IF SQLCODE = +100                                            07170000
+            MOVE 'Y' TO WS-EOF                                          07180000
+           .                                                            07190000
+           IF SQLCODE = 0                                               07200000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  07210000
+             MOVE US-DNI       TO C-DNI                                 07300000
+             MOVE US-NOMBRE    TO C-NOMBRE                              07310000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           07320000
+             MOVE US-DIRECCION TO C-DIRECCION                           07330000
+             EXEC CICS WRITEQ TS                                        07340000
+                QUEUE (WS-NOMBRECOLA)                                   07350000
+                FROM (COLA-USUARIOS)                                    07360000
+             END-EXEC                                                   07370000
+             .                                                          07380000
+       0150-CURSOR-05.                                                  07390000
+           EXEC CICS DELETEQ TS                                         07400000
+                QUEUE (WS-NOMBRECOLA)                                   07410000
+                RESP (RESPUESTA)                                        07420000
+           END-EXEC                                                     07430000
+           EXEC SQL                                                     07440000
+                OPEN CSR5                                               07450000
+           END-EXEC                                                     07460000
+           IF SQLCODE EQUAL ZERO                                        07470000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          07480000
+            PERFORM 0263-FECTCH-USUARIOS-DETA05                         07490000
+                UNTIL SQLCODE NOT EQUAL 0                               07500000
+           END-IF                                                       07510000
+                                                                        07520000
+           EXEC SQL                                                     07530000
+                CLOSE CSR5                                              07540000
+           END-EXEC                                                     07550000
+           .                                                            07560000
+       0263-FECTCH-USUARIOS-DETA05.                                     07570000
+           EXEC SQL                                                     07580000
+           FETCH CSR5                                                   07590000
+                   INTO                                                 07600000
+                       :US-DNI                                          07610000
+                      ,:US-NOMBRE                                       07620000
+                      ,:US-APELLIDOS                                    07630000
+                      ,:US-DIRECCION                                    07640000
+           END-EXEC                                                     07650000
+           IF SQLCODE = +100                                            07660000
+            MOVE 'Y' TO WS-EOF                                          07670000
+           .                                                            07680000
+           IF SQLCODE = 0                                               07690000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  07700000
+             MOVE US-DNI       TO C-DNI                                 07790000
+             MOVE US-NOMBRE    TO C-NOMBRE                              07800000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           07810000
+             MOVE US-DIRECCION TO C-DIRECCION                           07820000
+             EXEC CICS WRITEQ TS                                        07830000
+                QUEUE (WS-NOMBRECOLA)                                   07840000
+                FROM (COLA-USUARIOS)                                    07850000
+             END-EXEC                                                   07860000
+             .                                                          07870000
+       0150-CURSOR-06.                                                  07880000
+           EXEC CICS DELETEQ TS                                         07890000
+                QUEUE (WS-NOMBRECOLA)                                   07900000
+                RESP (RESPUESTA)                                        07910000
+           END-EXEC                                                     07920000
+           EXEC SQL                                                     07930000
+                OPEN CSR6                                               07940000
+           END-EXEC                                                     07950000
+           IF SQLCODE EQUAL ZERO                                        07960000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          07970000
+            PERFORM 0263-FECTCH-USUARIOS-DETA06                         07980000
+                UNTIL SQLCODE NOT EQUAL 0                               07990000
+           END-IF                                                       08000000
+                                                                        08010000
+           EXEC SQL                                                     08020000
+                CLOSE CSR6                                              08030000
+           END-EXEC                                                     08040000
+           .                                                            08050000
+       0263-FECTCH-USUARIOS-DETA06.                                     08060000
+           EXEC SQL                                                     08070000
+           FETCH CSR6                                                   08080000
+                   INTO                                                 08090000
+                       :US-DNI                                          08100000
+                      ,:US-NOMBRE                                       08110000
+                      ,:US-APELLIDOS                                    08120000
+                      ,:US-DIRECCION                                    08130000
+           END-EXEC                                                     08140000
+           IF SQLCODE = +100                                            08150000
+            MOVE 'Y' TO WS-EOF                                          08160000
+           .                                                            08170000
+           IF SQLCODE = 0                                               08180000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  08190000
+             MOVE US-DNI       TO C-DNI                                 08280000
+             MOVE US-NOMBRE    TO C-NOMBRE                              08290000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           08300000
+             MOVE US-DIRECCION TO C-DIRECCION                           08310000
+             EXEC CICS WRITEQ TS                                        08320000
+                QUEUE (WS-NOMBRECOLA)                                   08330000
+                FROM (COLA-USUARIOS)                                    08340000
+             END-EXEC                                                   08350000
+             .                                                          08360000
+       0150-CURSOR-07.                                                  08370000
+           EXEC CICS DELETEQ TS                                         08380000
+                QUEUE (WS-NOMBRECOLA)                                   08390000
+                RESP (RESPUESTA)                                        08400000
+           END-EXEC                                                     08410000
+           EXEC SQL                                                     08420000
+                OPEN CSR7                                               08430000
+           END-EXEC                                                     08440000
+           IF SQLCODE EQUAL ZERO                                        08450000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          08460000
+            PERFORM 0263-FECTCH-USUARIOS-DETA07                         08470000
+                UNTIL SQLCODE NOT EQUAL 0                               08480000
+           END-IF                                                       08490000
+                                                                        08500000
+           EXEC SQL                                                     08510000
+                CLOSE CSR7                                              08520000
+           END-EXEC                                                     08530000
+           .                                                            08540000
+       0263-FECTCH-USUARIOS-DETA07.                                     08550000
+           EXEC SQL                                                     08560000
+           FETCH CSR7                                                   08570000
+                   INTO                                                 08580000
+                       :US-DNI                                          08590000
+                      ,:US-NOMBRE                                       08600000
+                      ,:US-APELLIDOS                                    08610000
+                      ,:US-DIRECCION                                    08620000
+           END-EXEC                                                     08630000
+           IF SQLCODE = +100                                            08640000
+            MOVE 'Y' TO WS-EOF                                          08650000
+           END-IF                                                       08660000
+           IF SQLCODE = 0                                               08670000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  08680000
+             MOVE US-DNI       TO C-DNI                                 08690000
+             MOVE US-NOMBRE    TO C-NOMBRE                              08700000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           08710000
+             MOVE US-DIRECCION TO C-DIRECCION                           08720000
+             EXEC CICS WRITEQ TS                                        08730000
+                QUEUE (WS-NOMBRECOLA)                                   08740000
+                FROM (COLA-USUARIOS)                                    08750000
+             END-EXEC                                                   08760000
+             .                                                          08770000
+       0150-CURSOR-08.                                                  08780000
+           EXEC CICS DELETEQ TS                                         08790000
+                QUEUE (WS-NOMBRECOLA)                                   08800000
+                RESP (RESPUESTA)                                        08810000
+           END-EXEC                                                     08820000
+           EXEC SQL                                                     08830000
+                OPEN CSR8                                               08840000
+           END-EXEC                                                     08850000
+           IF SQLCODE EQUAL ZERO                                        08860000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          08870000
+            PERFORM 0263-FECTCH-USUARIOS-DETA08                         08880000
+                UNTIL SQLCODE NOT EQUAL 0                               08890000
+           END-IF                                                       08900000
+                                                                        08910000
+           EXEC SQL                                                     08920000
+                CLOSE CSR8                                              08930000
+           END-EXEC                                                     08940000
+           .                                                            08950000
+       0263-FECTCH-USUARIOS-DETA08.                                     08960000
+           EXEC SQL                                                     08970000
+           FETCH CSR8                                                   08980000
+                   INTO                                                 08990000
+                       :US-DNI                                          09000000
+                      ,:US-NOMBRE                                       09010000
+                      ,:US-APELLIDOS                                    09020000
+                      ,:US-DIRECCION                                    09030000
+           END-EXEC                                                     09040000
+           IF SQLCODE = +100                                            09050000
+            MOVE 'Y' TO WS-EOF                                          09060000
+           .                                                            09070000
+           IF SQLCODE = 0                                               09080000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  09090000
+             MOVE US-DNI       TO C-DNI                                 09180000
+             MOVE US-NOMBRE    TO C-NOMBRE                              09190000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           09200000
+             MOVE US-DIRECCION TO C-DIRECCION                           09210000
+             EXEC CICS WRITEQ TS                                        09220000
+                QUEUE (WS-NOMBRECOLA)                                   09230000
+                FROM (COLA-USUARIOS)                                    09240000
+             END-EXEC                                                   09250000
+             .                                                          09260000
+       0150-CURSOR-09.                                                  09270000
+           EXEC CICS DELETEQ TS                                         09280000
+                QUEUE (WS-NOMBRECOLA)                                   09290000
+                RESP (RESPUESTA)                                        09300000
+           END-EXEC                                                     09310000
+           EXEC SQL                                                     09320000
+                OPEN CSR9                                               09330000
+           END-EXEC                                                     09340000
+           IF SQLCODE EQUAL ZERO                                        09350000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          09360000
+            PERFORM 0263-FECTCH-USUARIOS-DETA09                         09370000
+                UNTIL SQLCODE NOT EQUAL 0                               09380000
+           END-IF                                                       09390000
+                                                                        09400000
+           EXEC SQL                                                     09410000
+                CLOSE CSR9                                              09420000
+           END-EXEC                                                     09430000
+           .                                                            09440000
+       0263-FECTCH-USUARIOS-DETA09.                                     09450000
+           EXEC SQL                                                     09460000
+           FETCH CSR9                                                   09470000
+                   INTO                                                 09480000
+                       :US-DNI                                          09490000
+                      ,:US-NOMBRE                                       09500000
+                      ,:US-APELLIDOS                                    09510000
+                      ,:US-DIRECCION                                    09520000
+           END-EXEC                                                     09530000
+           IF SQLCODE = +100                                            09640000
+            MOVE 'Y' TO WS-EOF                                          09650000
+           .                                                            09660000
+           IF SQLCODE = 0                                               09670000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  09680000
+             MOVE US-DNI       TO C-DNI                                 09770000
+             MOVE US-NOMBRE    TO C-NOMBRE                              09780000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           09790000
+             MOVE US-DIRECCION TO C-DIRECCION                           09800000
+             EXEC CICS WRITEQ TS                                        09810000
+                QUEUE (WS-NOMBRECOLA)                                   09820000
+                FROM (COLA-USUARIOS)                                    09830000
+             END-EXEC                                                   09840000
+             .                                                          09850000
+       0150-CURSOR-10.                                                  09860000
+           EXEC CICS DELETEQ TS                                         09870000
+                QUEUE (WS-NOMBRECOLA)                                   09880000
+                RESP (RESPUESTA)                                        09890000
+           END-EXEC                                                     09900000
+           EXEC SQL                                                     09910000
+                OPEN CSR10                                              09920000
+           END-EXEC                                                     09930000
+           IF SQLCODE EQUAL ZERO                                        09940000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          09950000
+            PERFORM 0263-FECTCH-USUARIOS-DETA10                         09960000
+                UNTIL SQLCODE NOT EQUAL 0                               09970000
+           END-IF                                                       09980000
+                                                                        09990000
+           EXEC SQL                                                     10000000
+                CLOSE CSR10                                             10010000
+           END-EXEC                                                     10020000
+           .                                                            10030000
+       0263-FECTCH-USUARIOS-DETA10.                                     10040000
+           EXEC SQL                                                     10050000
+           FETCH CSR10                                                  10060000
+                   INTO                                                 10070000
+                       :US-DNI                                          10080000
+                      ,:US-NOMBRE                                       10090000
+                      ,:US-APELLIDOS                                    10100000
+                      ,:US-DIRECCION                                    10110000
+           END-EXEC                                                     10120000
+           IF SQLCODE = +100                                            10130000
+            MOVE 'Y' TO WS-EOF                                          10140000
+           .                                                            10150000
+           IF SQLCODE = 0                                               10160000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  10170000
+             MOVE US-DNI       TO C-DNI                                 10260000
+             MOVE US-NOMBRE    TO C-NOMBRE                              10270000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           10280000
+             MOVE US-DIRECCION TO C-DIRECCION                           10290000
+             EXEC CICS WRITEQ TS                                        10300000
+                QUEUE (WS-NOMBRECOLA)                                   10310000
+                FROM (COLA-USUARIOS)                                    10320000
+             END-EXEC                                                   10330000
+             .                                                          10340000
+       0150-CURSOR-11.                                                  10350000
+           EXEC CICS DELETEQ TS                                         10360000
+                QUEUE (WS-NOMBRECOLA)                                   10370000
+                RESP (RESPUESTA)                                        10380000
+           END-EXEC                                                     10390000
+           EXEC SQL                                                     10400000
+                OPEN CSR11                                              10410000
+           END-EXEC                                                     10420000
+           IF SQLCODE EQUAL ZERO                                        10430000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          10440000
+            PERFORM 0263-FECTCH-USUARIOS-DETA11                         10450000
+                UNTIL SQLCODE NOT EQUAL 0                               10460000
+           END-IF                                                       10470000
+                                                                        10480000
+           EXEC SQL                                                     10490000
+                CLOSE CSR11                                             10500000
+           END-EXEC                                                     10510000
+           .                                                            10520000
+       0263-FECTCH-USUARIOS-DETA11.                                     10530000
+           EXEC SQL                                                     10540000
+           FETCH CSR11                                                  10550000
+                   INTO                                                 10560000
+                       :US-DNI                                          10570000
+                      ,:US-NOMBRE                                       10580000
+                      ,:US-APELLIDOS                                    10590000
+                      ,:US-DIRECCION                                    10600000
+           END-EXEC                                                     10610000
+           IF SQLCODE = +100                                            10620000
+            MOVE 'Y' TO WS-EOF                                          10630000
+           .                                                            10640000
+           IF SQLCODE = 0                                               10650000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  10660000
+             MOVE US-DNI       TO C-DNI                                 10750000
+             MOVE US-NOMBRE    TO C-NOMBRE                              10760000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           10770000
+             MOVE US-DIRECCION TO C-DIRECCION                           10780000
+             EXEC CICS WRITEQ TS                                        10790000
+                QUEUE (WS-NOMBRECOLA)                                   10800000
+                FROM (COLA-USUARIOS)                                    10810000
+             END-EXEC                                                   10820000
+             .                                                          10830000
+       0150-CURSOR-12.                                                  10840000
+           EXEC CICS DELETEQ TS                                         10850000
+                QUEUE (WS-NOMBRECOLA)                                   10860000
+                RESP (RESPUESTA)                                        10870000
+           END-EXEC                                                     10880000
+           EXEC SQL                                                     10890000
+                OPEN CSR12                                              10900000
+           END-EXEC                                                     10910000
+           IF SQLCODE EQUAL ZERO                                        10920000
+            MOVE ZEROS TO WS-CONTADOR-REGISTRO                          10930000
+            PERFORM 0263-FECTCH-USUARIOS-DETA12                         10940000
+                UNTIL SQLCODE NOT EQUAL 0                               10950000
+           END-IF                                                       10960000
+                                                                        10970000
+           EXEC SQL                                                     10980000
+                CLOSE CSR12                                             10990000
+           END-EXEC                                                     11000000
+           .                                                            11010000
+       0263-FECTCH-USUARIOS-DETA12.                                     11020000
+           EXEC SQL                                                     11030000
+           FETCH CSR12                                                  11040000
+                   INTO                                                 11050000
+                       :US-DNI                                          11060000
+                      ,:US-NOMBRE                                       11070000
+                      ,:US-APELLIDOS                                    11080000
+                      ,:US-DIRECCION                                    11090000
+           END-EXEC                                                     11100000
+           IF SQLCODE = +100                                            11110000
+            MOVE 'Y' TO WS-EOF                                          11120000
+           .                                                            11130000
+           IF SQLCODE = 0                                               11140000
+             ADD 1             TO WS-CONTADOR-REGISTRO                  11150000
+             MOVE US-DNI       TO C-DNI                                 11240000
+             MOVE US-NOMBRE    TO C-NOMBRE                              11250000
+             MOVE US-APELLIDOS TO C-APELLIDOS                           11260000
+             MOVE US-DIRECCION TO C-DIRECCION                           11270000
+             EXEC CICS WRITEQ TS                                        11280000
+                QUEUE (WS-NOMBRECOLA)                                   11290000
+                FROM (COLA-USUARIOS)                                    11300000
+             END-EXEC                                                   11310000
+             .                                                          11320000
+

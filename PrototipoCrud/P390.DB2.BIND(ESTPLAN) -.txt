@@ -1,0 +1,13 @@
+EDIT       P390.DB2.BIND(ESTPLAN) - 01.00       
+Command ===>                                    
+****** ***************************** Top of Data
+000100 DSN    SYSTEM     (DSN1)                 
+000200 BIND   PLAN       (PDB275) -             
+000300        PKLIST     (PKESTUD.*) -          
+000400        ACTION     (REPLACE) -            
+000500        ISOLATION  (CS)      -            
+000600        VALIDATE   (BIND)    -            
+000700        RELEASE    (COMMIT)  -            
+000800        OWNER      (P390)    -            
+000900        QUALIFIER  (P390)                 
+001000 END                                      
