@@ -27,7 +27,7 @@
                                                                         00270099
       *============================================================     00280099
        LINKAGE SECTION.                                                 00290099
-       01  DFHCOMMAREA           PIC X(59).                             00300099
+       01  DFHCOMMAREA           PIC X(52).                             00300099
        01  AREA-LINK          REDEFINES DFHCOMMAREA.                    00310099
            05 LK-PM-TIPO-OPE     PIC 9(01).                             00330099
            05 LK-PM-SUBTIPO-OPE  PIC 9(02).                             00331099
