@@ -10,7 +10,11 @@
       *        4: MODIFICAR - UPDATE                                    00029099
       *************************************************************     00030099
        IDENTIFICATION DIVISION.                                         00040099
+<<<<<<< HEAD
          PROGRAM-ID. RSNOTCUR                                           00050099
+=======
+         PROGRAM-ID. RSNCURSO.                                          00050099
+>>>>>>> main
        ENVIRONMENT DIVISION.                                            00060099
        DATA DIVISION.                                                   00070099
        WORKING-STORAGE SECTION.                                         00080099
@@ -37,8 +41,13 @@
        LINKAGE SECTION.                                                 00290099
        01  DFHCOMMAREA        PIC X(49).                                00300099
        01  AREA-LINK          REDEFINES DFHCOMMAREA.                    00310099
+<<<<<<< HEAD
            05 LK-CR-TIPO-OPE     PIC X(01).                             00330099
            05 LK-CR-SUBTIPO-OPE  PIC X(01).                             00331099
+=======
+           05 LK-CR-TIPO-OPE     PIC 9(01).                             00330099
+           05 LK-CR-SUBTIPO-OPE  PIC 9(02).                             00331099
+>>>>>>> main
            05 LK-CR-CURSO        PIC X(05).                             00340099
            05 LK-CR-DESCRIPCION  PIC X(20).                             00350099
            05 LK-CR-DNIPROFESOR  PIC X(09).                             00360099

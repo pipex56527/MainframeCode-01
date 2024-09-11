@@ -37,7 +37,12 @@
        LINKAGE SECTION.                                                 00290099
        01  DFHCOMMAREA        PIC X(49).                                00300099
        01  AREA-LINK          REDEFINES DFHCOMMAREA.                    00310099
+<<<<<<< HEAD
            05 LK-PF-COD-OPE      PIC 9(02).                             00330099
+=======
+           05 LK-PF-TIPO-OPE     PIC 9(01).                             00330099
+           05 LK-PF-SUBTIPO-OPE  PIC 9(02).                             00331099
+>>>>>>> main
            05 LK-PF-TRAN         PIC X(04).                             00340099
            05 LK-PF-IDPERFIL     PIC X(03).                             00350099
            05 LK-PF-NOMBRE       PIC X(20).                             00360099
@@ -82,8 +87,13 @@
       * 0200-EJECUTAR-OPERACION                                         00740099
       ******************************************************************00750099
        0200-EJECUTAR-OPERACION.                                         00760099
+<<<<<<< HEAD
            DISPLAY "LK-PF-COD-OPE: " LK-PF-COD-OPE                      00770099
            EVALUATE LK-PF-COD-OPE                                       00780099
+=======
+           DISPLAY "LK-PF-COD-OPE: " LK-PF-TIPO-OPE                     00770099
+           EVALUATE LK-PF-TIPO-OPE                                      00780099
+>>>>>>> main
               WHEN 1                                                    00790099
       *          DISPLAY "CONSULTA"                                     00800099
                  PERFORM 0210-CONSULTAR-PERFIL                          00810099
