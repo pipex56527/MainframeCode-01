@@ -1,0 +1,297 @@
+      *-----------------------------------------------------------*
+      *  PROGRAMA QUE MANEJA EL MENU DEL SISTEMA DE NOTAS
+      *  RECIBE LOS DATOS DEL USUARIO EN LA COMMAREA
+      *  Y LOS PASA A LOS PROGRAMAS QUE ENLAZA EN LAS
+      *  OPCIONES. PF3: SALE DEL SISTEMA DE NOTAS.
+      *-----------------------------------------------------------*
+      *
+      *------------------------*
+       IDENTIFICATION DIVISION.
+      *------------------------*
+         PROGRAM-ID. PSNMEN02.
+      *
+      *---------------------*
+       ENVIRONMENT DIVISION.
+      *---------------------*
+      *
+      *--------------*
+       DATA DIVISION.
+      *--------------*
+      *
+       WORKING-STORAGE SECTION.
+      *
+      * COPY DEL MAPA DE MENU
+      *
+       COPY CSNME02.
+      *
+      * FIN DE COPY DEL MAPA GENERADO
+      *--------------------------------------------------------------*
+      * VARIABLES DE TRABAJO
+      *
+       01  WS-VARIABLES-DE-TRABAJO.
+           03  WS-RESPUESTA             PIC S9(08)  COMP.
+           03  WS-CURRENT-DATE.
+               05 WS-CURRENT-YEAR       PIC 9(4).
+               05 WS-CURRENT-MONTH      PIC 9(2).
+               05 WS-CURRENT-DAY        PIC 9(2).
+           03  WS-FECHA-SALIDA.
+               05 WS-AAAA               PIC X(04).
+               05 FILLER                PIC X       VALUE "-".
+               05 WS-MES                PIC XX.
+               05 FILLER                PIC X       VALUE "-".
+               05 WS-DIA                PIC XX.
+      *
+      * DEFINICION DE LA COMMAREA
+      *
+       01  MI-COMMAREA              PIC X(95).
+       01  MI-COMMAREA-RD           REDEFINES MI-COMMAREA.
+           05 CA-TRANS              PIC X(04).
+           05 CA-TERM               PIC X(04).
+           05 CA-CICLO              PIC X(02).
+           05 CA-US-DNI             PIC X(09).
+           05 CA-US-TIPOUSUA        PIC X(05).
+           05 CA-US-NOMBRE          PIC X(20).
+           05 CA-US-APELLIDOS       PIC X(20).
+           05 CA-PR-PERFIL          PIC X(03).
+           05 CA-PR-NOMBRE          PIC X(20).
+           05 CA-PR-CONSUL          PIC X(02).
+           05 CA-PR-BORRAR          PIC X(02).
+           05 CA-PR-INGRESAR        PIC X(02).
+           05 CA-PR-MODIF           PIC X(02).
+      *
+       01  WC-CONSTANTES.
+           05  WC-TRANSID           PIC X(4)    VALUE "SN02".
+           05  WC-PROG-ESTUD        PIC X(8)    VALUE "PSNNES03".
+           05  WC-DESC-ESTUD  PIC X(20) VALUE "CONSULTA ESTUDIANTES".
+           05  WC-PROG-PROFE        PIC X(8)    VALUE "PSNNPR04".
+           05  WC-DESC-PROFE  PIC X(20) VALUE "CONSULTA PROFESORES ".
+           05  WC-PROG-ADMIN        PIC X(8)    VALUE "PSNEST05".
+           05  WC-DESC-ADMIN  PIC X(20) VALUE "MANTTO ESTUDIANTES  ".
+      *
+       01  WS-MJES-LOG.
+           03 WS-OPT-ERR  PIC X(23) VALUE "OPCION INVALIDA.       ".
+           03 WS-TEC-ERR  PIC X(23) VALUE "TECLA INVALIDA.        ".
+           03 WS-AUT-ERR  PIC X(23) VALUE "NO ESTA AUTORIZADO.    ".
+           03 WS-OPT-PEND PIC X(23) VALUE "POR IMPLEMENTAR.       ".
+           03 WS-LLAMADO  PIC X(45)
+              VALUE "EL MENU DEBE SER LLAMADO DESDE UN PROGRAMA   ".
+           03 WS-MSG-FIN-SESION     PIC X(45)
+              VALUE "FIN SISTEMA DE NOTAS   ".
+           03 WS-MSG-LINK.
+              05 WS-PROG-SAL        PIC X(8).
+              05 FILLER             PIC XX.
+              05 WS-DESCRIP         PIC X(20).
+              05 FILLER             PIC XX.
+              05 WS-MSG-PEND        PIC X(23).
+      *
+      *---------------------------------------------------------------*
+      * AYUDAS DE BMS
+      *
+       COPY DFHAID.
+       COPY DFHBMSCA.
+      *
+      * FIN COPY AYUDAS
+      *---------------------------------------------------------------*
+       LINKAGE SECTION.
+       01  DFHCOMMAREA              PIC X(95).
+      *
+      *-------------------*
+       PROCEDURE DIVISION.
+      *-------------------*
+      *
+       0000-PRINCIPAL.
+           PERFORM 100-RECIBIR-TXN
+           PERFORM 200-PROCESAR-TXN
+           PERFORM 780-RETORNAR-TXN
+           .
+      *
+      * RECIBIR-TXN
+      *    EL PROGRAMA QUE LLAMA ESTE MENU PASA CA-CICLO EN 99
+      *    VALIDO QUE LA EIBCALEN ES 0 PARA QUE NO SE EJECUTE ESTA
+      *    TRANSACCION DIRECTAMENTE DESDE CICS.
+      *
+       100-RECIBIR-TXN.
+           MOVE DFHCOMMAREA  TO MI-COMMAREA
+           DISPLAY "MI-COMMAREA AL ENTRAR: " MI-COMMAREA
+      *
+           IF (EIBCALEN = 0) THEN
+               MOVE '99'                   TO CA-CICLO
+               MOVE '*---  M A R U  --- *' TO CA-US-NOMBRE
+               MOVE LOW-VALUES             TO MSNME02O
+      *        MOVE WS-LLAMADO TO WS-MSG-FIN-SESION
+      *        PERFORM 900-TERMINAR
+           ELSE
+               IF (CA-CICLO NOT EQUAL '99') THEN
+                  EXEC CICS RECEIVE MAP('MSNME02')
+                            INTO       (MSNME02I)
+                            NOHANDLE
+                  END-EXEC
+      *
+                  EXEC CICS
+                       IGNORE CONDITION MAPFAIL
+                  END-EXEC
+               END-IF
+           END-IF
+           .
+      *
+      * PROCESAR-TXN
+      *
+       200-PROCESAR-TXN.
+           MOVE SPACES           TO MSGLOGO
+           MOVE CA-US-NOMBRE     TO MNOMBREO
+           MOVE FUNCTION CURRENT-DATE TO WS-CURRENT-DATE
+           MOVE WS-CURRENT-YEAR  TO WS-AAAA
+           MOVE WS-CURRENT-MONTH TO WS-MES
+           MOVE WS-CURRENT-DAY   TO WS-DIA
+           MOVE WS-FECHA-SALIDA  TO MFECHAO
+      *
+           IF (CA-CICLO = '99') THEN
+              MOVE '88' TO CA-CICLO
+           ELSE
+              DISPLAY "ANALIZO RECEIVE MAPA"
+              EVALUATE EIBAID
+                  WHEN DFHENTER
+      *                DISPLAY "ENTER"
+                       PERFORM 300-VALIDAR-OPCION
+                  WHEN DFHPF3
+      *                DISPLAY "F3"
+                       PERFORM 900-TERMINAR-PROG
+                  WHEN OTHER
+      *                DISPLAY "TECLA INVALIDA"
+                       MOVE WS-TEC-ERR TO MSGLOGO
+              END-EVALUATE
+           END-IF
+           .
+      *
+      * VALIDAR OPCION
+      *
+       300-VALIDAR-OPCION.
+      *    DISPLAY "EVALUO OPCION: " MOPCIONI
+           EVALUATE MOPCIONI
+               WHEN '1'
+                    PERFORM 790-LINK-CONSULTA-PROFE
+               WHEN '2'
+                    PERFORM 790-LINK-CONSULTA-ESTUD
+               WHEN '3'
+                    PERFORM 790-LINK-ADMIN-ESTUD
+               WHEN OTHER
+      *             DISPLAY "OPCION INVALIDA"
+                    MOVE WS-OPT-ERR TO MSGLOGO
+           END-EVALUATE
+           .
+      *
+      * RETORNAR-TXN
+      *
+       780-RETORNAR-TXN.
+           EXEC CICS SEND MAP('MSNME02')
+                     FROM(MSNME02O)
+                     ERASE
+           END-EXEC
+
+           MOVE EIBTRNID    TO CA-TRANS
+           MOVE EIBTRMID    TO CA-TERM
+           DISPLAY "MI-COMMAREA AL SALIR: " MI-COMMAREA
+      *
+           EXEC CICS RETURN
+                     TRANSID  (WC-TRANSID)
+                     COMMAREA (MI-COMMAREA)
+                     LENGTH   (LENGTH OF MI-COMMAREA)
+           END-EXEC
+      *
+      *    LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO
+      *    O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN
+           GOBACK
+           .
+      *
+      * 790-LINK-CONSULTA-PROFE
+      *
+       790-LINK-CONSULTA-PROFE.
+      *    BORRAR ESTAS LINEAS CUANDO YA ENLACE EL PROGRAMA
+           MOVE '88'          TO CA-CICLO
+           MOVE SPACES        TO WS-MSG-LINK
+           MOVE WC-PROG-PROFE TO WS-PROG-SAL
+           MOVE WC-DESC-PROFE TO WS-DESCRIP
+           MOVE WS-OPT-PEND   TO WS-MSG-PEND
+           MOVE WS-MSG-LINK   TO MSGLOGO
+      *
+      *    LINEAS PARA ENLAZAR PROGRAMA OJO- COMMAREA
+      *    MOVE '99' TP CA-CICLO
+      *
+      *    EXEC CICS XCTL
+      *         PROGRAM  (WC-PROG-PROFE)
+      *         COMMAREA (MI-COMMAREA)
+      *         LENGTH   (LENGTH OF MI-COMMAREA)
+      *         RESP     (WS-RESPUESTA)
+      *    END-EXEC
+      *
+           .
+      *
+      * 790-LINK-CONSULTA-ESTUD
+      *
+       790-LINK-CONSULTA-ESTUD.
+      *    DISPLAY "CONSULTA ESTUD"
+           MOVE '88'          TO CA-CICLO
+           MOVE SPACES        TO WS-MSG-LINK
+           MOVE WC-PROG-ESTUD TO WS-PROG-SAL
+           MOVE WC-DESC-ESTUD TO WS-DESCRIP
+           MOVE WS-OPT-PEND   TO WS-MSG-PEND
+           MOVE WS-MSG-LINK   TO MSGLOGO
+      *
+      *    LINEAS PARA ENLAZAR PROGRAMA OJO- COMMAREA
+      *    MOVE '99' TP CA-CICLO
+      *
+      *
+      *    EXEC CICS XCTL
+      *         PROGRAM  (WC-PROG-ESTUD)
+      *         COMMAREA (MI-COMMAREA)
+      *         LENGTH   (LENGTH OF MI-COMMAREA)
+      *         RESP     (WS-RESPUESTA)
+      *    END-EXEC
+      *
+           .
+      *
+      * 790-LINK-ADMIN-ESTUD
+      *
+       790-LINK-ADMIN-ESTUD.
+      *    DISPLAY "ADMIN ESTUD " WS-OPT-PEND
+           MOVE '88'          TO CA-CICLO
+           MOVE SPACES        TO WS-MSG-LINK
+           MOVE WC-PROG-ADMIN TO WS-PROG-SAL
+           MOVE WC-DESC-ADMIN TO WS-DESCRIP
+           MOVE WS-OPT-PEND   TO WS-MSG-PEND
+           MOVE WS-MSG-LINK   TO MSGLOGO
+      *
+      *
+      *    LINEAS PARA ENLAZAR PROGRAMA OJO- COMMAREA
+      *    MOVE '99' TP CA-CICLO
+      *
+      *    EXEC CICS XCTL
+      *         PROGRAM  (WC-PROG-ADMIN)
+      *         COMMAREA (MI-COMMAREA)
+      *         LENGTH   (LENGTH OF MI-COMMAREA)
+      *         RESP     (WS-RESPUESTA)
+      *    END-EXEC
+      *
+           .
+      *
+      * 900-TERMINAR-PROG
+      *
+       900-TERMINAR-PROG.
+            DISPLAY "TERMINA PROGRAMA"
+      *
+            EXEC CICS
+                 SEND TEXT FROM(WS-MSG-FIN-SESION)
+                 ERASE
+                 FREEKB
+            END-EXEC
+      *
+            EXEC CICS RETURN
+            END-EXEC
+      *     LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO
+      *     O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN
+            GOBACK
+            .
+      *
+      *  FIN DE PROGRAMA
+      *
+                                                                        
