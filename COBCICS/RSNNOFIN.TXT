@@ -51,8 +51,8 @@
            05 LK-NT-AAAA          PIC X(04).
            05 LK-NT-NOTA          PIC 99V99.
            05 LK-NT-CONTADOR      PIC 9(10).
-           05 LK-NT-SQLCODE       PIC S9(9).
            05 LK-NT-COD-RET       PIC 9(02).
+           05 LK-NT-SQLCODE       PIC S9(9).
 
       *=================================================================
        PROCEDURE DIVISION USING DFHCOMMAREA.
@@ -82,7 +82,7 @@
       * 0100-INICIO
       ******************************************************************
        0100-INICIO.
-           DISPLAY "AREA-LINK INP: " AREA-LINK
+      *   DISPLAY "AREA-LINK INP: " AREA-LINK
            .
       ******************************************************************
       * 0200-EJECUTAR-OPERACION
@@ -241,7 +241,7 @@
            END-IF
            .
       ***************************************************
-      * 0217-CONSULTA-NOTA-SUBTIPO-7              *
+      * 0217-CONSULTA-NOTA-SUBTIPO-7 POR ESTUDIANTE ANT *
       ***************************************************
        0217-CONSULTA-NOTA-SUBTIPO-7.
            MOVE LK-NT-CURSO      TO NT-CURSO
@@ -249,12 +249,17 @@
 
            EXEC SQL
                 DECLARE CURPREV CURSOR FOR
+      *            SELECT
+      *               CURSO, DNIESTUDIANTE, AAAA, NOTA
+      *            FROM NOTASFIN
+      *            WHERE CURSO = :NT-CURSO
+      *              AND DNIESTUDIANTE  < :NT-DNIESTUDIANTE
+      *            ORDER BY CURSO, DNIESTUDIANTE DESC
                    SELECT
                       CURSO, DNIESTUDIANTE, AAAA, NOTA
                    FROM NOTASFIN
-                   WHERE CURSO = :NT-CURSO
-                     AND DNIESTUDIANTE  < :NT-DNIESTUDIANTE
-                   ORDER BY CURSO, DNIESTUDIANTE DESC
+                   WHERE DNIESTUDIANTE  < :NT-DNIESTUDIANTE
+                   ORDER BY DNIESTUDIANTE DESC
            END-EXEC
       *
            EXEC SQL
@@ -290,7 +295,7 @@
            END-EXEC
            .
       ***************************************************
-      * 0218-CONSULTA-NOTA-SUBTIPO-8                   *
+      * 0218-CONSULTA-NOTA-SUBTIPO-8 POR ESTUDIANTE SIG *
       ***************************************************
        0218-CONSULTA-NOTA-SUBTIPO-8.
            MOVE LK-NT-CURSO      TO NT-CURSO
@@ -298,12 +303,17 @@
 
            EXEC SQL
                 DECLARE CURNEXT CURSOR FOR
+      *            SELECT
+      *               CURSO, DNIESTUDIANTE, AAAA, NOTA
+      *            FROM NOTASFIN
+      *            WHERE CURSO = :NT-CURSO
+      *              AND DNIESTUDIANTE  > :NT-DNIESTUDIANTE
+      *            ORDER BY CURSO, DNIESTUDIANTE ASC
                    SELECT
                       CURSO, DNIESTUDIANTE, AAAA, NOTA
                    FROM NOTASFIN
-                   WHERE CURSO = :NT-CURSO
-                     AND DNIESTUDIANTE  > :NT-DNIESTUDIANTE
-                   ORDER BY CURSO, DNIESTUDIANTE ASC
+                   WHERE DNIESTUDIANTE  > :NT-DNIESTUDIANTE
+                   ORDER BY DNIESTUDIANTE ASC
            END-EXEC
       *
            EXEC SQL
@@ -429,11 +439,11 @@
        0900-ERROR-DB2.
            MOVE SQLCODE TO LK-NT-SQLCODE
            MOVE SQLCODE TO DB2-SQLCODE
-           DISPLAY "ERROR DB2 EN RUTINA: "
-           DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
-           DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
-           DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG
-           DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE
+      *    DISPLAY "ERROR DB2 EN RUTINA: "
+      *    DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
+      *    DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
+      *    DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG
+      *    DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE
            .
       ******************************************************************
       * FIN SESION

@@ -1,23 +1,23 @@
       *************************************************************
-      *   ENCAPSULADOR TABLA CURSOS
+      *   ENCAPSULADOR TABLA PERFILES
       *   RUTINA QUE EJECUTA LAS SENTENCIAS DE LA BASE DE DATOS A
       *   PARTIR DE UN TIPO Y SUBTIPO DE OPERACION QUE ENVIA
       *   EL PROGRAMA QUE LA INVOCA.
       *   TIPO 1: CONSULTA - SELECT
-      *      SUBTIPO 1: CONSULTA POR CURSO
+      *      SUBTIPO 1: CONSULTA POR TRANSACCION Y IDPERFIL
       *        2: ADICION - INSERT
       *        3: BORRAR - DELETE
       *        4: MODIFICAR - UPDATE
       *************************************************************
        IDENTIFICATION DIVISION.
-         PROGRAM-ID. RSNCURSO.
+         PROGRAM-ID. RSNPERFI.
        ENVIRONMENT DIVISION.
        DATA DIVISION.
        WORKING-STORAGE SECTION.
       *===============================================================
-      * MODSQL - DEFINICION TABLA CURSOS SQL Y COBOL
+      * MODSQL - DEFINICION TABLA PERFILES SQL Y COBOL
            EXEC SQL
-                INCLUDE CURSOS
+                INCLUDE PERFILES
            END-EXEC.
       *===============================================================
       * MODSQL - SE TIENE QUE UTILIZAR SQLCA
@@ -37,15 +37,17 @@
        LINKAGE SECTION.
        01  DFHCOMMAREA        PIC X(49).
        01  AREA-LINK          REDEFINES DFHCOMMAREA.
-           05 LK-CR-TIPO-OPE     PIC 9(01).
-           05 LK-CR-SUBTIPO-OPE  PIC 9(02).
-           05 LK-CR-CURSO        PIC X(05).
-           05 LK-CR-DESCRIPCION  PIC X(20).
-           05 LK-CR-DNIPROFESOR  PIC X(09).
-           05 LK-CR-ESTADO       PIC X(01).
-           05 LK-CR-COD-RET      PIC 9(02).
-           05 LK-CR-SQLCODE      PIC S9(9).
-
+           05 LK-PF-TIPO-OPE     PIC 9(01).
+           05 LK-PF-SUBTIPO-OPE  PIC 9(02).
+           05 LK-PF-TRAN         PIC X(04).
+           05 LK-PF-IDPERFIL     PIC X(03).
+           05 LK-PF-NOMBRE       PIC X(20).
+           05 LK-PF-CONSUL       PIC X(02).
+           05 LK-PF-BORRAR       PIC X(02).
+           05 LK-PF-INGRESAR     PIC X(02).
+           05 LK-PF-MODIF        PIC X(02).
+           05 LK-PF-COD-RET      PIC 9(02).
+           05 LK-PF-SQLCODE      PIC S9(9).
       *=================================================================
        PROCEDURE DIVISION USING DFHCOMMAREA.
       *=================================================================
@@ -74,51 +76,62 @@
       * 0100-INICIO
       ******************************************************************
        0100-INICIO.
+      *    DISPLAY "ENTRO A RUTINA RSNPERFI"
       *    DISPLAY "AREA-LINK INP: " AREA-LINK
            .
       ******************************************************************
       * 0200-EJECUTAR-OPERACION
       ******************************************************************
        0200-EJECUTAR-OPERACION.
-           EVALUATE LK-CR-TIPO-OPE
-              WHEN '1'
-                 PERFORM 0210-CONSULTAR-CURSO
-              WHEN '2'
-                 PERFORM 0220-INSERTAR-CURSO
-              WHEN '3'
-                 PERFORM 0230-BORRAR-CURSO
-              WHEN '4'
-                 PERFORM 0240-MODIFICAR-CURSO
+      *    DISPLAY "LK-PF-COD-OPE: " LK-PF-TIPO-OPE
+           EVALUATE LK-PF-TIPO-OPE
+              WHEN 1
+      *          DISPLAY "CONSULTA"
+                 PERFORM 0210-CONSULTAR-PERFIL
+              WHEN 2
+      *          DISPLAY "ADICION"
+                 PERFORM 0220-INSERTAR-PERFIL
+              WHEN 3
+      *          DISPLAY "DELETE"
+                 PERFORM 0230-BORRAR-PERFIL
+              WHEN 4
+      *          DISPLAY "UPDATE"
+                 PERFORM 0240-MODIFICAR-PERFIL
               WHEN OTHER
-                 MOVE 9             TO LK-CR-COD-RET
+      *          DISPLAY "OPCION NO IMPLEMENTADA"
+                 MOVE 9                        TO LK-PF-COD-RET
            END-EVALUATE
            .
       **************************************************************
-      * 0210-CONSULTAR-CURSO
+      * 0210-CONSULTAR-PERFIL
       **************************************************************
-       0210-CONSULTAR-CURSO.
-           MOVE 1           TO LK-CR-COD-RET
-           MOVE LK-CR-CURSO TO CR-CURSO
+       0210-CONSULTAR-PERFIL.
+           MOVE 1              TO LK-PF-COD-RET
+           MOVE LK-PF-TRAN     TO PF-TRAN
+           MOVE LK-PF-IDPERFIL TO PF-IDPERFIL
       *
            EXEC SQL
              SELECT
-                DESCRIPCION, DNIPROFESOR, ESTADO
+                NOMBRE, CONSUL, BORRAR, INGRESAR, MODIF
              INTO
-                :CR-DESCRIPCION, :CR-DNIPROFESOR, :CR-ESTADO
-             FROM CURSOS
-             WHERE CURSO =:CR-CURSO
+                :PF-NOMBRE, :PF-CONSUL, :PF-BORRAR,
+                :PF-INGRESAR, :PF-MODIF
+             FROM PERFILES
+             WHERE TRAN = :PF-TRAN  AND  IDPERFIL = :PF-IDPERFIL
            END-EXEC
 
            IF SQLCODE = 0 THEN
-              MOVE 0               TO  LK-CR-COD-RET
-              MOVE CR-DESCRIPCION  TO  LK-CR-DESCRIPCION
-              MOVE CR-DNIPROFESOR TO   LK-CR-DNIPROFESOR
-              MOVE CR-ESTADO       TO  LK-CR-ESTADO
+              MOVE 0             TO  LK-PF-COD-RET
+              MOVE PF-NOMBRE     TO  LK-PF-NOMBRE
+              MOVE PF-CONSUL     TO  LK-PF-CONSUL
+              MOVE PF-BORRAR     TO  LK-PF-BORRAR
+              MOVE PF-INGRESAR   TO  LK-PF-INGRESAR
+              MOVE PF-MODIF      TO  LK-PF-MODIF
            ELSE
               IF SQLCODE = +100 THEN
-                 MOVE 1 TO  LK-CR-COD-RET
+                 MOVE 1 TO  LK-PF-COD-RET
               ELSE
-                 MOVE 2 TO  LK-CR-COD-RET
+                 MOVE 2 TO  LK-PF-COD-RET
                  PERFORM 0900-ERROR-DB2
               END-IF
            END-IF
@@ -126,30 +139,35 @@
       ***************************************************
       * INSERTA LOS DATOS EN LA TABLA                   *
       ***************************************************
-       0220-INSERTAR-CURSO.
-           MOVE LK-CR-CURSO        TO  CR-CURSO
-           MOVE LK-CR-DESCRIPCION  TO  CR-DESCRIPCION
-           MOVE LK-CR-DNIPROFESOR TO   CR-DNIPROFESOR
-           MOVE LK-CR-ESTADO       TO  CR-ESTADO
+       0220-INSERTAR-PERFIL.
+           MOVE LK-PF-TRAN       TO  PF-TRAN
+           MOVE LK-PF-IDPERFIL   TO  PF-IDPERFIL
+           MOVE LK-PF-NOMBRE     TO  PF-NOMBRE
+           MOVE LK-PF-CONSUL     TO  PF-CONSUL
+           MOVE LK-PF-BORRAR     TO  PF-BORRAR
+           MOVE LK-PF-INGRESAR   TO  PF-INGRESAR
+           MOVE LK-PF-MODIF      TO  PF-MODIF
 
            EXEC SQL
-             INSERT INTO CURSOS
+             INSERT INTO PERFILES
                 (
-                 CURSO, DESCRIPCION, DNIPROFESOR, ESTADO
+                 TRAN, IDPERFIL, NOMBRE, CONSUL, BORRAR,
+                 INGRESAR, MODIF
                 )
              VALUES
                 (
-                 :CR-CURSO,:CR-DESCRIPCION, :CR-DNIPROFESOR,  :CR-ESTADO
+                 :PF-TRAN, :PF-IDPERFIL, :PF-NOMBRE, :PF-CONSUL,
+                 :PF-BORRAR, :PF-INGRESAR, :PF-MODIF
                 )
            END-EXEC
 
            IF SQLCODE = 0
-             MOVE 0         TO LK-CR-COD-RET
+             MOVE 0         TO LK-PF-COD-RET
            ELSE
              IF SQLCODE = +100 THEN
-                MOVE 1      TO  LK-CR-COD-RET
+                MOVE 1      TO  LK-PF-COD-RET
              ELSE
-                MOVE 2      TO  LK-CR-COD-RET
+                MOVE 2      TO  LK-PF-COD-RET
                 PERFORM 0900-ERROR-DB2
              END-IF
            END-IF
@@ -157,21 +175,22 @@
       ***************************************************
       * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *
       ***************************************************
-       0230-BORRAR-CURSO.
-           MOVE LK-CR-CURSO      TO  CR-CURSO
+       0230-BORRAR-PERFIL.
+           MOVE LK-PF-TRAN       TO  PF-TRAN
+           MOVE LK-PF-IDPERFIL   TO  PF-IDPERFIL
 
            EXEC SQL
-             DELETE FROM CURSOS
-               WHERE CURSO =:CR-CURSO
+             DELETE FROM PERFILES
+               WHERE TRAN = :PF-TRAN  AND  IDPERFIL = :PF-IDPERFIL
            END-EXEC
 
            IF SQLCODE = 0
-             MOVE 0         TO LK-CR-COD-RET
+             MOVE 0         TO LK-PF-COD-RET
            ELSE
              IF SQLCODE = +100 THEN
-                MOVE 1      TO  LK-CR-COD-RET
+                MOVE 1      TO  LK-PF-COD-RET
              ELSE
-                MOVE 2      TO  LK-CR-COD-RET
+                MOVE 2      TO  LK-PF-COD-RET
                 PERFORM 0900-ERROR-DB2
              END-IF
            END-IF
@@ -179,28 +198,32 @@
       ***************************************************
       * ACTUALIZA LOS DATOS EN LA TABLA                 *
       ***************************************************
-       0240-MODIFICAR-CURSO.
-           MOVE LK-CR-CURSO        TO  CR-CURSO
-           MOVE LK-CR-DESCRIPCION  TO  CR-DESCRIPCION
-           MOVE LK-CR-DNIPROFESOR TO   CR-DNIPROFESOR
-           MOVE LK-CR-ESTADO       TO  CR-ESTADO
+       0240-MODIFICAR-PERFIL.
+           MOVE LK-PF-TRAN       TO  PF-TRAN
+           MOVE LK-PF-IDPERFIL   TO  PF-IDPERFIL
+           MOVE LK-PF-NOMBRE     TO  PF-NOMBRE
+           MOVE LK-PF-CONSUL     TO  PF-CONSUL
+           MOVE LK-PF-BORRAR     TO  PF-BORRAR
+           MOVE LK-PF-INGRESAR   TO  PF-INGRESAR
+           MOVE LK-PF-MODIF      TO  PF-MODIF
 
            EXEC SQL
-              UPDATE CURSOS
-              SET CURSO        = :CR-CURSO,
-                  DESCRIPCION  = :CR-DESCRIPCION,
-                  DNIPROFESOR = :CR-DNIPROFESOR,
-                  ESTADO       = :CR-ESTADO
-              WHERE CURSO      = :CR-CURSO
+              UPDATE PERFILES
+              SET NOMBRE      = :PF-NOMBRE,
+                  CONSUL      = :PF-CONSUL,
+                  BORRAR      = :PF-BORRAR,
+                  INGRESAR    = :PF-INGRESAR,
+                  MODIF       = :PF-MODIF
+              WHERE TRAN = :PF-TRAN  AND  IDPERFIL = :PF-IDPERFIL
            END-EXEC
 
            IF SQLCODE = 0
-             MOVE 0         TO LK-CR-COD-RET
+             MOVE 0         TO LK-PF-COD-RET
            ELSE
              IF SQLCODE = +100 THEN
-                MOVE 1      TO  LK-CR-COD-RET
+                MOVE 1      TO  LK-PF-COD-RET
              ELSE
-                MOVE 2      TO  LK-CR-COD-RET
+                MOVE 2      TO  LK-PF-COD-RET
                 PERFORM 0900-ERROR-DB2
              END-IF
            END-IF
@@ -209,8 +232,8 @@
       * 0900-ERROR-DB2
       ******************************************************************
        0900-ERROR-DB2.
-           MOVE SQLCODE TO LK-CR-SQLCODE
-           MOVE SQLCODE TO DB2-SQLCODE
+           MOVE SQLCODE     TO LK-PF-SQLCODE
+           MOVE SQLCODE     TO DB2-SQLCODE
       *    DISPLAY "ERROR DB2 EN RUTINA: "
       *    DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
       *    DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
@@ -221,6 +244,8 @@
       * FIN SESION
       ******************************************************************
        0300-FIN.
+      *    DISPLAY "AREA-LINK OUT: " AREA-LINK
+      *    DISPLAY "SALGO DE RUTINA RTSNOTPF"
            GOBACK
            .
       ******************************************************************
