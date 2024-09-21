@@ -1,50 +1,44 @@
       *************************************************************
-      *   ENCAPSULADOR TABLA CURSOS
+      *   ENCAPSULADOR TABLA PERMISOS
       *   RUTINA QUE EJECUTA LAS SENTENCIAS DE LA BASE DE DATOS A
       *   PARTIR DE UN TIPO Y SUBTIPO DE OPERACION QUE ENVIA
       *   EL PROGRAMA QUE LA INVOCA.
       *   TIPO 1: CONSULTA - SELECT
-      *      SUBTIPO 1: CONSULTA POR CURSO
+      *      SUBTIPO 1: CONSULTA POR TRANSACCION Y DNI
       *        2: ADICION - INSERT
       *        3: BORRAR - DELETE
       *        4: MODIFICAR - UPDATE
       *************************************************************
        IDENTIFICATION DIVISION.
-         PROGRAM-ID. RSNCURSO.
+         PROGRAM-ID. RSNPERMI.
        ENVIRONMENT DIVISION.
        DATA DIVISION.
        WORKING-STORAGE SECTION.
       *===============================================================
-      * MODSQL - DEFINICION TABLA CURSOS SQL Y COBOL
+      * MODSQL - DEFINICION TABLA PERMISOS SQL Y COBOL
            EXEC SQL
-                INCLUDE CURSOS
+                INCLUDE PERMISOS
            END-EXEC.
       *===============================================================
       * MODSQL - SE TIENE QUE UTILIZAR SQLCA
            EXEC SQL
                 INCLUDE SQLCA
            END-EXEC.
-      *===============================================================
-      * MODSQL CAMPOS PARA ERROR DE DB2
-       01  DB2-ERR.
-           03  DB2-SQLCODE                PIC S9(9).
-           03  DB2-SQLCODE-Z              PIC -ZZZZZZZZ9.
-           03  DB2-ERROR.
-               05  DB2-ERR-MSG            PIC X(50).
-               05  DB2-ERR-CODE           PIC X(20).
 
       *============================================================
        LINKAGE SECTION.
-       01  DFHCOMMAREA        PIC X(49).
+       01  DFHCOMMAREA           PIC X(52).
        01  AREA-LINK          REDEFINES DFHCOMMAREA.
-           05 LK-CR-TIPO-OPE     PIC 9(01).
-           05 LK-CR-SUBTIPO-OPE  PIC 9(02).
-           05 LK-CR-CURSO        PIC X(05).
-           05 LK-CR-DESCRIPCION  PIC X(20).
-           05 LK-CR-DNIPROFESOR  PIC X(09).
-           05 LK-CR-ESTADO       PIC X(01).
-           05 LK-CR-COD-RET      PIC 9(02).
-           05 LK-CR-SQLCODE      PIC S9(9).
+           05 LK-PM-TIPO-OPE     PIC 9(01).
+           05 LK-PM-SUBTIPO-OPE  PIC 9(02).
+           05 LK-PM-TRAN         PIC X(04).
+           05 LK-PM-DNI          PIC X(09).
+           05 LK-PM-IDPERFIL     PIC X(03).
+           05 LK-PM-NROACCESOS   PIC S9(9) USAGE COMP.
+           05 LK-PM-FECHAUL      PIC X(10).
+           05 LK-PM-HORAUL       PIC X(08).
+           05 LK-PM-COD-RET      PIC 9(02).
+           05 LK-PM-SQLCODE      PIC S9(9).
 
       *=================================================================
        PROCEDURE DIVISION USING DFHCOMMAREA.
@@ -66,59 +60,61 @@
                 WHENEVER  NOT FOUND   CONTINUE
            END-EXEC
 
-           PERFORM 0100-INICIO
+      *    PERFORM 0100-INICIO
            PERFORM 0200-EJECUTAR-OPERACION
-           PERFORM 0300-FIN
+           PERFORM 0900-FIN
            .
       ******************************************************************
       * 0100-INICIO
       ******************************************************************
-       0100-INICIO.
-      *    DISPLAY "AREA-LINK INP: " AREA-LINK
-           .
+      *0100-INICIO.
+      *.
       ******************************************************************
       * 0200-EJECUTAR-OPERACION
       ******************************************************************
        0200-EJECUTAR-OPERACION.
-           EVALUATE LK-CR-TIPO-OPE
-              WHEN '1'
-                 PERFORM 0210-CONSULTAR-CURSO
-              WHEN '2'
-                 PERFORM 0220-INSERTAR-CURSO
-              WHEN '3'
-                 PERFORM 0230-BORRAR-CURSO
-              WHEN '4'
-                 PERFORM 0240-MODIFICAR-CURSO
+           EVALUATE LK-PM-TIPO-OPE
+              WHEN 1
+                 PERFORM 0210-CONSULTAR-PERMISO
+              WHEN 2
+                 PERFORM 0220-INSERTAR-PERMISO
+              WHEN 3
+                 PERFORM 0230-BORRAR-PERMISO
+              WHEN 4
+                 PERFORM 0240-MODIFICAR-PERMISO
               WHEN OTHER
-                 MOVE 9             TO LK-CR-COD-RET
+      *          DISPLAY "OPCION NO IMPLEMENTADA"
+                 MOVE 9                        TO LK-PM-COD-RET
            END-EVALUATE
            .
       **************************************************************
-      * 0210-CONSULTAR-CURSO
+      * 0210-CONSULTAR-PERMISO
       **************************************************************
-       0210-CONSULTAR-CURSO.
-           MOVE 1           TO LK-CR-COD-RET
-           MOVE LK-CR-CURSO TO CR-CURSO
+       0210-CONSULTAR-PERMISO.
+           MOVE 1          TO LK-PM-COD-RET
+           MOVE LK-PM-TRAN TO PM-TRAN
+           MOVE LK-PM-DNI  TO PM-DNI
       *
            EXEC SQL
              SELECT
-                DESCRIPCION, DNIPROFESOR, ESTADO
+                IDPERFIL, NROACCESOS, FECHAUL, HORAUL
              INTO
-                :CR-DESCRIPCION, :CR-DNIPROFESOR, :CR-ESTADO
-             FROM CURSOS
-             WHERE CURSO =:CR-CURSO
+                :PM-IDPERFIL, :PM-NROACCESOS, :PM-FECHAUL, :PM-HORAUL
+             FROM PERMISOS
+             WHERE TRAN = :PM-TRAN  AND  DNI = :PM-DNI
            END-EXEC
 
            IF SQLCODE = 0 THEN
-              MOVE 0               TO  LK-CR-COD-RET
-              MOVE CR-DESCRIPCION  TO  LK-CR-DESCRIPCION
-              MOVE CR-DNIPROFESOR TO   LK-CR-DNIPROFESOR
-              MOVE CR-ESTADO       TO  LK-CR-ESTADO
+              MOVE 0             TO  LK-PM-COD-RET
+              MOVE PM-IDPERFIL   TO  LK-PM-IDPERFIL
+              MOVE PM-NROACCESOS TO  LK-PM-NROACCESOS
+              MOVE PM-FECHAUL    TO  LK-PM-FECHAUL
+              MOVE PM-HORAUL     TO  LK-PM-HORAUL
            ELSE
               IF SQLCODE = +100 THEN
-                 MOVE 1 TO  LK-CR-COD-RET
+                 MOVE 1 TO  LK-PM-COD-RET
               ELSE
-                 MOVE 2 TO  LK-CR-COD-RET
+                 MOVE 2 TO  LK-PM-COD-RET
                  PERFORM 0900-ERROR-DB2
               END-IF
            END-IF
@@ -126,30 +122,33 @@
       ***************************************************
       * INSERTA LOS DATOS EN LA TABLA                   *
       ***************************************************
-       0220-INSERTAR-CURSO.
-           MOVE LK-CR-CURSO        TO  CR-CURSO
-           MOVE LK-CR-DESCRIPCION  TO  CR-DESCRIPCION
-           MOVE LK-CR-DNIPROFESOR TO   CR-DNIPROFESOR
-           MOVE LK-CR-ESTADO       TO  CR-ESTADO
+       0220-INSERTAR-PERMISO.
+           MOVE LK-PM-TRAN       TO  PM-TRAN
+           MOVE LK-PM-DNI        TO  PM-DNI
+           MOVE LK-PM-IDPERFIL TO PM-IDPERFIL
+           MOVE LK-PM-NROACCESOS TO PM-NROACCESOS
+           MOVE LK-PM-FECHAUL TO     PM-FECHAUL
+           MOVE LK-PM-HORAUL     TO  PM-HORAUL
 
            EXEC SQL
-             INSERT INTO CURSOS
+             INSERT INTO PERMISOS
                 (
-                 CURSO, DESCRIPCION, DNIPROFESOR, ESTADO
+                 TRAN, DNI, IDPERFIL, NROACCESOS, FECHAUL, HORAUL
                 )
              VALUES
                 (
-                 :CR-CURSO,:CR-DESCRIPCION, :CR-DNIPROFESOR,  :CR-ESTADO
+                 :PM-TRAN, :PM-DNI, :PM-IDPERFIL,
+                 :PM-NROACCESOS, :PM-FECHAUL, :PM-HORAUL
                 )
            END-EXEC
 
            IF SQLCODE = 0
-             MOVE 0         TO LK-CR-COD-RET
+             MOVE 0         TO LK-PM-COD-RET
            ELSE
              IF SQLCODE = +100 THEN
-                MOVE 1      TO  LK-CR-COD-RET
+                MOVE 1      TO  LK-PM-COD-RET
              ELSE
-                MOVE 2      TO  LK-CR-COD-RET
+                MOVE 2      TO  LK-PM-COD-RET
                 PERFORM 0900-ERROR-DB2
              END-IF
            END-IF
@@ -157,21 +156,22 @@
       ***************************************************
       * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *
       ***************************************************
-       0230-BORRAR-CURSO.
-           MOVE LK-CR-CURSO      TO  CR-CURSO
+       0230-BORRAR-PERMISO.
+           MOVE LK-PM-TRAN       TO  PM-TRAN
+           MOVE LK-PM-DNI        TO  PM-DNI
 
            EXEC SQL
-             DELETE FROM CURSOS
-               WHERE CURSO =:CR-CURSO
+             DELETE FROM PERMISOS
+               WHERE TRAN = :PM-TRAN  AND  DNI = :PM-DNI
            END-EXEC
 
            IF SQLCODE = 0
-             MOVE 0         TO LK-CR-COD-RET
+             MOVE 0         TO LK-PM-COD-RET
            ELSE
              IF SQLCODE = +100 THEN
-                MOVE 1      TO  LK-CR-COD-RET
+                MOVE 1      TO  LK-PM-COD-RET
              ELSE
-                MOVE 2      TO  LK-CR-COD-RET
+                MOVE 2      TO  LK-PM-COD-RET
                 PERFORM 0900-ERROR-DB2
              END-IF
            END-IF
@@ -179,28 +179,30 @@
       ***************************************************
       * ACTUALIZA LOS DATOS EN LA TABLA                 *
       ***************************************************
-       0240-MODIFICAR-CURSO.
-           MOVE LK-CR-CURSO        TO  CR-CURSO
-           MOVE LK-CR-DESCRIPCION  TO  CR-DESCRIPCION
-           MOVE LK-CR-DNIPROFESOR TO   CR-DNIPROFESOR
-           MOVE LK-CR-ESTADO       TO  CR-ESTADO
+       0240-MODIFICAR-PERMISO.
+           MOVE LK-PM-TRAN       TO  PM-TRAN
+           MOVE LK-PM-DNI        TO  PM-DNI
+           MOVE LK-PM-IDPERFIL TO PM-IDPERFIL
+           MOVE LK-PM-NROACCESOS TO PM-NROACCESOS
+           MOVE LK-PM-FECHAUL TO     PM-FECHAUL
+           MOVE LK-PM-HORAUL     TO  PM-HORAUL
 
            EXEC SQL
-              UPDATE CURSOS
-              SET CURSO        = :CR-CURSO,
-                  DESCRIPCION  = :CR-DESCRIPCION,
-                  DNIPROFESOR = :CR-DNIPROFESOR,
-                  ESTADO       = :CR-ESTADO
-              WHERE CURSO      = :CR-CURSO
+              UPDATE PERMISOS
+              SET IDPERFIL    = :PM-IDPERFIL,
+                  NROACCESOS  = :PM-NROACCESOS,
+                  FECHAUL     = :PM-FECHAUL,
+                  HORAUL      = :PM-HORAUL
+              WHERE TRAN = :PM-TRAN  AND  DNI = :PM-DNI
            END-EXEC
 
            IF SQLCODE = 0
-             MOVE 0         TO LK-CR-COD-RET
+             MOVE 0         TO LK-PM-COD-RET
            ELSE
              IF SQLCODE = +100 THEN
-                MOVE 1      TO  LK-CR-COD-RET
+                MOVE 1      TO  LK-PM-COD-RET
              ELSE
-                MOVE 2      TO  LK-CR-COD-RET
+                MOVE 2      TO  LK-PM-COD-RET
                 PERFORM 0900-ERROR-DB2
              END-IF
            END-IF
@@ -209,18 +211,12 @@
       * 0900-ERROR-DB2
       ******************************************************************
        0900-ERROR-DB2.
-           MOVE SQLCODE TO LK-CR-SQLCODE
-           MOVE SQLCODE TO DB2-SQLCODE
-      *    DISPLAY "ERROR DB2 EN RUTINA: "
-      *    DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
-      *    DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
-      *    DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG
-      *    DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE
+           MOVE SQLCODE        TO LK-PM-SQLCODE
            .
       ******************************************************************
       * FIN SESION
       ******************************************************************
-       0300-FIN.
+       0900-FIN.
            GOBACK
            .
       ******************************************************************

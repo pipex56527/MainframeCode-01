@@ -61,6 +61,8 @@
       *
        01  WC-CONSTANTES.
            05  WC-TRANSID           PIC X(4)    VALUE "SN02".
+           05  WC-TERMID            PIC X(4)    VALUE "L702".
+           05  WC-PROG-CLAVE        PIC X(8)    VALUE "PSNIDU01".
            05  WC-PROG-ESTUD        PIC X(8)    VALUE "PSNNES03".
            05  WC-DESC-ESTUD  PIC X(20) VALUE "CONSULTA ESTUDIANTES".
            05  WC-PROG-PROFE        PIC X(8)    VALUE "PSNNPR04".
@@ -74,9 +76,9 @@
            03 WS-AUT-ERR  PIC X(23) VALUE "NO ESTA AUTORIZADO.    ".
            03 WS-OPT-PEND PIC X(23) VALUE "POR IMPLEMENTAR.       ".
            03 WS-LLAMADO  PIC X(45)
-              VALUE "EL MENU DEBE SER LLAMADO DESDE UN PROGRAMA   ".
+              VALUE "ESTE MENU DEBE SER LLAMADO DESDE UN PROGRAMA ".
            03 WS-MSG-FIN-SESION     PIC X(45)
-              VALUE "FIN SISTEMA DE NOTAS   ".
+              VALUE "*** FIN SISTEMA DE NOTAS *** ".
            03 WS-MSG-LINK.
               05 WS-PROG-SAL        PIC X(8).
               05 FILLER             PIC XX.
@@ -112,9 +114,11 @@
       *
        100-RECIBIR-TXN.
            MOVE DFHCOMMAREA  TO MI-COMMAREA
-           DISPLAY "MI-COMMAREA AL ENTRAR: " MI-COMMAREA
+      *    DISPLAY "PSNMEN02 MI-COMMAREA AL ENTRAR: " MI-COMMAREA
       *
            IF (EIBCALEN = 0) THEN
+      *    ESTAS LINEAS SE ACTIVAN CUANDO SE NECESITE CORRER
+      *    EL MENU COMO SN02 DESDE CICS
                MOVE '99'                   TO CA-CICLO
                MOVE '*---  M A R U  --- *' TO CA-US-NOMBRE
                MOVE LOW-VALUES             TO MSNME02O
@@ -146,9 +150,10 @@
            MOVE WS-FECHA-SALIDA  TO MFECHAO
       *
            IF (CA-CICLO = '99') THEN
-              MOVE '88' TO CA-CICLO
+              MOVE LOW-VALUES      TO MSNME02O
+              MOVE WS-FECHA-SALIDA TO MFECHAO
+              MOVE '88'            TO CA-CICLO
            ELSE
-              DISPLAY "ANALIZO RECEIVE MAPA"
               EVALUATE EIBAID
                   WHEN DFHENTER
       *                DISPLAY "ENTER"
@@ -175,7 +180,7 @@
                WHEN '3'
                     PERFORM 790-LINK-ADMIN-ESTUD
                WHEN OTHER
-      *             DISPLAY "OPCION INVALIDA"
+      *             DISPLAY "OPCION INVALIDA " MOPCIONI
                     MOVE WS-OPT-ERR TO MSGLOGO
            END-EVALUATE
            .
@@ -190,7 +195,6 @@
 
            MOVE EIBTRNID    TO CA-TRANS
            MOVE EIBTRMID    TO CA-TERM
-           DISPLAY "MI-COMMAREA AL SALIR: " MI-COMMAREA
       *
            EXEC CICS RETURN
                      TRANSID  (WC-TRANSID)
@@ -203,10 +207,11 @@
            GOBACK
            .
       *
-      * 790-LINK-CONSULTA-PROFE
+      * 790-LINK-CONSULTA-PROFE: ENLAZA CON LA CONSULTA DE LOS
+      * ESTUDIANTES DE UN PROFESOR
       *
        790-LINK-CONSULTA-PROFE.
-      *    BORRAR ESTAS LINEAS CUANDO YA ENLACE EL PROGRAMA
+      *
            MOVE '88'          TO CA-CICLO
            MOVE SPACES        TO WS-MSG-LINK
            MOVE WC-PROG-PROFE TO WS-PROG-SAL
@@ -215,7 +220,7 @@
            MOVE WS-MSG-LINK   TO MSGLOGO
       *
       *    LINEAS PARA ENLAZAR PROGRAMA OJO- COMMAREA
-      *    MOVE '99' TP CA-CICLO
+      *    MOVE '99' TO CA-CICLO
       *
       *    EXEC CICS XCTL
       *         PROGRAM  (WC-PROG-PROFE)
@@ -226,10 +231,10 @@
       *
            .
       *
-      * 790-LINK-CONSULTA-ESTUD
+      * 790-LINK-CONSULTA-ESTUD: ENLAZA CO LA CONSULTA DE LOS CURSOS
+      * DE UN ESTUDIANTE
       *
        790-LINK-CONSULTA-ESTUD.
-      *    DISPLAY "CONSULTA ESTUD"
            MOVE '88'          TO CA-CICLO
            MOVE SPACES        TO WS-MSG-LINK
            MOVE WC-PROG-ESTUD TO WS-PROG-SAL
@@ -238,7 +243,7 @@
            MOVE WS-MSG-LINK   TO MSGLOGO
       *
       *    LINEAS PARA ENLAZAR PROGRAMA OJO- COMMAREA
-      *    MOVE '99' TP CA-CICLO
+      *    MOVE '99' TO CA-CICLO
       *
       *
       *    EXEC CICS XCTL
@@ -250,10 +255,10 @@
       *
            .
       *
-      * 790-LINK-ADMIN-ESTUD
+      *  ENLAZA CON ADMIN ESTUDIANTES
       *
        790-LINK-ADMIN-ESTUD.
-      *    DISPLAY "ADMIN ESTUD " WS-OPT-PEND
+      *
            MOVE '88'          TO CA-CICLO
            MOVE SPACES        TO WS-MSG-LINK
            MOVE WC-PROG-ADMIN TO WS-PROG-SAL
@@ -261,9 +266,8 @@
            MOVE WS-OPT-PEND   TO WS-MSG-PEND
            MOVE WS-MSG-LINK   TO MSGLOGO
       *
-      *
       *    LINEAS PARA ENLAZAR PROGRAMA OJO- COMMAREA
-      *    MOVE '99' TP CA-CICLO
+      *    MOVE '99' TO CA-CICLO
       *
       *    EXEC CICS XCTL
       *         PROGRAM  (WC-PROG-ADMIN)
@@ -274,24 +278,47 @@
       *
            .
       *
-      * 900-TERMINAR-PROG
+      * 900-TERMINAR-PROG: PARA FACILITAR LAS PRUEBAS ESTE
+      *     MENU ENLAZA CON EL PROGRAMA QUE PIDE USUARIO-CLAVE.
+      * VIENE ACA CON PF3 Y ENLAZA CON PSNIDU01.
       *
        900-TERMINAR-PROG.
-            DISPLAY "TERMINA PROGRAMA"
+      *     DISPLAY "TERMINA PROGRAMA PSNMEN02"
+      *
+           MOVE LOW-VALUES TO MI-COMMAREA
+           MOVE WC-TRANSID TO CA-TRANS
+           MOVE WC-TERMID  TO CA-TERM
+           MOVE '00'       TO CA-CICLO
+      *
+           EXEC CICS XCTL
+                PROGRAM  (WC-PROG-CLAVE)
+                COMMAREA (MI-COMMAREA)
+                LENGTH   (LENGTH OF MI-COMMAREA)
+                RESP     (WS-RESPUESTA)
+           END-EXEC
+           .
+      *
+      *
+      * 900-TERMINAR: LA TRANSACCION TERMINA COMPLETAMENTE
+      *
+      *
+       900-TERMINAR.
       *
             EXEC CICS
                  SEND TEXT FROM(WS-MSG-FIN-SESION)
                  ERASE
                  FREEKB
             END-EXEC
-      *
+
             EXEC CICS RETURN
             END-EXEC
+      *
       *     LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO
       *     O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN
+      *
             GOBACK
             .
       *
-      *  FIN DE PROGRAMA
+      *  -------- FIN DE PROGRAMA
       *
-                                                                        
+
