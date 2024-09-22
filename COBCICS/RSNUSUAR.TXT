@@ -1,392 +1,393 @@
-      *************************************************************
-      *   ENCAPSULADOR TABLA USUARIOS
-      *   RUTINA QUE EJECUTA LAS SENTENCIAS DE LA BASE DE DATOS A
-      *   PARTIR DE UN TIPO Y SUBTIPO DE OPERACION QUE ENVIA
-      *   EL PROGRAMA QUE LA INVOCA.
-      *   TIPO 1: CONSULTA - SELECT
-      *      SUBTIPO 1: CONSULTA POR DNI
-      *      SUBTIPO 2: CURSOR ANTERIOR
-      *      SUBTIPO 3: CURSOR SIGUIENTE
-      *        2: ADICION - INSERT
-      *        3: BORRAR - DELETE
-      *        4: MODIFICAR - UPDATE
-      *
-      *************************************************************
-       IDENTIFICATION DIVISION.
-         PROGRAM-ID. RSNUSUAR.
-       ENVIRONMENT DIVISION.
-       DATA DIVISION.
-       WORKING-STORAGE SECTION.
-      *===============================================================
-      * MODSQL - DEFINICON TABLA USUARIOS SQL Y COBOL
-           EXEC SQL
-                INCLUDE USUARIOS
-           END-EXEC.
-      *===============================================================
-      * MODSQL - SE TIENE QUE UTILIZAR SQLCA
-           EXEC SQL
-                INCLUDE SQLCA
-           END-EXEC.
-      *===============================================================
-      * MODSQL CAMPOS PARA ERROR DE DB2
-       01  DB2-ERR.
-           03  DB2-SQLCODE                PIC S9(9).
-           03  DB2-SQLCODE-Z              PIC -ZZZZZZZZ9.
-           03  DB2-ERROR.
-               05  DB2-ERR-MSG            PIC X(50).
-               05  DB2-ERR-CODE           PIC X(20).
-
-      *============================================================
-       LINKAGE SECTION.
-       01  DFHCOMMAREA              PIC X(132).
-       01  AREA-LINK      REDEFINES DFHCOMMAREA.
-           05 LK-US-TIPO-OPE        PIC 9(01).
-           05 LK-US-SUBTIPO-OPE     PIC 9(02).
-           05 LK-US-DNI             PIC X(09).
-           05 LK-US-TIPOUSUA        PIC X(05).
-           05 LK-US-CLAVE           PIC X(08).
-           05 LK-US-NOMBRE          PIC X(20).
-           05 LK-US-APELLIDOS       PIC X(20).
-           05 LK-US-DIRECCION       PIC X(35).
-           05 LK-US-CARGO           PIC X(20).
-           05 LK-US-ESTADO          PIC X(01).
-           05 LK-US-COD-RET         PIC 9(02).
-           05 LK-US-SQLCODE         PIC S9(9).
-
-      *=================================================================
-       PROCEDURE DIVISION USING DFHCOMMAREA.
-      *=================================================================
-      ******************************************************************
-      * 0000-RAIZ
-      ******************************************************************
-       0000-RAIZ.
-      *    MODSQL EXCEPCIONES SQL DB2
-           EXEC SQL
-                WHENEVER  SQLERROR    CONTINUE
-           END-EXEC
-
-           EXEC SQL
-                WHENEVER  SQLWARNING  CONTINUE
-           END-EXEC
-
-           EXEC SQL
-                WHENEVER  NOT FOUND   CONTINUE
-           END-EXEC
-
-           PERFORM 0100-INICIO
-           PERFORM 0200-EJECUTAR-OPERACION
-           PERFORM 0900-FIN
-           .
-      ******************************************************************
-      * 0100-INICIO
-      ******************************************************************
-       0100-INICIO.
-      *    DISPLAY "ENTRO A RUTINA RTSNOTUS"
-      *    DISPLAY "AREA-LINK INP: " AREA-LINK
-           .
-      ******************************************************************
-      * 0200-EJECUTAR-OPERACION
-      ******************************************************************
-       0200-EJECUTAR-OPERACION.
-      *    DISPLAY "LK-US-TIPO-OPE: " LK-US-TIPO-OPE
-           EVALUATE LK-US-TIPO-OPE
-              WHEN 1
-      *          DISPLAY "CONSULTA"
-                 PERFORM 0210-CONSULTAR-TABLA
-              WHEN 2
-      *          DISPLAY "ADICION"
-                 PERFORM 0220-INSERTAR-USUARIO
-              WHEN 3
-      *          DISPLAY "DELETE"
-                 PERFORM 0230-BORRAR-USUARIO
-              WHEN 4
-      *          DISPLAY "UPDATE"
-                 PERFORM 0240-MODIFICAR-USUARIO
-              WHEN OTHER
-      *          DISPLAY "OPCION NO IMPLEMENTADA"
-                 MOVE 9   TO LK-US-COD-RET
-           END-EVALUATE
-           .
-      **************************************************************
-      * 0210-CONSULTAR-TABLA
-      **************************************************************
-        0210-CONSULTAR-TABLA.
-            EVALUATE LK-US-SUBTIPO-OPE
-              WHEN 1
-      *          DISPLAY "CONSULTA DNI"
-                 PERFORM 0210-CONSULTAR-USUARIO
-              WHEN 2
-      *          DISPLAY "ANTERIOR"
-                 PERFORM 0250-TIPO-USER-PREV
-              WHEN 3
-      *          DISPLAY "SIGUIENTE"
-                 PERFORM 0260-TIPO-USER-NEXT
-              WHEN OTHER
-      *          DISPLAY "SUBTIPO NO IMPLEMENTADO"
-                 MOVE 9   TO LK-US-COD-RET
-            END-EVALUATE
-            .
-      **************************************************************
-      * 0210-CONSULTAR-USUARIO
-      **************************************************************
-       0210-CONSULTAR-USUARIO.
-      *    DISPLAY "CONSULTAR USUARIO"
-           MOVE 1           TO LK-US-COD-RET
-           MOVE LK-US-DNI   TO US-DNI
-      *
-           EXEC SQL
-             SELECT
-                TIPOUSUA,  CLAVE, NOMBRE, APELLIDOS,
-                DIRECCION, CARGO, ESTADO
-             INTO
-                :US-TIPOUSUA, :US-CLAVE, :US-NOMBRE, :US-APELLIDOS,
-                :US-DIRECCION, :US-CARGO, :US-ESTADO
-             FROM USUARIOS
-             WHERE DNI = :US-DNI
-           END-EXEC
-
-           IF SQLCODE = 0 THEN
-              MOVE 0             TO  LK-US-COD-RET
-              MOVE US-TIPOUSUA   TO  LK-US-TIPOUSUA
-              MOVE US-CLAVE      TO  LK-US-CLAVE
-              MOVE US-NOMBRE     TO  LK-US-NOMBRE
-              MOVE US-APELLIDOS  TO  LK-US-APELLIDOS
-              MOVE US-DIRECCION  TO  LK-US-DIRECCION
-              MOVE US-CARGO      TO  LK-US-CARGO
-              MOVE US-ESTADO     TO  LK-US-ESTADO
-           ELSE
-              IF SQLCODE = +100 THEN
-                 MOVE 1 TO  LK-US-COD-RET
-              ELSE
-                 MOVE 2 TO  LK-US-COD-RET
-                 PERFORM 0900-ERROR-DB2
-              END-IF
-           END-IF
-           .
-      ***************************************************
-      * INSERTA LOS DATOS EN LA TABLA                   *
-      ***************************************************
-       0220-INSERTAR-USUARIO.
-           MOVE LK-US-DNI        TO  US-DNI
-           MOVE LK-US-TIPOUSUA   TO  US-TIPOUSUA
-           MOVE LK-US-CLAVE      TO  US-CLAVE
-           MOVE LK-US-NOMBRE     TO  US-NOMBRE
-           MOVE LK-US-APELLIDOS  TO  US-APELLIDOS
-           MOVE LK-US-DIRECCION  TO  US-DIRECCION
-           MOVE LK-US-CARGO      TO  US-CARGO
-           MOVE LK-US-ESTADO     TO  US-ESTADO
-
-           EXEC SQL
-             INSERT INTO USUARIOS
-                (
-                 DNI, TIPOUSUA, CLAVE, NOMBRE,
-                 APELLIDOS, DIRECCION, CARGO, ESTADO
-                )
-             VALUES
-                (
-                 :US-DNI, :US-TIPOUSUA, :US-CLAVE, :US-NOMBRE,
-                 :US-APELLIDOS, :US-DIRECCION, :US-CARGO, :US-ESTADO
-                )
-           END-EXEC
-
-           IF SQLCODE = 0
-             MOVE 0     TO LK-US-COD-RET
-           ELSE
-              IF SQLCODE = +100 THEN
-                 MOVE 1 TO  LK-US-COD-RET
-              ELSE
-                 MOVE 2 TO  LK-US-COD-RET
-                 PERFORM 0900-ERROR-DB2
-              END-IF
-           END-IF
-           .
-      ***************************************************
-      * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *
-      ***************************************************
-       0230-BORRAR-USUARIO.
-           MOVE LK-US-DNI TO  US-DNI
-           EXEC SQL
-             DELETE FROM USUARIOS
-                    WHERE DNI = :US-DNI
-           END-EXEC
-
-           IF SQLCODE = 0
-             MOVE 0     TO LK-US-COD-RET
-           ELSE
-              IF SQLCODE = +100 THEN
-                 MOVE 1 TO  LK-US-COD-RET
-              ELSE
-                 MOVE 2 TO  LK-US-COD-RET
-                 PERFORM 0900-ERROR-DB2
-              END-IF
-           END-IF
-           .
-      ***************************************************
-      * ACTUALIZA LOS DATOS EN LA TABLA                 *
-      ***************************************************
-       0240-MODIFICAR-USUARIO.
-           MOVE LK-US-TIPOUSUA   TO  US-TIPOUSUA
-           MOVE LK-US-CLAVE      TO  US-CLAVE
-           MOVE LK-US-NOMBRE     TO  US-NOMBRE
-           MOVE LK-US-APELLIDOS  TO  US-APELLIDOS
-           MOVE LK-US-DIRECCION  TO  US-DIRECCION
-           MOVE LK-US-CARGO      TO  US-CARGO
-           MOVE LK-US-ESTADO     TO  US-ESTADO
-           EXEC SQL
-              UPDATE USUARIOS
-              SET TIPOUSUA  = :US-TIPOUSUA,
-                  CLAVE     = :US-CLAVE,
-                  NOMBRE    = :US-NOMBRE,
-                  APELLIDOS = :US-APELLIDOS,
-                  DIRECCION = :US-DIRECCION,
-                  CARGO     = :US-CARGO,
-                  ESTADO    = :US-ESTADO
-              WHERE DNI = :US-DNI
-           END-EXEC
-
-           IF SQLCODE = 0
-             MOVE 0                TO LK-US-COD-RET
-           ELSE
-              IF SQLCODE = +100 THEN
-                 MOVE 1 TO  LK-US-COD-RET
-              ELSE
-                 MOVE 2 TO  LK-US-COD-RET
-                 PERFORM 0900-ERROR-DB2
-              END-IF
-           END-IF
-           .
-      ***************************************************
-      * 0250-TIPO-USER-PREV                        *
-      ***************************************************
-       0250-TIPO-USER-PREV.
-           MOVE LK-US-DNI        TO US-DNI
-           MOVE LK-US-TIPOUSUA   TO US-TIPOUSUA
-
-           EXEC SQL
-                DECLARE CURPREV CURSOR FOR
-                   SELECT
-                      TIPOUSUA, DNI, CLAVE, NOMBRE,
-                      APELLIDOS, DIRECCION, CARGO, ESTADO
-                   FROM USUARIOS
-                   WHERE TIPOUSUA = :US-TIPOUSUA
-                     AND DNI < :US-DNI
-                   ORDER BY TIPOUSUA, DNI DESC
-           END-EXEC
-      *
-           EXEC SQL
-                OPEN CURPREV
-           END-EXEC
-      *
-           EXEC SQL
-                FETCH CURPREV
-                INTO
-                     :US-TIPOUSUA
-                   , :US-DNI
-                   , :US-CLAVE
-                   , :US-NOMBRE
-                   , :US-APELLIDOS
-                   , :US-DIRECCION
-                   , :US-CARGO
-                   , :US-ESTADO
-           END-EXEC
-      *
-           IF SQLCODE = 0 THEN
-      *       REGISTRO ANTERIOR
-              MOVE 0                      TO LK-US-COD-RET
-              MOVE US-DNI                 TO LK-US-DNI
-              MOVE US-NOMBRE              TO LK-US-NOMBRE
-              MOVE US-APELLIDOS           TO LK-US-APELLIDOS
-              MOVE US-DIRECCION           TO LK-US-DIRECCION
-              MOVE US-CARGO               TO LK-US-CARGO
-              MOVE US-ESTADO              TO LK-US-ESTADO
-           ELSE
-              IF SQLCODE = +100 THEN
-                 MOVE 1             TO  LK-US-COD-RET
-              ELSE
-                 MOVE 2             TO  LK-US-COD-RET
-                 PERFORM 0900-ERROR-DB2
-              END-IF
-           END-IF
-
-           EXEC SQL
-                CLOSE CURPREV
-           END-EXEC
-           .
-      ***************************************************
-      * 0260-TIPO-USER-NEXT                             *
-      ***************************************************
-       0260-TIPO-USER-NEXT.
-           MOVE LK-US-DNI        TO US-DNI
-           MOVE LK-US-TIPOUSUA   TO US-TIPOUSUA
-
-           EXEC SQL
-                DECLARE CURNEXT CURSOR FOR
-                   SELECT
-                      TIPOUSUA, DNI, CLAVE, NOMBRE,
-                      APELLIDOS, DIRECCION, CARGO, ESTADO
-                   FROM USUARIOS
-                   WHERE TIPOUSUA = :US-TIPOUSUA
-                     AND DNI > :US-DNI
-                   ORDER BY TIPOUSUA, DNI ASC
-           END-EXEC
-      *
-           EXEC SQL
-                OPEN CURNEXT
-           END-EXEC
-      *
-           EXEC SQL
-                FETCH CURNEXT
-                INTO
-                     :US-TIPOUSUA
-                   , :US-DNI
-                   , :US-CLAVE
-                   , :US-NOMBRE
-                   , :US-APELLIDOS
-                   , :US-DIRECCION
-                   , :US-CARGO
-                   , :US-ESTADO
-           END-EXEC
-      *
-           IF SQLCODE = 0 THEN
-      *       REGISTRO SIGUIENTE
-              MOVE 0                      TO LK-US-COD-RET
-              MOVE US-DNI                 TO LK-US-DNI
-              MOVE US-NOMBRE              TO LK-US-NOMBRE
-              MOVE US-APELLIDOS           TO LK-US-APELLIDOS
-              MOVE US-DIRECCION           TO LK-US-DIRECCION
-              MOVE US-CARGO               TO LK-US-CARGO
-              MOVE US-ESTADO              TO LK-US-ESTADO
-           ELSE
-              IF SQLCODE = +100 THEN
-                 MOVE 1             TO  LK-US-COD-RET
-              ELSE
-                 MOVE 2             TO  LK-US-COD-RET
-                 PERFORM 0900-ERROR-DB2
-              END-IF
-           END-IF
-
-           EXEC SQL
-                CLOSE CURNEXT
-           END-EXEC
-           .
-      ******************************************************************
-      * 0900-ERROR-DB2
-      ******************************************************************
-       0900-ERROR-DB2.
-            MOVE SQLCODE TO LK-US-SQLCODE
-            MOVE SQLCODE TO DB2-SQLCODE
-      *     DISPLAY "ERROR DB2 EN RUTINA: "
-      *     DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
-      *     DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
-      *     DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG
-      *     DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE
-            .
-      ******************************************************************
-      * FIN SESION
-      ******************************************************************
-       0900-FIN.
-       *   DISPLAY "AREA-LINK OUT: " AREA-LINK
-       *   DISPLAY "SALGO DE RUTINA RSNUSUAR"
-           GOBACK
-           .
-      ******************************************************************
+      *************************************************************     00010099
+      *   ENCAPSULADOR TABLA USUARIOS                                   00020099
+      *   RUTINA QUE EJECUTA LAS SENTENCIAS DE LA BASE DE DATOS A       00030099
+      *   PARTIR DE UN TIPO Y SUBTIPO DE OPERACION QUE ENVIA            00040099
+      *   EL PROGRAMA QUE LA INVOCA.                                    00050099
+      *   TIPO 1: CONSULTA - SELECT                                     00060099
+      *      SUBTIPO 1: CONSULTA POR DNI                                00070099
+      *      SUBTIPO 2: CURSOR ANTERIOR                                 00080099
+      *      SUBTIPO 3: CURSOR SIGUIENTE                                00090099
+      *        2: ADICION - INSERT                                      00100099
+      *        3: BORRAR - DELETE                                       00110099
+      *        4: MODIFICAR - UPDATE                                    00120099
+      *                                                                 00130099
+      *************************************************************     00140099
+       IDENTIFICATION DIVISION.                                         00150099
+         PROGRAM-ID. RSNUSUAR.                                          00160099
+       ENVIRONMENT DIVISION.                                            00170099
+       DATA DIVISION.                                                   00180099
+       WORKING-STORAGE SECTION.                                         00190099
+      *===============================================================  00200099
+      * MODSQL - DEFINICON TABLA USUARIOS SQL Y COBOL                   00210099
+           EXEC SQL                                                     00220099
+                INCLUDE USUARIOS                                        00230099
+           END-EXEC.                                                    00240099
+      *===============================================================  00250099
+      * MODSQL - SE TIENE QUE UTILIZAR SQLCA                            00260099
+           EXEC SQL                                                     00270099
+                INCLUDE SQLCA                                           00280099
+           END-EXEC.                                                    00290099
+      *===============================================================  00300099
+      * MODSQL CAMPOS PARA ERROR DE DB2                                 00310099
+       01  DB2-ERR.                                                     00320099
+           03  DB2-SQLCODE                PIC S9(9).                    00330099
+           03  DB2-SQLCODE-Z              PIC -ZZZZZZZZ9.               00340099
+           03  DB2-ERROR.                                               00350099
+               05  DB2-ERR-MSG            PIC X(50).                    00360099
+               05  DB2-ERR-CODE           PIC X(20).                    00370099
+                                                                        00380099
+      *============================================================     00390099
+       LINKAGE SECTION.                                                 00400099
+       01  DFHCOMMAREA              PIC X(132).                         00410099
+       01  AREA-LINK      REDEFINES DFHCOMMAREA.                        00420099
+           05 LK-US-TIPO-OPE        PIC 9(01).                          00430099
+           05 LK-US-SUBTIPO-OPE     PIC 9(02).                          00440099
+           05 LK-US-DNI             PIC X(09).                          00450099
+           05 LK-US-TIPOUSUA        PIC X(05).                          00460099
+           05 LK-US-CLAVE           PIC X(08).                          00470099
+           05 LK-US-NOMBRE          PIC X(20).                          00480099
+           05 LK-US-APELLIDOS       PIC X(20).                          00490099
+           05 LK-US-DIRECCION       PIC X(35).                          00500099
+           05 LK-US-CARGO           PIC X(20).                          00510099
+           05 LK-US-ESTADO          PIC X(01).                          00520099
+           05 LK-US-COD-RET         PIC 9(02).                          00530099
+           05 LK-US-SQLCODE         PIC S9(9).                          00540099
+                                                                        00550099
+      *=================================================================00560099
+       PROCEDURE DIVISION USING DFHCOMMAREA.                            00570099
+      *=================================================================00580099
+      ******************************************************************00590099
+      * 0000-RAIZ                                                       00600099
+      ******************************************************************00610099
+       0000-RAIZ.                                                       00620099
+      *    MODSQL EXCEPCIONES SQL DB2                                   00630099
+           EXEC SQL                                                     00640099
+                WHENEVER  SQLERROR    CONTINUE                          00650099
+           END-EXEC                                                     00660099
+                                                                        00670099
+           EXEC SQL                                                     00680099
+                WHENEVER  SQLWARNING  CONTINUE                          00690099
+           END-EXEC                                                     00700099
+                                                                        00710099
+           EXEC SQL                                                     00720099
+                WHENEVER  NOT FOUND   CONTINUE                          00730099
+           END-EXEC                                                     00740099
+                                                                        00750099
+           PERFORM 0100-INICIO                                          00760099
+           PERFORM 0200-EJECUTAR-OPERACION                              00770099
+           PERFORM 0900-FIN                                             00780099
+           .                                                            00790099
+      ******************************************************************00800099
+      * 0100-INICIO                                                     00810099
+      ******************************************************************00820099
+       0100-INICIO.                                                     00830099
+      *    DISPLAY "ENTRO A RUTINA RTSNOTUS"                            00840099
+      *    DISPLAY "AREA-LINK INP: " AREA-LINK                          00850099
+           MOVE 1           TO LK-US-COD-RET                            00851099
+           .                                                            00860099
+      ******************************************************************00870099
+      * 0200-EJECUTAR-OPERACION                                         00880099
+      ******************************************************************00890099
+       0200-EJECUTAR-OPERACION.                                         00900099
+      *    DISPLAY "LK-US-TIPO-OPE: " LK-US-TIPO-OPE                    00910099
+           EVALUATE LK-US-TIPO-OPE                                      00920099
+              WHEN 1                                                    00930099
+      *          DISPLAY "CONSULTA"                                     00940099
+                 PERFORM 0210-CONSULTAR-TABLA                           00950099
+              WHEN 2                                                    00960099
+      *          DISPLAY "ADICION"                                      00970099
+                 PERFORM 0220-INSERTAR-USUARIO                          00980099
+              WHEN 3                                                    00990099
+      *          DISPLAY "DELETE"                                       01000099
+                 PERFORM 0230-BORRAR-USUARIO                            01010099
+              WHEN 4                                                    01020099
+      *          DISPLAY "UPDATE"                                       01030099
+                 PERFORM 0240-MODIFICAR-USUARIO                         01040099
+              WHEN OTHER                                                01050099
+      *          DISPLAY "OPCION NO IMPLEMENTADA"                       01060099
+                 MOVE 9   TO LK-US-COD-RET                              01070099
+           END-EVALUATE                                                 01080099
+           .                                                            01090099
+      **************************************************************    01100099
+      * 0210-CONSULTAR-TABLA                                            01110099
+      **************************************************************    01120099
+        0210-CONSULTAR-TABLA.                                           01130099
+            EVALUATE LK-US-SUBTIPO-OPE                                  01140099
+              WHEN 1                                                    01150099
+      *          DISPLAY "CONSULTA DNI"                                 01160099
+                 PERFORM 0210-CONSULTAR-USUARIO                         01170099
+              WHEN 2                                                    01180099
+      *          DISPLAY "ANTERIOR"                                     01190099
+                 PERFORM 0250-TIPO-USER-PREV                            01200099
+              WHEN 3                                                    01210099
+      *          DISPLAY "SIGUIENTE"                                    01220099
+                 PERFORM 0260-TIPO-USER-NEXT                            01230099
+              WHEN OTHER                                                01240099
+      *          DISPLAY "SUBTIPO NO IMPLEMENTADO"                      01250099
+                 MOVE 9   TO LK-US-COD-RET                              01260099
+            END-EVALUATE                                                01270099
+            .                                                           01280099
+      **************************************************************    01290099
+      * 0210-CONSULTAR-USUARIO                                          01300099
+      **************************************************************    01310099
+       0210-CONSULTAR-USUARIO.                                          01320099
+      *    DISPLAY "CONSULTAR USUARIO"                                  01330099
+           MOVE LK-US-DNI   TO US-DNI                                   01350099
+      *                                                                 01360099
+           EXEC SQL                                                     01370099
+             SELECT                                                     01380099
+                TIPOUSUA,  CLAVE, NOMBRE, APELLIDOS,                    01390099
+                DIRECCION, CARGO, ESTADO                                01400099
+             INTO                                                       01410099
+                :US-TIPOUSUA, :US-CLAVE, :US-NOMBRE, :US-APELLIDOS,     01420099
+                :US-DIRECCION, :US-CARGO, :US-ESTADO                    01430099
+             FROM USUARIOS                                              01440099
+             WHERE DNI = :US-DNI                                        01450099
+           END-EXEC                                                     01460099
+                                                                        01470099
+           IF SQLCODE = 0 THEN                                          01480099
+              MOVE 0             TO  LK-US-COD-RET                      01490099
+              MOVE US-TIPOUSUA   TO  LK-US-TIPOUSUA                     01500099
+              MOVE US-CLAVE      TO  LK-US-CLAVE                        01510099
+              MOVE US-NOMBRE     TO  LK-US-NOMBRE                       01520099
+              MOVE US-APELLIDOS  TO  LK-US-APELLIDOS                    01530099
+              MOVE US-DIRECCION  TO  LK-US-DIRECCION                    01540099
+              MOVE US-CARGO      TO  LK-US-CARGO                        01550099
+              MOVE US-ESTADO     TO  LK-US-ESTADO                       01560099
+           ELSE                                                         01570099
+              IF SQLCODE = +100 THEN                                    01580099
+                 MOVE 1 TO  LK-US-COD-RET                               01590099
+              ELSE                                                      01600099
+                 MOVE 2 TO  LK-US-COD-RET                               01610099
+                 PERFORM 0900-ERROR-DB2                                 01620099
+              END-IF                                                    01630099
+           END-IF                                                       01640099
+           .                                                            01650099
+      ***************************************************               01660099
+      * INSERTA LOS DATOS EN LA TABLA                   *               01670099
+      ***************************************************               01680099
+       0220-INSERTAR-USUARIO.                                           01690099
+           MOVE LK-US-DNI        TO  US-DNI                             01700099
+           MOVE LK-US-TIPOUSUA   TO  US-TIPOUSUA                        01710099
+           MOVE LK-US-CLAVE      TO  US-CLAVE                           01720099
+           MOVE LK-US-NOMBRE     TO  US-NOMBRE                          01730099
+           MOVE LK-US-APELLIDOS  TO  US-APELLIDOS                       01740099
+           MOVE LK-US-DIRECCION  TO  US-DIRECCION                       01750099
+           MOVE LK-US-CARGO      TO  US-CARGO                           01760099
+           MOVE LK-US-ESTADO     TO  US-ESTADO                          01770099
+                                                                        01780099
+           EXEC SQL                                                     01790099
+             INSERT INTO USUARIOS                                       01800099
+                (                                                       01810099
+                 DNI, TIPOUSUA, CLAVE, NOMBRE,                          01820099
+                 APELLIDOS, DIRECCION, CARGO, ESTADO                    01830099
+                )                                                       01840099
+             VALUES                                                     01850099
+                (                                                       01860099
+                 :US-DNI, :US-TIPOUSUA, :US-CLAVE, :US-NOMBRE,          01870099
+                 :US-APELLIDOS, :US-DIRECCION, :US-CARGO, :US-ESTADO    01880099
+                )                                                       01890099
+           END-EXEC                                                     01900099
+                                                                        01910099
+           IF SQLCODE = 0                                               01920099
+             MOVE 0     TO LK-US-COD-RET                                01930099
+           ELSE                                                         01940099
+              IF SQLCODE = +100 THEN                                    01950099
+                 MOVE 1 TO  LK-US-COD-RET                               01960099
+              ELSE                                                      01970099
+                 MOVE 2 TO  LK-US-COD-RET                               01980099
+                 PERFORM 0900-ERROR-DB2                                 01990099
+              END-IF                                                    02000099
+           END-IF                                                       02010099
+           .                                                            02020099
+      ***************************************************               02030099
+      * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *               02040099
+      ***************************************************               02050099
+       0230-BORRAR-USUARIO.                                             02060099
+           MOVE LK-US-DNI TO  US-DNI                                    02070099
+           EXEC SQL                                                     02080099
+             DELETE FROM USUARIOS                                       02090099
+                    WHERE DNI = :US-DNI                                 02100099
+           END-EXEC                                                     02110099
+                                                                        02120099
+           IF SQLCODE = 0                                               02130099
+             MOVE 0     TO LK-US-COD-RET                                02140099
+           ELSE                                                         02150099
+              IF SQLCODE = +100 THEN                                    02160099
+                 MOVE 1 TO  LK-US-COD-RET                               02170099
+              ELSE                                                      02180099
+                 MOVE 2 TO  LK-US-COD-RET                               02190099
+                 PERFORM 0900-ERROR-DB2                                 02200099
+              END-IF                                                    02210099
+           END-IF                                                       02220099
+           .                                                            02230099
+      ***************************************************               02240099
+      * ACTUALIZA LOS DATOS EN LA TABLA                 *               02250099
+      ***************************************************               02260099
+       0240-MODIFICAR-USUARIO.                                          02270099
+           MOVE LK-US-TIPOUSUA   TO  US-TIPOUSUA                        02280099
+           MOVE LK-US-CLAVE      TO  US-CLAVE                           02290099
+           MOVE LK-US-NOMBRE     TO  US-NOMBRE                          02300099
+           MOVE LK-US-APELLIDOS  TO  US-APELLIDOS                       02310099
+           MOVE LK-US-DIRECCION  TO  US-DIRECCION                       02320099
+           MOVE LK-US-CARGO      TO  US-CARGO                           02330099
+           MOVE LK-US-ESTADO     TO  US-ESTADO                          02340099
+           EXEC SQL                                                     02350099
+              UPDATE USUARIOS                                           02360099
+              SET TIPOUSUA  = :US-TIPOUSUA,                             02370099
+                  CLAVE     = :US-CLAVE,                                02380099
+                  NOMBRE    = :US-NOMBRE,                               02390099
+                  APELLIDOS = :US-APELLIDOS,                            02400099
+                  DIRECCION = :US-DIRECCION,                            02410099
+                  CARGO     = :US-CARGO,                                02420099
+                  ESTADO    = :US-ESTADO                                02430099
+              WHERE DNI = :US-DNI                                       02440099
+           END-EXEC                                                     02450099
+                                                                        02460099
+           IF SQLCODE = 0                                               02470099
+             MOVE 0                TO LK-US-COD-RET                     02480099
+           ELSE                                                         02490099
+              IF SQLCODE = +100 THEN                                    02500099
+                 MOVE 1 TO  LK-US-COD-RET                               02510099
+              ELSE                                                      02520099
+                 MOVE 2 TO  LK-US-COD-RET                               02530099
+                 PERFORM 0900-ERROR-DB2                                 02540099
+              END-IF                                                    02550099
+           END-IF                                                       02560099
+           .                                                            02570099
+      ***************************************************               02580099
+      * 0250-TIPO-USER-PREV                        *                    02590099
+      ***************************************************               02600099
+       0250-TIPO-USER-PREV.                                             02610099
+           MOVE LK-US-DNI        TO US-DNI                              02620099
+           MOVE LK-US-TIPOUSUA   TO US-TIPOUSUA                         02630099
+                                                                        02640099
+           EXEC SQL                                                     02650099
+                DECLARE CURPREV CURSOR FOR                              02660099
+                   SELECT                                               02670099
+                      TIPOUSUA, DNI, CLAVE, NOMBRE,                     02680099
+                      APELLIDOS, DIRECCION, CARGO, ESTADO               02690099
+                   FROM USUARIOS                                        02700099
+                   WHERE TIPOUSUA = :US-TIPOUSUA                        02710099
+                     AND DNI < :US-DNI                                  02720099
+                   ORDER BY TIPOUSUA, DNI DESC                          02730099
+           END-EXEC                                                     02740099
+      *                                                                 02750099
+           EXEC SQL                                                     02760099
+                OPEN CURPREV                                            02770099
+           END-EXEC                                                     02780099
+      *                                                                 02790099
+           EXEC SQL                                                     02800099
+                FETCH CURPREV                                           02810099
+                INTO                                                    02820099
+                     :US-TIPOUSUA                                       02830099
+                   , :US-DNI                                            02840099
+                   , :US-CLAVE                                          02850099
+                   , :US-NOMBRE                                         02860099
+                   , :US-APELLIDOS                                      02870099
+                   , :US-DIRECCION                                      02880099
+                   , :US-CARGO                                          02890099
+                   , :US-ESTADO                                         02900099
+           END-EXEC                                                     02910099
+      *                                                                 02920099
+           IF SQLCODE = 0 THEN                                          02930099
+      *       REGISTRO ANTERIOR                                         02940099
+              MOVE 0                      TO LK-US-COD-RET              02950099
+              MOVE US-DNI                 TO LK-US-DNI                  02960099
+              MOVE US-NOMBRE              TO LK-US-NOMBRE               02970099
+              MOVE US-APELLIDOS           TO LK-US-APELLIDOS            02980099
+              MOVE US-DIRECCION           TO LK-US-DIRECCION            02990099
+              MOVE US-CARGO               TO LK-US-CARGO                03000099
+              MOVE US-ESTADO              TO LK-US-ESTADO               03010099
+           ELSE                                                         03020099
+              IF SQLCODE = +100 THEN                                    03030099
+                 MOVE 1             TO  LK-US-COD-RET                   03040099
+              ELSE                                                      03050099
+                 MOVE 2             TO  LK-US-COD-RET                   03060099
+                 PERFORM 0900-ERROR-DB2                                 03070099
+              END-IF                                                    03080099
+           END-IF                                                       03090099
+                                                                        03100099
+           EXEC SQL                                                     03110099
+                CLOSE CURPREV                                           03120099
+           END-EXEC                                                     03130099
+           .                                                            03140099
+      ***************************************************               03150099
+      * 0260-TIPO-USER-NEXT                             *               03160099
+      ***************************************************               03170099
+       0260-TIPO-USER-NEXT.                                             03180099
+           MOVE LK-US-DNI        TO US-DNI                              03190099
+           MOVE LK-US-TIPOUSUA   TO US-TIPOUSUA                         03200099
+                                                                        03210099
+           EXEC SQL                                                     03220099
+                DECLARE CURNEXT CURSOR FOR                              03230099
+                   SELECT                                               03240099
+                      TIPOUSUA, DNI, CLAVE, NOMBRE,                     03250099
+                      APELLIDOS, DIRECCION, CARGO, ESTADO               03260099
+                   FROM USUARIOS                                        03270099
+                   WHERE TIPOUSUA = :US-TIPOUSUA                        03280099
+                     AND DNI > :US-DNI                                  03290099
+                   ORDER BY TIPOUSUA, DNI ASC                           03300099
+           END-EXEC                                                     03310099
+      *                                                                 03320099
+           EXEC SQL                                                     03330099
+                OPEN CURNEXT                                            03340099
+           END-EXEC                                                     03350099
+      *                                                                 03360099
+           EXEC SQL                                                     03370099
+                FETCH CURNEXT                                           03380099
+                INTO                                                    03390099
+                     :US-TIPOUSUA                                       03400099
+                   , :US-DNI                                            03410099
+                   , :US-CLAVE                                          03420099
+                   , :US-NOMBRE                                         03430099
+                   , :US-APELLIDOS                                      03440099
+                   , :US-DIRECCION                                      03450099
+                   , :US-CARGO                                          03460099
+                   , :US-ESTADO                                         03470099
+           END-EXEC                                                     03480099
+      *                                                                 03490099
+           IF SQLCODE = 0 THEN                                          03500099
+      *       REGISTRO SIGUIENTE                                        03510099
+              MOVE 0                      TO LK-US-COD-RET              03520099
+              MOVE US-DNI                 TO LK-US-DNI                  03530099
+              MOVE US-NOMBRE              TO LK-US-NOMBRE               03540099
+              MOVE US-APELLIDOS           TO LK-US-APELLIDOS            03550099
+              MOVE US-DIRECCION           TO LK-US-DIRECCION            03560099
+              MOVE US-CARGO               TO LK-US-CARGO                03570099
+              MOVE US-ESTADO              TO LK-US-ESTADO               03580099
+           ELSE                                                         03590099
+              IF SQLCODE = +100 THEN                                    03600099
+                 MOVE 1             TO  LK-US-COD-RET                   03610099
+              ELSE                                                      03620099
+                 MOVE 2             TO  LK-US-COD-RET                   03630099
+                 PERFORM 0900-ERROR-DB2                                 03640099
+              END-IF                                                    03650099
+           END-IF                                                       03660099
+                                                                        03670099
+           EXEC SQL                                                     03680099
+                CLOSE CURNEXT                                           03690099
+           END-EXEC                                                     03700099
+           .                                                            03710099
+      ******************************************************************03720099
+      * 0900-ERROR-DB2                                                  03730099
+      ******************************************************************03740099
+       0900-ERROR-DB2.                                                  03750099
+            MOVE SQLCODE TO LK-US-SQLCODE                               03760099
+            MOVE SQLCODE TO DB2-SQLCODE                                 03770099
+      *     DISPLAY "ERROR DB2 EN RUTINA: "                             03780099
+      *     DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE                   03790099
+      *     DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z                 03800099
+      *     DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG                   03810099
+      *     DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE                  03820099
+            .                                                           03830099
+      ******************************************************************03840099
+      * FIN SESION                                                      03850099
+      ******************************************************************03860099
+       0900-FIN.                                                        03870099
+      *    DISPLAY "AREA-LINK OUT: " AREA-LINK                          03880099
+      *    DISPLAY "SALGO DE RUTINA RSNUSUAR"                           03890099
+           GOBACK                                                       03900099
+           .                                                            03910099
+      ******************************************************************03920099
+
