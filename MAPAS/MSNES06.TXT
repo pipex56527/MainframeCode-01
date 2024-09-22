@@ -1,0 +1,171 @@
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 00010002
+*                   -----  MAP  'HOLSMP' -----                        * 00020002
+*            PANTALLA DE LISTA Y SELECCION DE CLIENTE                 * 00030002
+*                          VERSION 1.0                                * 00040002
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 00050002
+MSNES06  DFHMSD MODE=INOUT,LANG=COBOL,TIOAPFX=YES,TYPE=DSECT,TERM=ALL, X00060002
+               CTRL=FREEKB,STORAGE=AUTO,                               X00070002
+               MAPATTS=(COLOR,HILIGHT,OUTLINE),                        X00080002
+               DSATTS=(COLOR,HILIGHT,OUTLINE),                         X00090002
+               EXTATT=YES,COLOR=GREEN                                   00100002
+*                                                                       00110002
+MSNES06  DFHMDI SIZE=(24,80),LINE=1,COLUMN=1                            00120002
+*                                                                       00130002
+TRN1     DFHMDF POS=(01,01),LENGTH=07,INITIAL='MSNES06',               X00140002
+               ATTRB=(PROT,BRT),COLOR=YELLOW                            00150002
+TITLE    DFHMDF POS=(01,06),LENGTH=50,ATTRB=(PROT,BRT),COLOR=YELLOW,   X00160002
+               INITIAL='        SCROLL Y SELECCION DE ESTUDIANTES'      00170002
+*                                                                       00180002
+         DFHMDF POS=(01,57),LENGTH=15,ATTRB=(PROT,BRT),                X00190002
+               INITIAL='N.ESTUDIANTES:',COLOR=YELLOW                    00200002
+                                                                        00201003
+*                                                                       00210002
+NUMC     DFHMDF POS=(01,73),LENGTH=04,                                 X00220002
+               ATTRB=(ASKIP,NUM,BRT),COLOR=TURQUOISE,PICOUT='ZZZ9'      00230002
+*                                                                       00240002
+         DFHMDF POS=(02,01),LENGTH=79,                                 X00250002
+               INITIAL='===============================================X00260002
+               ================================',                      X00270002
+               ATTRB=(PROT,BRT),COLOR=YELLOW                            00280002
+*                                                                       00290002
+         DFHMDF POS=(03,04),LENGTH=07,INITIAL='Buscar:',               X00300002
+               ATTRB=(PROT,NORM),COLOR=BLUE                             00310002
+BUS      DFHMDF POS=(03,12),LENGTH=35,ATTRB=(UNPROT,NORM,FSET),        X00320002
+               HILIGHT=UNDERLINE,COLOR=GREEN                            00330002
+         DFHMDF POS=(03,48),ATTRB=ASKIP                                 00340002
+         DFHMDF POS=(03,50),LENGTH=09,INITIAL='Comienza:',             X00350002
+               ATTRB=(PROT,NORM),COLOR=BLUE                             00360002
+INI      DFHMDF POS=(03,60),LENGTH=01,INITIAL='N',HILIGHT=UNDERLINE,   X00370002
+               ATTRB=(UNPROT,NORM,FSET),COLOR=GREEN                     00380002
+         DFHMDF POS=(03,62),ATTRB=ASKIP                                 00390002
+         DFHMDF POS=(03,65),LENGTH=09,INITIAL='Contiene:',             X00400002
+               ATTRB=(PROT,NORM),COLOR=BLUE                             00410002
+CON      DFHMDF POS=(03,75),LENGTH=01,INITIAL='N',HILIGHT=UNDERLINE,   X00420002
+               ATTRB=(UNPROT,NORM,FSET),COLOR=GREEN                     00430002
+         DFHMDF POS=(03,77),ATTRB=ASKIP                                 00440002
+*                                                                       00450002
+         DFHMDF POS=(04,01),LENGTH=79,                                 X00460002
+               INITIAL='-----------------------------------------------X00470002
+               --------------------------------',                      X00480002
+               ATTRB=(PROT,NORM),COLOR=BLUE                             00490002
+*                                                                       00500002
+ORD      DFHMDF POS=(05,05),LENGTH=01,HILIGHT=UNDERLINE,               X00510002
+               ATTRB=(UNPROT,NORM,FSET),COLOR=YELLOW,INITIAL='*'        00520002
+         DFHMDF POS=(05,07),LENGTH=07,INITIAL='DNI   /',               X00530002
+               ATTRB=(PROT,BRT),COLOR=BLUE                              00540002
+ADD      DFHMDF POS=(05,15),LENGTH=01,INITIAL='A',                     X00550002
+               ATTRB=(PROT,BRT,FSET),COLOR=TURQUOISE                    00560002
+*                                                                       00570002
+ORN      DFHMDF POS=(05,18),LENGTH=01,HILIGHT=UNDERLINE,               X00580002
+               ATTRB=(UNPROT,NORM,FSET),COLOR=YELLOW                    00590002
+         DFHMDF POS=(05,20),LENGTH=23,INITIAL='NOMBRE               /',X00600002
+               ATTRB=(PROT,BRT),COLOR=BLUE                              00610002
+ADN      DFHMDF POS=(05,44),LENGTH=01,INITIAL=' ',                     X00620002
+               ATTRB=(PROT,BRT,FSET),COLOR=TURQUOISE                    00630002
+*                                                                       00640002
+ORA      DFHMDF POS=(05,47),LENGTH=01,HILIGHT=UNDERLINE,               X00650002
+               ATTRB=(UNPROT,NORM,FSET),COLOR=YELLOW                    00660002
+         DFHMDF POS=(05,49),LENGTH=23,INITIAL='APELLIDOS            /',X00670002
+               ATTRB=(PROT,BRT),COLOR=BLUE                              00680002
+ADA      DFHMDF POS=(05,73),LENGTH=01,INITIAL=' ',                     X00690002
+               ATTRB=(PROT,BRT,FSET),COLOR=TURQUOISE                    00700002
+*                                                                       00710002
+MUP      DFHMDF POS=(05,76),LENGTH=01,INITIAL='-',                     X00720002
+               ATTRB=(PROT,BRT,FSET),COLOR=YELLOW                       00730002
+*                                                                       00740002
+         DFHMDF POS=(06,05),LENGTH=11,INITIAL='===========',           X00750002
+               ATTRB=(PROT,BRT),COLOR=YELLOW                            00760002
+         DFHMDF POS=(06,18),LENGTH=27,                                 X00770002
+               INITIAL='===========================',                  X00780002
+               ATTRB=(PROT,BRT),COLOR=YELLOW                            00790002
+         DFHMDF POS=(06,47),LENGTH=27,                                 X00800002
+               INITIAL='===========================',                  X00810002
+               ATTRB=(PROT,BRT),COLOR=YELLOW                            00820002
+*                                                                       00830002
+SEL1     DFHMDF POS=(07,05),LENGTH=01,HILIGHT=UNDERLINE,               X00840002
+               ATTRB=(UNPROT,NORM,FSET,IC),COLOR=GREEN                  00850002
+DNI1     DFHMDF POS=(07,07),LENGTH=09,                                 X00860002
+               ATTRB=(PROT,NORM,FSET),COLOR=TURQUOISE                   00870002
+NOM1     DFHMDF POS=(07,18),LENGTH=25,                                 X00880002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        00890002
+APE1     DFHMDF POS=(07,47),LENGTH=25,                                 X00900002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        00910002
+*                                                                       00920002
+         DFHMDF POS=(08,20),LENGTH=18,INITIAL='Direccion........:',    X00930002
+               ATTRB=(PROT,NORM),COLOR=BLUE                             00940002
+DIR1     DFHMDF POS=(08,39),LENGTH=35,                                 X00950002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        00960002
+         DFHMDF POS=(09,05),LENGTH=69,                                 X00970002
+               INITIAL='-----------------------------------------------X00980002
+               ----------------------'                                  00990002
+*                                                                       01000002
+SEL2     DFHMDF POS=(10,05),LENGTH=01,HILIGHT=UNDERLINE,               X01010002
+               ATTRB=(UNPROT,NORM,FSET),COLOR=GREEN                     01020002
+DNI2     DFHMDF POS=(10,07),LENGTH=09,                                 X01030002
+               ATTRB=(PROT,NORM,FSET),COLOR=TURQUOISE                   01040002
+NOM2     DFHMDF POS=(10,18),LENGTH=25,                                 X01050002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01060002
+APE2     DFHMDF POS=(10,47),LENGTH=25,                                 X01070002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01080002
+         DFHMDF POS=(11,20),LENGTH=18,INITIAL='Direccion........:',    X01090002
+               ATTRB=(PROT,NORM),COLOR=BLUE                             01100002
+DIR2     DFHMDF POS=(11,39),LENGTH=35,                                 X01110002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01120002
+         DFHMDF POS=(12,05),LENGTH=69,                                 X01130002
+               INITIAL='-----------------------------------------------X01140002
+               ----------------------'                                  01150002
+*                                                                       01160002
+SEL3     DFHMDF POS=(13,05),LENGTH=01,HILIGHT=UNDERLINE,               X01170002
+               ATTRB=(UNPROT,NORM,FSET),COLOR=GREEN                     01180002
+DNI3     DFHMDF POS=(13,07),LENGTH=09,                                 X01190002
+               ATTRB=(PROT,NORM,FSET),COLOR=TURQUOISE                   01200002
+NOM3     DFHMDF POS=(13,18),LENGTH=25,                                 X01210002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01220002
+APE3     DFHMDF POS=(13,47),LENGTH=25,                                 X01230002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01240002
+         DFHMDF POS=(14,20),LENGTH=18,INITIAL='Direccion........:',    X01250002
+               ATTRB=(PROT,NORM),COLOR=BLUE                             01260002
+DIR3     DFHMDF POS=(14,39),LENGTH=35,                                 X01270002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01280002
+*                                                                       01290002
+         DFHMDF POS=(15,05),LENGTH=69,                                 X01300002
+               INITIAL='-----------------------------------------------X01310002
+               ----------------------',                                X01320002
+               ATTRB=(PROT,NORM),COLOR=GREEN                            01330002
+*                                                                       01340002
+SEL4     DFHMDF POS=(16,05),LENGTH=01,HILIGHT=UNDERLINE,               X01350002
+               ATTRB=(UNPROT,NORM,FSET),COLOR=GREEN                     01360002
+DNI4     DFHMDF POS=(16,07),LENGTH=09,                                 X01370002
+               ATTRB=(PROT,NORM,FSET),COLOR=TURQUOISE                   01380002
+NOM4     DFHMDF POS=(16,18),LENGTH=25,                                 X01390002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01400002
+APE4     DFHMDF POS=(16,47),LENGTH=25,                                 X01410002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01420002
+         DFHMDF POS=(17,20),LENGTH=18,INITIAL='Direccion........:',    X01430002
+               ATTRB=(PROT,NORM),COLOR=BLUE                             01440002
+DIR4     DFHMDF POS=(17,39),LENGTH=35,                                 X01450002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01460002
+MDOWN    DFHMDF POS=(17,76),LENGTH=01,INITIAL='-',                     X01470002
+               ATTRB=(PROT,BRT,FSET),COLOR=YELLOW                       01480002
+SHOW     DFHMDF POS=(19,01),LENGTH=78,                                 X01490002
+               ATTRB=(PROT,BRT,FSET),COLOR=YELLOW                       01500002
+         DFHMDF POS=(20,01),LENGTH=79,                                 X01510002
+               INITIAL='-----------------------------------------------X01520002
+               --------------------------------',                      X01530002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01540002
+         DFHMDF POS=(21,01),LENGTH=79,                                 X01550002
+               INITIAL='F1-Ayuda       F2-Reset      F3-Volver      F5-X01560002
+               Ordenacion        INTRO-Proceso',                       X01570002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01580002
+         DFHMDF POS=(22,01),LENGTH=79,                                 X01590002
+               INITIAL='F7-Anterior    F8-siguiente  F9-Filtrar        X01600002
+                                 F12-Listado',                         X01610002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01620002
+         DFHMDF POS=(23,01),LENGTH=79,                                 X01630002
+               INITIAL='-----------------------------------------------X01640002
+               --------------------------------',                      X01650002
+               ATTRB=(PROT,NORM),COLOR=TURQUOISE                        01660002
+MSG      DFHMDF POS=(24,01),LENGTH=79,ATTRB=(PROT,BRT),COLOR=RED        01670002
+         DFHMSD TYPE=FINAL                                              01680002
+         END                                                            01690002
+
