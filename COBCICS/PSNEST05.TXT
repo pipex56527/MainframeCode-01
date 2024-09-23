@@ -1,0 +1,1829 @@
+      ***********************************************************
+      *    CRUD DE ESTUDIANTES (ADICION,MODIFICACION,CONSULTA Y *
+      *    RETIRO COMO PARAMETRO DE ENTRADA RECIBE EL USUARIO   *
+      *    Y SUS PERMISOS                                       *
+      ***********************************************************
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PSNEST05.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       COPY CSNES05.
+       COPY CSNOP03.
+       COPY CSNOP04.
+       COPY CSNOP05.
+       COPY CSNOP06.
+       COPY CSNOP07.
+       COPY CSNOP08.
+      *COMMAREA
+       01 MI-COMMAREA.
+          03 TRANS             PIC X(04).
+          03 TERM              PIC X(04).
+          03 CICLO             PIC X(02).
+          03 TIPOUSUA          PIC X(05).
+          03 USU               PIC X(09).
+          03 NOMUSU            PIC X(20).
+          03 APEUSU            PIC X(20).
+          03 PAS               PIC X(08).
+          03 PERFIL            PIC X(16).
+          03 CED               PIC X(09).
+          03 CLAVE             PIC X(8).
+          03 NOM               PIC X(20).
+          03 APE               PIC X(20).
+          03 DIR               PIC X(35).
+          03 CARGO             PIC X(20).
+          03 ESTADO            PIC X.
+          03 TIPO              PIC X(06).
+          03 SUB-TIPO          PIC XX.
+          03 EXISTE            PIC X.
+          03 NUM-REGISTRO      PIC 9(5).
+          03 CONTADOR-REGISTRO PIC S9(5).
+          03 CODIGO-CURSOR     PIC XX.
+          03 MLIKE             PIC X(35).
+       01 CA-COMMAREA.
+           03 CA-TRANS                    PIC X(04).
+           03 CA-TERM                     PIC X(04).
+           03 CA-CICLO                    PIC X(02).
+           03 CA-US-DNI                   PIC X(09).
+           03 CA-US-TIPOUSUA              PIC X(05).
+           03 CA-US-NOMBRE                PIC X(20).
+           03 CA-US-APELLIDOS             PIC X(20).
+           03 CA-PF-IDPERFIL              PIC X(3).
+           03 CA-PF-NOMPERFIL             PIC X(20).
+           03 CA-PF-CONS                  PIC X(2).
+           03 CA-PF-BORR                  PIC X(2).
+           03 CA-PF-INGR                  PIC X(2).
+           03 CA-PF-MODI                  PIC X(2).
+      *    03 CA-FILLER                   PIC X(162).
+      *
+      *COMMAREA
+       01 RC-COMMAREA.
+          03 RTRANS             PIC X(04).
+          03 RTERM              PIC X(04).
+          03 RCICLO             PIC X(02).
+          03 RTIPOUSUA          PIC X(05).
+          03 RUSU               PIC X(09).
+          03 RNOMUSU            PIC X(20).
+          03 RAPEUSU            PIC X(20).
+          03 RPAS               PIC X(08).
+          03 RPERFIL            PIC X(16).
+          03 RCED               PIC X(09).
+          03 RCLAVE             PIC X(8).
+          03 RNOM               PIC X(20).
+          03 RAPE               PIC X(20).
+          03 RDIR               PIC X(35).
+          03 RCARGO             PIC X(20).
+          03 RESTADO            PIC X.
+          03 RTIPO              PIC X(06).
+          03 RSUB-TIPO          PIC XX.
+          03 REXISTE            PIC X.
+          03 RNUM-REGISTRO      PIC 9(5).
+          03 RCONTADOR-REGISTRO PIC S9(5).
+          03 RCODIGO-CURSOR     PIC XX.
+          03 RMLIKE             PIC X(35).
+       01  AREA-LINK.
+           05 LK-PM-TIPO-OPE        PIC 9(01).
+           05 LK-PM-SUBTIPO-OPE     PIC 9(02).
+           05 LK-PM-TRAN            PIC X(04).
+           05 LK-PM-DNI             PIC X(09).
+           05 LK-PM-IDPERFIL        PIC X(03).
+           05 LK-PM-NROACCESOS      PIC S9(9) USAGE COMP.
+           05 LK-PM-FECHAUL         PIC X(10).
+           05 LK-PM-HORAUL          PIC X(08).
+           05 LK-PM-COD-RET         PIC 9(02).
+           05 LK-PM-SQLCODE         PIC S9(9).
+           05 LK-PM-ESPACIOS        PIC X(75).
+       01  WS-TRANSA                PIC X(04) VALUE  'SN01'.
+       01  WS-RESPUESTA             PIC S9(08) COMP.
+       01 WS-PERFIL.
+          02 WS-TRAN         PIC X(4).
+          02 WS-IDPERFIL     PIC X(3).
+          02 WS-CONS         PIC X(2).
+          02 WS-BORR         PIC X(2).
+          02 WS-INGR         PIC X(2).
+          02 WS-MODI         PIC X(2).
+          02 WS-FILLER       PIC X.
+      *VARIABLES
+       01 MSG-FIN-SESION PIC X(40) VALUE '          FIN SESION'.
+       01  DFHMFSET         PIC X VALUE '8'.
+      *ESTA COLA LA USO PARA LLEVAR LOS REGISTROS LEIDOS EN TABLA
+      *DE ESTUDIANTES Y DESPUES MOSTRAR POR CONSULTA ESTOS DATOS
+       01 COLA-ESTUD.
+          05 C-DNI       PIC X(09).
+          05 C-NOMBRE    PIC X(20).
+          05 C-APELLIDOS PIC X(20).
+          05 C-DIRECCION PIC X(35).
+      *ESTA COLA LA USO COMO UN DEBUG PARA LEER DATOS EN CUALQUIER
+      *PARTE DEL PROGRAMA
+       01 COLA-TRABAJO.
+          05 T-AREA-LINK PIC X(257).
+          05 T-DNI       PIC X(09).
+          05 T-NOMBRE    PIC X(20).
+          05 T-APELLIDOS PIC X(20).
+          05 T-DIRECCION PIC X(35).
+          05 T-CONSUL    PIC XX.
+          05 T-BORRAR    PIC XX.
+          05 T-INGRESAR  PIC XX.
+          05 T-MODIF     PIC XX.
+          05 T-SQLCODE   PIC X(10).
+      *01 FILLER PIC X(20) VALUE 'TABLA678901234567890'.
+
+
+       01 DB2-ERR.
+          03 DB2-SQLCODE              PIC S9(9).
+          03 DB2-SQLCODE-Z            PIC -ZZZZZZZZ9.
+          03 DB2-ERROR.
+             05 DB2-ERR-MSG           PIC X(50).
+             05 DB2-ERR-CODE          PIC X(20).
+       01 RESPUESTA      PIC S9(08) COMP.
+       01 SW-CICLO       PIC X(02).
+          88 CICLO-0     VALUE '00'.
+          88 CICLO-1     VALUE '01'.
+          88 CICLO-2     VALUE '02'.
+          88 CICLO-3     VALUE '03'.
+          88 CICLO-4     VALUE '04'.
+          88 CICLO-5     VALUE '05'.
+          88 CICLO-6     VALUE '06'.
+          88 CICLO-7     VALUE '07'.
+          88 CICLO-8     VALUE '08'.
+          88 CICLO-9     VALUE '09'.
+          88 CICLO-20    VALUE '20'.
+          88 CICLO-30    VALUE '30'.
+          88 CICLO-31    VALUE '31'.
+          88 CICLO-50    VALUE '50'.
+          88 CICLO-51    VALUE '51'.
+          88 CICLO-52    VALUE '52'.
+          88 CICLO-70    VALUE '70'.
+          88 CICLO-71    VALUE '71'.
+          88 CICLO-88    VALUE '88'.
+          88 CICLO-99    VALUE '99'.
+      * AYUSASA COLATS
+       01 WC-CONSTANTES.
+          03 WC-CUR-CED   PIC 9(3) VALUE 486.
+          03 WC-CUR-NOM   PIC 9(3) VALUE 506.
+          03 WC-CUR-APE   PIC 9(3) VALUE 586.
+          03 WC-CUR-DIR   PIC 9(3) VALUE 666.
+          03 WC-CUR-POS   PIC 9(3) VALUE ZEROS.
+       77 WS-TRANS       PIC X(4)  VALUE 'SN05'.
+       77 WS-NOMBRECOLA  PIC X(08) VALUE 'KCICS03'.
+       77 WS-TRABAJOCOLA PIC X(08) VALUE 'KCICS54'.
+       77 WS-NUM-ELMENT  PIC S9(4) COMP VALUE 1.
+       77 WS-ITEM        PIC X(5) VALUE SPACES.
+       77 WS-EOF         PIC X VALUE SPACES.
+       77 WS-OPCION      PIC X VALUE SPACES.
+       77 WS-EXISTE      PIC 9 VALUE ZEROS.
+       77 WS-CEDI-PROX   PIC X(9) VALUE SPACES.
+       77 WS-CEDI-PREV   PIC X(9) VALUE SPACES.
+       77 WS-CEDI-PROXIMO PIC X(9) VALUE SPACES.
+       77 WS-OPERACION   PIC 9.
+      * AYUDAS DE MBS
+       COPY DFHAID.
+       COPY DFHBMSCA.
+       LINKAGE SECTION.
+       01 DFHCOMMAREA    PIC X(257).
+
+       PROCEDURE DIVISION.
+       0000-RAIZ.
+      *EXCEPCIONES DB2
+      *   EXEC CICS INQUIRE TSQUEUE
+      *      QUEUE('KCICS54')
+      *      RESP(EIBRESP)
+      *   END-EXEC.
+      *   IF EIBRESP = 0
+      *       EXEC CICS DELETEQ TS
+      *         QUEUE (WS-TRABAJOCOLA)
+      *         RESP (RESPUESTA)
+      *       END-EXEC
+      *   END-IF
+           PERFORM 0100-INICIO
+           PERFORM 0200-PROCESO
+           PERFORM 0300-FIN
+           .
+      **********************************************************
+      *INICIO DEL PROGRAMA, LA COMMAREA TRAE EL CICLO EN QUE   *
+      * ESTAMOS TRABAJANDO Y NOS LLEVA A CONTINUAR EN ESE CICLO*
+      **********************************************************
+       0100-INICIO.
+           EVALUATE TRUE
+            WHEN EIBCALEN = 0
+              SET CICLO-0 TO TRUE
+            WHEN OTHER
+
+               MOVE DFHCOMMAREA TO  MI-COMMAREA
+               MOVE PERFIL      TO  WS-PERFIL
+               EVALUATE CICLO
+                 WHEN '00'
+                   SET CICLO-0 TO TRUE
+                 WHEN '01'
+                   SET CICLO-1 TO TRUE
+                 WHEN '02'
+                   SET CICLO-2 TO TRUE
+                 WHEN '03'
+                   SET CICLO-3 TO TRUE
+                 WHEN '04'
+                   SET CICLO-4 TO TRUE
+                 WHEN '05'
+                   SET CICLO-5 TO TRUE
+                 WHEN '06'
+                   SET CICLO-6 TO TRUE
+                 WHEN '07'
+                  SET CICLO-7 TO TRUE
+                 WHEN '08'
+                   SET CICLO-8 TO TRUE
+                 WHEN '09'
+                   SET CICLO-9 TO TRUE
+                 WHEN '20'
+                   SET CICLO-20 TO TRUE
+                 WHEN '30'
+                   SET CICLO-30 TO TRUE
+                 WHEN '31'
+                   SET CICLO-31 TO TRUE
+                 WHEN '50'
+                   SET CICLO-50 TO TRUE
+                 WHEN '51'
+                   SET CICLO-51 TO TRUE
+                 WHEN '52'
+                   SET CICLO-52 TO TRUE
+                 WHEN '70'
+                   SET CICLO-70 TO TRUE
+                 WHEN '71'
+                   SET CICLO-71 TO TRUE
+                 WHEN '88'
+                   MOVE DFHCOMMAREA     TO CA-COMMAREA
+                   MOVE CA-TRANS        TO TRANS
+                   MOVE CA-TERM         TO TERM
+                   MOVE CA-CICLO        TO CICLO
+                   MOVE CA-US-DNI       TO USU
+                   MOVE CA-US-NOMBRE    TO NOMUSU
+                   MOVE CA-US-APELLIDOS TO APEUSU
+                   MOVE CA-TRANS        TO WS-TRAN
+                   MOVE CA-PF-IDPERFIL  TO WS-IDPERFIL
+                   MOVE CA-PF-CONS      TO WS-CONS
+                   MOVE CA-PF-BORR      TO WS-BORR
+                   MOVE CA-PF-INGR      TO WS-INGR
+                   MOVE CA-PF-MODI      TO WS-MODI
+                   MOVE WS-PERFIL       TO PERFIL
+                   SET CICLO-0 TO TRUE
+                 WHEN '99'
+                   SET CICLO-0 TO TRUE
+                 WHEN OTHER
+                   MOVE "                  CICLO NO PROGRAMADO"
+                                             TO MSG-FIN-SESION
+                   PERFORM 0300-FIN
+               END-EVALUATE
+           END-EVALUATE
+           .
+      ***************************************************
+      *   CICLO-1 DIGITACION DE USUARIO Y CONTRASEÑA    *
+      *   SI ES VALIDA ACTIVA EL CICLO-2                *
+      ***************************************************
+       0200-PROCESO.
+           EVALUATE TRUE
+               WHEN CICLO-0
+                 PERFORM 0201-CICLO-0
+               WHEN CICLO-1
+                 PERFORM 0202-CICLO-1
+               WHEN CICLO-2
+                 PERFORM 0203-CICLO-2
+               WHEN CICLO-3
+                 PERFORM 0204-CICLO-3
+               WHEN CICLO-4
+                 PERFORM 0205-CICLO-4
+               WHEN CICLO-5
+                 PERFORM 0206-CICLO-5
+               WHEN CICLO-6
+                 PERFORM 0207-CICLO-6
+               WHEN CICLO-7
+                 PERFORM 0208-CICLO-7
+               WHEN CICLO-8
+                 PERFORM 0209-CICLO-8
+               WHEN CICLO-9
+                 PERFORM 0210-CICLO-9
+               WHEN CICLO-20
+                 PERFORM 0210-CICLO-20
+               WHEN CICLO-30
+                 PERFORM 0210-CICLO-30
+               WHEN CICLO-31
+                 PERFORM 0210-CICLO-31
+               WHEN CICLO-50
+                 PERFORM 0210-CICLO-50
+               WHEN CICLO-51
+                 PERFORM 0210-CICLO-51
+               WHEN CICLO-52
+                 PERFORM 0210-CICLO-52
+               WHEN CICLO-70
+                 PERFORM 0208-CICLO-70
+               WHEN CICLO-71
+                 PERFORM 0209-CICLO-71
+               WHEN CICLO-99
+                 SET CICLO-0 TO TRUE
+                 PERFORM 0201-CICLO-0
+           END-EVALUATE
+             .
+      ********************************************************
+      * FIN DE LA TRANSACCION, LLAMA O RETORNA AL PROGRAMA DE*
+      *                SEGURIDAD                             *
+      ********************************************************
+       0300-FIN.
+           MOVE '99'         TO CICLO
+           MOVE TRANS        TO CA-TRANS
+           MOVE TERM         TO CA-TERM
+           MOVE CICLO        TO CA-CICLO
+           MOVE USU          TO CA-US-DNI
+           MOVE NOMUSU       TO CA-US-NOMBRE
+           MOVE APEUSU       TO CA-US-APELLIDOS
+           MOVE PERFIL       TO WS-PERFIL
+      *    MOVE WS-TRAN      TO CA-TRAN
+           MOVE WS-IDPERFIL  TO CA-PF-IDPERFIL
+           MOVE WS-CONS      TO CA-PF-CONS
+           MOVE WS-BORR      TO CA-PF-BORR
+           MOVE WS-INGR      TO CA-PF-INGR
+           MOVE WS-MODI      TO CA-PF-MODI
+           EXEC CICS
+                SET TERMINAL(EIBTRMID) UCTRAN
+           END-EXEC
+           MOVE 'XCTL'     TO TRANS
+           EXEC CICS XCTL
+                PROGRAM('PSNMEN02')
+                COMMAREA(CA-COMMAREA)
+                LENGTH(LENGTH OF MI-COMMAREA)
+                RESP(RESPUESTA)
+           END-EXEC
+           EXEC CICS RETURN
+           END-EXEC
+           GOBACK
+           .
+      ***************************************************
+      *   CICLO INICIAL MUESTRA EN PANTALLA EL MENU DEL *
+      *   CRUD                                          *
+      ***************************************************
+       0201-CICLO-0.
+           EVALUATE TRUE
+             WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
+                  WS-INGR = 'SI' AND WS-MODI = 'SI'
+                  MOVE LOW-VALUE          TO MSNOP03O
+                  MOVE USU                TO LOG03O
+                  MOVE NOMUSU             TO LNOM03O
+                  MOVE APEUSU             TO LAPE03O
+                  PERFORM 0222-SEND-MAPMENU03
+             WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                  WS-INGR = 'NO' AND WS-MODI = 'SI'
+                  MOVE LOW-VALUE          TO MSNOP04O
+                  MOVE USU                TO LOG04O
+                  MOVE NOMUSU             TO LNOM04O
+                  MOVE APEUSU             TO LAPE04O
+                  PERFORM 0222-SEND-MAPMENU04
+             WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                  WS-INGR = 'NO' AND WS-MODI = 'NO'
+                 MOVE LOW-VALUE          TO MSNOP05O
+                 MOVE USU                TO LOG05O
+                 MOVE NOMUSU             TO LNOM05O
+                 MOVE APEUSU             TO LAPE05O
+                 PERFORM 0222-SEND-MAPMENU05
+             WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                  WS-INGR = 'SI' AND WS-MODI = 'NO'
+                 MOVE LOW-VALUE          TO MSNOP06O
+                 MOVE USU                TO LOG06O
+                 MOVE NOMUSU             TO LNOM06O
+                 MOVE APEUSU             TO LAPE06O
+                 PERFORM 0222-SEND-MAPMENU06
+             WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
+                  WS-INGR = 'NO' AND WS-MODI = 'NO'
+                 MOVE LOW-VALUE          TO MSNOP07O
+                 MOVE USU                TO LOG07O
+                 MOVE NOMUSU             TO LNOM07O
+                 MOVE APEUSU             TO LAPE07O
+                 PERFORM 0222-SEND-MAPMENU07
+             WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
+                  WS-INGR = 'SI' AND WS-MODI = 'NO'
+                 MOVE LOW-VALUE          TO MSNOP08O
+                 MOVE USU                TO LOG08O
+                 MOVE NOMUSU             TO LNOM08O
+                 MOVE APEUSU             TO LAPE08O
+                 PERFORM 0222-SEND-MAPMENU07
+             WHEN OTHER
+                   MOVE "            OJO  OPCION NO PERMITIDA "
+                                             TO MSG-FIN-SESION
+                   PERFORM 0300-FIN
+           END-EVALUATE
+           MOVE '01'     TO CICLO
+           PERFORM 8200-RETORNO-TRANS
+           .
+      ***************************************************
+      *   CICLO RECIBE LA OPCION ESCOGIDA POR EL USUARIO*
+      *   Y ASIGNA EL CICLO CORRESPONDIENTE A LA OPCION *
+      ***************************************************
+       0202-CICLO-1.
+           MOVE ZEROS TO WS-OPCION
+           EVALUATE TRUE
+              WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
+                   WS-INGR = 'SI' AND WS-MODI = 'SI'
+                   PERFORM 0223-RECIBE-MAPMENU03
+                   MOVE OPC03I TO WS-OPCION
+              WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                   WS-INGR = 'NO' AND WS-MODI = 'SI'
+                   PERFORM 0223-RECIBE-MAPMENU04
+                   MOVE '0' TO WS-OPCION
+                   IF OPC04I = '1'
+                     MOVE '2' TO WS-OPCION
+                   ELSE
+                     IF OPC04I = '2'
+                       MOVE 3 TO WS-OPCION
+                     ELSE
+                       IF OPC04I = '3'
+                         MOVE 5 TO WS-OPCION
+                       END-IF
+                     END-IF
+                   END-IF
+              WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
+                   WS-INGR = 'SI' AND WS-MODI = 'NO'
+                   PERFORM 0223-RECIBE-MAPMENU08
+                   MOVE '0' TO WS-OPCION
+                   IF OPC08I = '1'
+                     MOVE '1' TO WS-OPCION
+                     ELSE
+                     IF OPC08I = '2'
+                       MOVE '3' TO WS-OPCION
+                     ELSE
+                       IF OPC08I = '3'
+                         MOVE 4 TO WS-OPCION
+                       ELSE
+                         IF OPC08I = '4'
+                           MOVE 5 TO WS-OPCION
+                         END-IF
+                       END-IF
+                     END-IF
+                   END-IF
+              WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                   WS-INGR = 'SI' AND WS-MODI = 'NO'
+                   PERFORM 0223-RECIBE-MAPMENU06
+                   MOVE '0' TO WS-OPCION
+                   IF OPC05I = '1'
+                     MOVE '1' TO WS-OPCION
+                   ELSE
+                     IF OPC05I = '2'
+                       MOVE 3 TO WS-OPCION
+                     ELSE
+                       IF OPC05I = '3'
+                         MOVE 5 TO WS-OPCION
+                       END-IF
+                     END-IF
+                   END-IF
+              WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
+                   WS-INGR = 'NO' AND WS-MODI = 'NO'
+                   PERFORM 0223-RECIBE-MAPMENU07
+                   MOVE '0' TO WS-OPCION
+                   IF OPC07I = '1'
+                     MOVE '3' TO WS-OPCION
+                   ELSE
+                     IF OPC07I = '2'
+                       MOVE 4 TO WS-OPCION
+                     ELSE
+                       IF OPC07I = '3'
+                         MOVE 5 TO WS-OPCION
+                       END-IF
+                     END-IF
+                   END-IF
+              WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                   WS-INGR = 'NO' AND WS-MODI = 'NO'
+                   PERFORM 0223-RECIBE-MAPMENU05
+                   MOVE '0' TO WS-OPCION
+                   IF OPC05I = '1'
+                     MOVE 3 TO WS-OPCION
+                   ELSE
+                     IF OPC05I = '2'
+                       MOVE 5 TO WS-OPCION
+                     END-IF
+                   END-IF
+           END-EVALUATE
+           EVALUATE EIBAID
+             WHEN DFHPF3
+                PERFORM 0300-FIN
+           END-EVALUATE
+           MOVE LOW-VALUES TO MSNES05O
+           IF WS-OPCION = '1'
+             MOVE 'ADICION DE ESTUDIANTES' TO TITO
+             MOVE 'F3=END ENTER= LEER ' TO TECO
+             MOVE '05'     TO CICLO
+           END-IF
+           IF WS-OPCION  = '2'
+             MOVE 'MODIFICACION DE ESTUDIANTES' TO TITO
+             MOVE 'F3=END ENTER= LEER' TO TECO
+             MOVE '03'     TO CICLO
+           END-IF
+           IF WS-OPCION  = '3'
+             MOVE 'CONSULTA DE ESTUDIANTES' TO TITO
+             MOVE 'F3=END ENTER= LEER F7=ANTERIOR F8=PROXIMO' TO TECO
+             MOVE '02'     TO CICLO
+             MOVE 'DA'     TO CODIGO-CURSOR
+             MOVE 'CURSOR' TO TIPO
+             MOVE '01'     TO SUB-TIPO
+             MOVE 'ESTUD'  TO TIPOUSUA
+             PERFORM 9000-PROCESE-CRUD
+           END-IF
+           IF WS-OPCION  = '4'
+             MOVE 'RETIRO DE ESTUDIANTES' TO TITO
+             MOVE 'F3=END ENTER= LEER ' TO TECO
+             MOVE '07'     TO CICLO
+           END-IF
+           IF WS-OPCION  = '5'
+             MOVE '09'     TO CICLO
+             MOVE SPACES TO CED
+             PERFORM 0210-CICLO-9
+           END-IF
+           IF WS-OPCION  < '1' OR  WS-OPCION  > '5'
+             EVALUATE TRUE
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
+                    WS-INGR = 'SI' AND WS-MODI = 'SI'
+                 MOVE " OPCION NO PERMITIDA" TO MSG03O
+                 MOVE USU        TO LOG03O
+                 MOVE NOMUSU     TO LNOM03O
+                 MOVE APEUSU     TO LAPE03O
+                 PERFORM 0222-SEND-MAPMENU03
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                    WS-INGR = 'NO' AND WS-MODI = 'SI'
+                 MOVE " OPCION NO PERMITIDA" TO MSG04O
+                 MOVE USU        TO LOG04O
+                 MOVE NOMUSU     TO LNOM04O
+                 MOVE APEUSU     TO LAPE04O
+                 PERFORM 0222-SEND-MAPMENU04
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                    WS-INGR = 'NO' AND WS-MODI = 'NO'
+                   MOVE " OPCION NO PERMITIDA" TO MSG05O
+                   MOVE USU        TO LOG05O
+                   MOVE NOMUSU     TO LNOM05O
+                   MOVE APEUSU     TO LAPE05O
+                   PERFORM 0222-SEND-MAPMENU05
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                    WS-INGR = 'SI' AND WS-MODI = 'NO'
+                   MOVE " OPCION NO PERMITIDA" TO MSG06O
+                   MOVE USU        TO LOG06O
+                   MOVE NOMUSU     TO LNOM06O
+                   MOVE APEUSU     TO LAPE06O
+                   PERFORM 0222-SEND-MAPMENU05
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
+                    WS-INGR = 'NO' AND WS-MODI = 'NO'
+                   MOVE " OPCION NO PERMITIDA" TO MSG07O
+                   MOVE USU        TO LOG07O
+                   MOVE NOMUSU     TO LNOM07O
+                   MOVE APEUSU     TO LAPE07O
+                   PERFORM 0222-SEND-MAPMENU07
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                    WS-INGR = 'SI' AND WS-MODI = 'SI'
+                   MOVE " OPCION NO PERMITIDA" TO MSG08O
+                   MOVE USU        TO LOG08O
+                   MOVE NOMUSU     TO LNOM08O
+                   MOVE APEUSU     TO LAPE08O
+                   PERFORM 0222-SEND-MAPMENU08
+             END-EVALUATE
+             MOVE '01' TO CICLO
+             PERFORM 8200-RETORNO-TRANS
+           END-IF
+           MOVE USU        TO LOG5O
+           MOVE NOMUSU     TO LNOM5O
+           MOVE APEUSU     TO LAPE5O
+           PERFORM 0224-SEND-MAP
+           PERFORM 8200-RETORNO-TRANS
+           .
+      ***************************************************
+      *   EN ESTE CICLO REALIZAMOS LAS CONSULTAS YA SEA *
+      * INDIVIDUAL , SIGUIENTE O ANTERIOR               *
+      ***************************************************
+       0203-CICLO-2.
+           PERFORM 0225-RECIBE-MAP
+           MOVE 'ESTUD' TO TIPOUSUA
+           MOVE CEDI TO CED
+           EVALUATE EIBAID
+             WHEN DFHENTER
+                PERFORM 0250-PROCESE-CONS
+             WHEN DFHPF8
+                PERFORM 0251-PROCESE-PROXIMO
+             WHEN DFHPF7
+                PERFORM 0252-PROCESE-ANTERIOR
+             WHEN OTHER
+                PERFORM 0232-VALIDE-MENUPF3
+           END-EVALUATE
+           .
+      **************************************************
+      * CAPTURAMOS EL CODIGO DE ESTUDIANTE Y SI EXISTE *
+      * CONTINUAMOS CON EL UPDATE EN EL CICLO 4        *
+      **************************************************
+       0204-CICLO-3.
+           PERFORM 0225-RECIBE-MAP
+           IF EIBAID NOT EQUAL DFHENTER THEN
+             PERFORM 0232-VALIDE-MENUPF3
+           END-IF
+           PERFORM VALIDE-CEDI
+           MOVE 'ESTUD' TO TIPOUSUA
+           MOVE CEDI TO CED
+           MOVE SPACES TO NOM APE DIR EXISTE
+           MOVE 'SELECT' TO TIPO
+           MOVE '01' TO SUB-TIPO
+           PERFORM 9000-PROCESE-CRUD
+           MOVE LOW-VALUES TO MSNES05I
+           IF EXISTE = '0'  THEN
+             MOVE 'MODIFICACION DE ESTUDIANTES' TO TITO
+             MOVE 'ENTRE DATOS A MODIFICAR' TO MSGO
+             MOVE 'F3=END ENTER= MODIFICAR' TO TECO
+             PERFORM DESPROTEJA-CAMPOS
+             PERFORM MOVER-ETIQUETAS
+             PERFORM MOVER-SELECT
+             PERFORM 0224-SEND-MAP1
+             MOVE '04' TO CICLO
+           ELSE
+             MOVE 'MODIFICACION DE ESTUDIANTES' TO TITO
+             MOVE 'EL ESTUDIANTE NO EXISTE   ' TO MSGO
+             MOVE 'F3=END ENTER= MODIFICAR' TO TECO
+             PERFORM MOVER-NO-EXISTE
+             PERFORM 0224-SEND-MAP1
+             MOVE    '03' TO CICLO
+           END-IF
+           PERFORM 8200-RETORNO-TRANS
+           .
+      ********************************************************
+      * VALIDAMOS INFORMACION Y REALIZAMOS  EL UPDATE        *
+      * LOS CAMPOS QUE NO SE DIGITARON SE RESPETA SU VALOR   *
+      ********************************************************
+       0205-CICLO-4.
+           PERFORM 0225-RECIBE-MAP
+           IF EIBAID NOT EQUAL DFHENTER THEN
+              PERFORM 0232-VALIDE-MENUPF3
+           END-IF
+           IF CEDI = LOW-VALUES AND CED NOT = SPACES
+              MOVE CED TO CEDI
+           END-IF
+           IF NOMI = LOW-VALUES AND NOM NOT = SPACES
+              MOVE NOM TO NOMI
+           END-IF
+           IF APEI = LOW-VALUES AND APE NOT = SPACES
+              MOVE APE TO APEI
+           END-IF
+           IF DIRI = LOW-VALUES AND DIR NOT = SPACES
+              MOVE DIR TO DIRI
+           END-IF
+           MOVE '04' TO CICLO
+           PERFORM   VALIDE-NOMI
+           PERFORM   VALIDE-APEI
+           PERFORM   VALIDE-DIRI
+           PERFORM   0253-MOD-FILE
+           MOVE '03' TO CICLO
+           MOVE 'ESTUD' TO TIPOUSUA
+           MOVE CEDI TO CED
+           PERFORM   0224-SEND-MAP1
+           PERFORM   8200-RETORNO-TRANS
+           .
+      *******************************************************
+      *   EN ESTE CICLO Y EL CICLO 6 SE PERMITE CREAR UN    *
+      *   REGISTRO                                          *
+      *******************************************************
+       0206-CICLO-5.
+           PERFORM 0225-RECIBE-MAP
+           IF EIBAID NOT EQUAL DFHENTER THEN
+                PERFORM 0232-VALIDE-MENUPF3
+           END-IF
+           PERFORM VALIDE-CEDI
+           MOVE 'ESTUD' TO TIPOUSUA
+           MOVE CEDI TO CED
+           MOVE SPACES TO NOM APE DIR EXISTE
+           MOVE 'SELECT' TO TIPO
+           MOVE '01' TO SUB-TIPO
+           PERFORM 9000-PROCESE-CRUD
+           MOVE LOW-VALUES TO MSNES05I
+           MOVE CED  TO CEDI
+           IF EXISTE = '1'  THEN
+             PERFORM DESPROTEJA-CAMPOS
+             MOVE 'ADICION DE ESTUDIANTES' TO TITO
+             MOVE 'ENTRE DATOS            ' TO MSGO
+             MOVE 'F3=END ENTER= ADICIONAR ' TO TECO
+             PERFORM MOVER-ETIQUETAS
+             MOVE SPACES TO NOM APE DIR
+             PERFORM 0224-SEND-MAP1
+             MOVE '06' TO CICLO
+           ELSE
+             MOVE 'ADICION DE ESTUDIANTES' TO TITO
+             MOVE 'EL ESTUDIANTE YA EXISTE'
+                                            TO MSGO
+             MOVE 'F3=END ENTER= LEER     ' TO TECO
+             MOVE SPACES TO NOM APE DIR
+             PERFORM 0224-SEND-MAP1
+             MOVE    '05' TO CICLO
+           END-IF
+           PERFORM 8200-RETORNO-TRANS
+           .
+      ********************************************************
+      * REALIZAMOS EL INSERT TENIENDO VALIDANDO LOS CAMPOS   *
+      * DIGITADOS QUE SON OBLIGATORIOS                       *
+      ********************************************************
+       0207-CICLO-6.
+           PERFORM 0225-RECIBE-MAP
+           IF EIBAID NOT EQUAL DFHENTER THEN
+                PERFORM 0232-VALIDE-MENUPF3
+           END-IF
+           IF NOMI = LOW-VALUES AND NOM NOT = SPACES
+              MOVE NOM TO NOMI
+           END-IF
+           IF APEI = LOW-VALUES AND APE NOT = SPACES
+              MOVE APE TO APEI
+           END-IF
+           IF DIRI = LOW-VALUES AND DIR NOT = SPACES
+              MOVE DIR TO DIRI
+           END-IF
+           MOVE CED  TO CEDI
+           MOVE '06' TO CICLO
+           PERFORM      VALIDE-NOMI
+           PERFORM      VALIDE-APEI
+           PERFORM      VALIDE-DIRI
+           PERFORM      0254-INS-FILE
+           MOVE '05' TO CICLO
+           MOVE CEDI TO CED
+           PERFORM   0224-SEND-MAP1
+           PERFORM   8200-RETORNO-TRANS
+           .
+      *********************************************************
+      * EN ESTE CICLO Y CICLO-7 SE REALIZA LA OPERACION RETIRO*
+      * VERIFICANDO QUE EL REGISTRO A RETIRAR EXISTA          *
+      *********************************************************
+       0208-CICLO-7.
+           PERFORM 0225-RECIBE-MAP
+           MOVE CEDI TO CED
+           IF EIBAID NOT EQUAL DFHENTER THEN
+                PERFORM 0232-VALIDE-MENUPF3
+           END-IF
+           PERFORM VALIDE-CEDI
+           MOVE 'ESTUD' TO TIPOUSUA
+           MOVE CEDI TO CED
+           MOVE SPACES TO NOM APE DIR EXISTE
+           MOVE 'SELECT' TO TIPO
+           MOVE '01' TO SUB-TIPO
+           PERFORM 9000-PROCESE-CRUD
+           MOVE LOW-VALUES TO MSNES05I
+           IF EXISTE = '0'  THEN
+             PERFORM 0260-LEA-PERMISOS
+             IF EXISTE = '0'
+               MOVE 'RETIRO  DE ESTUDIANTES' TO TITO
+               MOVE 'ESTUDIANTE CON PERMISOS,RETIRE SUS PERMISOS'
+                    TO MSGO
+               MOVE 'F3=END ENTER= LEER     ' TO TECO
+               PERFORM MOVER-NO-EXISTE
+               PERFORM 0224-SEND-MAP1
+               MOVE    '07' TO CICLO
+             ELSE
+               PERFORM MOVER-SELECT
+               MOVE 'RETIRO  DE ESTUDIANTES' TO TITO
+               MOVE 'PRESIONE ENTER PARA RETIRAR' TO MSGO
+               PERFORM MOVER-ETIQUETAS
+               MOVE 'F3=END ENTER= RETIRAR  ' TO TECO
+               PERFORM 0224-SEND-MAP1
+               MOVE '08' TO CICLO
+             END-IF
+           ELSE
+             MOVE 'RETIRO  DE ESTUDIANTES' TO TITO
+             MOVE 'EL ESTUDIANTE NO EXISTE   ' TO MSGO
+             MOVE 'F3=END ENTER= LEER     ' TO TECO
+             PERFORM MOVER-NO-EXISTE
+             PERFORM 0224-SEND-MAP1
+             MOVE    '07' TO CICLO
+           END-IF
+           PERFORM 8200-RETORNO-TRANS
+           .
+      *********************************************************
+      * COMO EL REGISTRO A RETIRAR EXISTE PROCEDEMOS CON EL   *
+      * RETIRO EN LA BASE DE DATOS                            *
+      *********************************************************
+       0209-CICLO-8.
+           PERFORM 0225-RECIBE-MAP
+           IF EIBAID NOT EQUAL DFHENTER THEN
+             PERFORM 0232-VALIDE-MENUPF3
+           END-IF
+           MOVE CEDI TO CED
+           MOVE NOMI TO NOM
+           MOVE APEI TO APE
+           MOVE DIRI TO DIR
+           PERFORM 0255-RET-FILE
+           MOVE '07' TO CICLO
+           MOVE CEDI TO CED
+           PERFORM   0224-SEND-MAP1
+           PERFORM   8200-RETORNO-TRANS
+           .
+      ********************************************************
+      * LLAMA AL PROGRAMA QUE PERMITE CONSULTAR VARIOS       *
+      *                REGISTROS                             *
+      ********************************************************
+       0210-CICLO-9.
+           EXEC CICS
+                SET TERMINAL(EIBTRMID) UCTRAN
+           END-EXEC
+           IF WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+              WS-INGR = 'NO' AND WS-MODI = 'NO'
+              PERFORM 0300-FIN
+           END-IF
+           MOVE '99'     TO CICLO
+           MOVE 'SN06'     TO TRANS
+           MOVE ZEROS  TO NUM-REGISTRO CONTADOR-REGISTRO
+           MOVE SPACES TO   CODIGO-CURSOR MLIKE
+           EXEC CICS XCTL
+                PROGRAM('PSNEST06')
+                COMMAREA(MI-COMMAREA)
+                LENGTH(LENGTH OF MI-COMMAREA)
+                RESP(RESPUESTA)
+           END-EXEC
+           EXEC CICS RETURN
+           END-EXEC
+           GOBACK
+           .
+      **************************************************
+      * CAPTURAMOS EL CODIGO DE ESTUDIANTE Y SI EXISTE *
+      * CONTINUAMOS CON EL UPDATE EN EL CICLO 4        *
+      **************************************************
+       0210-CICLO-20.
+           MOVE 'ESTUD' TO TIPOUSUA
+           MOVE CED  TO CEDI
+           MOVE SPACES TO NOM APE DIR EXISTE
+           MOVE 'SELECT' TO TIPO
+           MOVE '01' TO SUB-TIPO
+           PERFORM 9000-PROCESE-CRUD
+           MOVE LOW-VALUES TO MSNES05I
+           IF EXISTE = '0'  THEN
+             MOVE 'CONSULTA DE ESTUDIANTES' TO TITO
+             MOVE SPACES                    TO MSGO
+             MOVE 'F3=END                 ' TO TECO
+             PERFORM MOVER-ETIQUETAS
+             PERFORM MOVER-SELECT
+             MOVE '09' TO CICLO
+             MOVE CEDI TO CED
+             PERFORM PROTEJA-CEDI
+             PERFORM 0224-SEND-MAP1
+             PERFORM 8200-RETORNO-TRANS
+           ELSE
+             MOVE 'CONSULTA DE ESTUDIANTES' TO TITO
+             MOVE 'EL ESTUDIANTE NO EXISTE   ' TO MSGO
+             MOVE 'F3=END                 ' TO TECO
+             PERFORM MOVER-NO-EXISTE
+             PERFORM 0224-SEND-MAP1
+             MOVE    '09' TO CICLO
+             PERFORM 8200-RETORNO-TRANS
+           END-IF
+           .
+      **************************************************
+      * CAPTURAMOS EL CODIGO DE ESTUDIANTE Y SI EXISTE *
+      * CONTINUAMOS CON EL UPDATE EN EL CICLO 4        *
+      **************************************************
+       0210-CICLO-30.
+           MOVE LOW-VALUES TO MSNES05I
+           MOVE 'ESTUD' TO TIPOUSUA
+           MOVE CED  TO CEDI
+           MOVE 'SELECT' TO TIPO
+           MOVE '01' TO SUB-TIPO
+           MOVE SPACES TO NOMI APEI DIRI EXISTE
+           PERFORM 9000-PROCESE-CRUD
+           IF EXISTE = '0'  THEN
+             MOVE 'MODIFICACION DE ESTUDIANTES' TO TITI
+             MOVE 'ENTRE DATOS A MODIFICAR' TO MSGI
+             MOVE 'F3=END ENTER= MOFIFICAR' TO TECI
+             PERFORM DESPROTEJA-CAMPOS
+             PERFORM MOVER-ETIQUETAS
+             PERFORM MOVER-SELECT
+             MOVE '31' TO CICLO
+             PERFORM 0224-SEND-MAP1
+             PERFORM   8200-RETORNO-TRANS
+           ELSE
+             MOVE 'MODIFICACION DE ESTUDIANTES' TO TITO
+             MOVE 'EL ESTUDIANTE NO EXISTE   ' TO MSGO
+             MOVE 'F3=END ENTER= MODIFICAR' TO TECO
+             PERFORM MOVER-NO-EXISTE
+             MOVE    '09' TO CICLO
+             PERFORM 0224-SEND-MAP1
+             PERFORM 8200-RETORNO-TRANS
+           END-IF
+           .
+      ********************************************************
+      * VALIDAMOS INFORMACION Y REALIZAMOS  EL UPDATE        *
+      * LOS CAMPOS QUE NO SE DIGITARON SE RESPETA SU VALOR   *
+      ********************************************************
+       0210-CICLO-31.
+           PERFORM 0225-RECIBE-MAP
+           IF EIBAID NOT EQUAL DFHENTER THEN
+               MOVE LOW-VALUES TO MSNES05O
+               MOVE 'MODIFICACION DE ESTUDIANTES' TO TITO
+               MOVE 'ESTUDIANTE SIN CAMBIOS'
+                    TO MSGO
+              PERFORM 0232-VALIDE-SCROLLPF3
+           END-IF
+           MOVE CED TO CEDI
+      *      MOVE 'EIBCPOS'     TO T-PAS
+           IF (NOMI = LOW-VALUES OR NOML = ZEROS OR NOML > 20) AND
+               NOM NOT = SPACES
+              MOVE NOM TO NOMI
+           END-IF
+           IF (APEI = LOW-VALUES OR APEL = ZEROS OR APEL > 20) AND
+              APE NOT = SPACES
+              MOVE APE TO APEI
+           END-IF
+           IF (DIRI = LOW-VALUES OR DIRL = ZEROS OR DIRL > 35) AND
+              DIR NOT = SPACES
+              MOVE DIR TO DIRI
+           END-IF
+           PERFORM   VALIDE-NOMI
+           PERFORM   VALIDE-APEI
+           PERFORM   VALIDE-DIRI
+           MOVE CED  TO CEDI
+           PERFORM   0253-MOD-FILE
+           MOVE '09' TO CICLO
+           MOVE CEDI TO CED
+           PERFORM PROTEJA-CEDI
+           PERFORM 0224-SEND-MAP1
+           PERFORM 8200-RETORNO-TRANS
+           .
+      *******************************************************
+      *   EN ESTE CICLO LEEMOS EL CODIGO A INGRESAR         *
+      *******************************************************
+       0210-CICLO-50.
+           MOVE LOW-VALUES TO MSNES05O
+           MOVE SPACES TO CED NOM APE DIR
+           MOVE 51 TO CICLO
+           MOVE USU        TO LOG5O
+           MOVE NOMUSU     TO LNOM5O
+           MOVE APEUSU     TO LAPE5O
+           MOVE 'ADICION DE ESTUDIANTES' TO TITO
+           MOVE 'ENTRE DATOS            ' TO MSGO
+           MOVE 'F3=END ENTER= ADICIONAR ' TO TECO
+           PERFORM 0224-SEND-MAP
+           PERFORM 8200-RETORNO-TRANS
+           .
+      *******************************************************
+      *   EN ESTE CICLO Y EL CICLO 6 SE PERMITE CREAR UN    *
+      *   REGISTRO                                          *
+      *******************************************************
+       0210-CICLO-51.
+           PERFORM 0225-RECIBE-MAP
+           IF EIBAID NOT EQUAL DFHENTER THEN
+               MOVE LOW-VALUES TO MSNES05O
+               MOVE 'ADICION DE ESTUDIANTES' TO TITO
+               MOVE 'ESTUDIANTE NO SE CREA  '
+                    TO MSGO
+               PERFORM 0232-VALIDE-SCROLLPF3
+           END-IF
+           PERFORM VALIDE-CEDI
+           MOVE 'ESTUD' TO TIPOUSUA
+           MOVE CEDI TO CED
+           MOVE SPACES TO NOM APE DIR EXISTE
+           MOVE 'SELECT' TO TIPO
+           MOVE '01' TO SUB-TIPO
+           PERFORM 9000-PROCESE-CRUD
+           MOVE LOW-VALUES TO MSNES05I
+           MOVE CED  TO CEDI
+           IF EXISTE = '1'  THEN
+             PERFORM DESPROTEJA-CAMPOS
+             MOVE 'ADICION DE ESTUDIANTES' TO TITO
+             MOVE 'ENTRE DATOS            ' TO MSGO
+             MOVE 'F3=END ENTER= ADICIONAR ' TO TECO
+             PERFORM MOVER-ETIQUETAS
+             MOVE SPACES TO NOM APE DIR
+             PERFORM 0224-SEND-MAP1
+             MOVE '52' TO CICLO
+           ELSE
+             MOVE 'ADICION DE ESTUDIANTES' TO TITO
+             MOVE 'EL ESTUDIANTE YA EXISTE'
+                                            TO MSGO
+             MOVE 'F3=END ENTER= LEER     ' TO TECO
+             MOVE SPACES TO NOM APE DIR
+             PERFORM 0224-SEND-MAP1
+             MOVE    '09' TO CICLO
+           END-IF
+           PERFORM 8200-RETORNO-TRANS
+           .
+      ********************************************************
+      * REALIZAMOS EL INSERT TENIENDO VALIDANDO LOS CAMPOS   *
+      * DIGITADOS QUE SON OBLIGATORIOS                       *
+      ********************************************************
+       0210-CICLO-52.
+           PERFORM 0225-RECIBE-MAP
+           IF EIBAID NOT EQUAL DFHENTER THEN
+               MOVE LOW-VALUES TO MSNES05O
+               MOVE 'ADICION DE ESTUDIANTES' TO TITO
+               MOVE 'ESTUDIANTE NO SE CREA  '
+                    TO MSGO
+                PERFORM 0232-VALIDE-SCROLLPF3
+           END-IF
+           IF NOMI = LOW-VALUES AND NOM NOT = SPACES
+              MOVE NOM TO NOMI
+           END-IF
+           IF APEI = LOW-VALUES AND APE NOT = SPACES
+              MOVE APE TO APEI
+           END-IF
+           IF DIRI = LOW-VALUES AND DIR NOT = SPACES
+              MOVE DIR TO DIRI
+           END-IF
+           MOVE CED  TO CEDI
+           MOVE '52' TO CICLO
+           PERFORM      VALIDE-NOMI
+           PERFORM      VALIDE-APEI
+           PERFORM      VALIDE-DIRI
+           PERFORM      0254-INS-FILE
+           MOVE '09' TO CICLO
+           MOVE CEDI TO CED
+           PERFORM PROTEJA-CEDI
+           PERFORM   0224-SEND-MAP1
+           PERFORM   8200-RETORNO-TRANS
+           .
+      *********************************************************
+      * EN ESTE CICLO Y CICLO-7 SE REALIZA LA OPERACION RETIRO*
+      * VERIFICANDO QUE EL REGISTRO A RETIRAR EXISTA          *
+      *********************************************************
+       0208-CICLO-70.
+           MOVE 'ESTUD'  TO TIPOUSUA
+           MOVE CED      TO CEDI
+           MOVE SPACES   TO NOM APE DIR EXISTE
+           MOVE 'SELECT' TO TIPO
+           MOVE '01'     TO SUB-TIPO
+           PERFORM 9000-PROCESE-CRUD
+           MOVE LOW-VALUES TO MSNES05I
+           IF EXISTE = '0'  THEN
+             PERFORM MOVER-SELECT
+             MOVE 'RETIRO  DE ESTUDIANTES' TO TITO
+             MOVE 'PRESIONE ENTER PARA RETIRAR' TO MSGO
+             PERFORM MOVER-ETIQUETAS
+             MOVE 'F3=END ENTER= RETIRAR  ' TO TECO
+             MOVE '71' TO CICLO
+             PERFORM 0224-SEND-MAP1
+           ELSE
+             MOVE 'RETIRO  DE ESTUDIANTES' TO TITO
+             MOVE 'EL ESTUDIANTE NO EXISTE   ' TO MSGO
+             MOVE 'F3=END ENTER= LEER     ' TO TECO
+             PERFORM MOVER-NO-EXISTE
+             PERFORM 0224-SEND-MAP1
+             MOVE    '09' TO CICLO
+           END-IF
+           PERFORM 8200-RETORNO-TRANS
+           .
+      *********************************************************
+      * COMO EL REGISTRO A RETIRAR EXISTE PROCEDEMOS CON EL   *
+      * RETIRO EN LA BASE DE DATOS                            *
+      *********************************************************
+       0209-CICLO-71.
+           PERFORM 0225-RECIBE-MAP
+           IF EIBAID NOT EQUAL DFHENTER THEN
+               MOVE LOW-VALUES TO MSNES05O
+               MOVE 'RETIRO  DE ESTUDIANTES' TO TITO
+               MOVE 'ESTUDIANTE NO SE RETIRA'
+                    TO MSGO
+             PERFORM 0232-VALIDE-SCROLLPF3
+           END-IF
+           MOVE CED  TO CEDI
+           MOVE NOM  TO NOMI
+           MOVE APE  TO APEI
+           MOVE DIR  TO DIRI
+           PERFORM 0255-RET-FILE
+           MOVE '09' TO CICLO
+           MOVE CEDI TO CED
+           PERFORM PROTEJA-CEDI
+           PERFORM   0224-SEND-MAP1
+           PERFORM   8200-RETORNO-TRANS
+           .
+      *****************************************
+      * EN ESTA SECCION ESTAN AGRUPADO TODO   *
+      * LO RELACIONADO CON MAPAS              *
+      *****************************************
+      *
+      *
+      *****************************************
+      * MAP MENU SIRVE PARA ESCOGER OPCIONES  *
+      * DEL MENU                              *
+      *****************************************
+       0222-SEND-MAPMENU03.
+           EXEC CICS
+                SEND MAP('MSNOP03') MAPSET('MSNOP03')
+                     ERASE
+                     FROM(MSNOP03O)
+                     NOHANDLE
+           END-EXEC
+           .
+       0223-RECIBE-MAPMENU03.
+           EXEC CICS RECEIVE MAP('MSNOP03')
+                INTO(MSNOP03I)
+                NOHANDLE
+           END-EXEC
+           EXEC CICS
+                IGNORE CONDITION MAPFAIL
+           END-EXEC
+           .
+      *
+      *
+      *****************************************
+      * MAP MENU SIRVE PARA ESCOGER OPCIONES  *
+      * DEL MENU                              *
+      *****************************************
+       0222-SEND-MAPMENU04.
+           EXEC CICS
+                SEND MAP('MSNOP04') MAPSET('MSNOP04')
+                     ERASE
+                     FROM(MSNOP04O)
+                     NOHANDLE
+           END-EXEC
+           .
+       0223-RECIBE-MAPMENU04.
+           EXEC CICS RECEIVE MAP('MSNOP04')
+                INTO(MSNOP04I)
+                NOHANDLE
+           END-EXEC
+           EXEC CICS
+                IGNORE CONDITION MAPFAIL
+           END-EXEC
+           .
+      *
+      *
+      *****************************************
+      * MAP MENU SIRVE PARA ESCOGER OPCIONES  *
+      * DEL MENU                              *
+      *****************************************
+       0222-SEND-MAPMENU05.
+           EXEC CICS
+                SEND MAP('MSNOP05') MAPSET('MSNOP05')
+                     ERASE
+                     FROM(MSNOP05O)
+                     NOHANDLE
+           END-EXEC
+           .
+       0223-RECIBE-MAPMENU05.
+           EXEC CICS RECEIVE MAP('MSNOP05')
+                INTO(MSNOP05I)
+                NOHANDLE
+           END-EXEC
+           EXEC CICS
+                IGNORE CONDITION MAPFAIL
+           END-EXEC
+           .
+      *
+      *
+      *****************************************
+      * MAP MENU SIRVE PARA ESCOGER OPCIONES  *
+      * DEL MENU                              *
+      *****************************************
+       0222-SEND-MAPMENU06.
+           EXEC CICS
+                SEND MAP('MSNOP06') MAPSET('MSNOP06')
+                     ERASE
+                     FROM(MSNOP06O)
+                     NOHANDLE
+           END-EXEC
+           .
+       0223-RECIBE-MAPMENU06.
+           EXEC CICS RECEIVE MAP('MSNOP06')
+                INTO(MSNOP06I)
+                NOHANDLE
+           END-EXEC
+           EXEC CICS
+                IGNORE CONDITION MAPFAIL
+           END-EXEC
+           .
+      *
+      *
+      *****************************************
+      * MAP MENU SIRVE PARA ESCOGER OPCIONES  *
+      * DEL MENU                              *
+      *****************************************
+       0222-SEND-MAPMENU07.
+           EXEC CICS
+                SEND MAP('MSNOP07') MAPSET('MSNOP07')
+                     ERASE
+                     FROM(MSNOP07O)
+                     NOHANDLE
+           END-EXEC
+           .
+       0223-RECIBE-MAPMENU07.
+           EXEC CICS RECEIVE MAP('MSNOP07')
+                INTO(MSNOP07I)
+                NOHANDLE
+           END-EXEC
+           EXEC CICS
+                IGNORE CONDITION MAPFAIL
+           END-EXEC
+           .
+      *
+      *
+      *****************************************
+      * MAP MENU SIRVE PARA ESCOGER OPCIONES  *
+      * DEL MENU                              *
+      *****************************************
+       0222-SEND-MAPMENU08.
+           EXEC CICS
+                SEND MAP('MSNOP08') MAPSET('MSNOP08')
+                     ERASE
+                     FROM(MSNOP08O)
+                     NOHANDLE
+           END-EXEC
+           .
+       0223-RECIBE-MAPMENU08.
+           EXEC CICS RECEIVE MAP('MSNOP08')
+                INTO(MSNOP08I)
+                NOHANDLE
+           END-EXEC
+           EXEC CICS
+                IGNORE CONDITION MAPFAIL
+           END-EXEC
+           .
+      *
+      *****************************************
+      * EN ESTE MAPA ESTA LA INFORMACION DEL  *
+      * ESTUDIANTE                            *
+      *****************************************
+       0224-SEND-MAP.
+           MOVE USU                TO LOG5O
+           MOVE NOMUSU  TO LNOM5O
+           MOVE APEUSU  TO LAPE5O
+           EXEC CICS
+                SEND MAP('MSNES05') MAPSET('MSNES05')
+                     ERASE
+                     FROM(MSNES05O)
+                     NOHANDLE
+           END-EXEC
+           .
+      **********************************************
+      * ENVIA EL MAPA                              *
+      **********************************************
+       0224-SEND-MAP1.
+           MOVE USU     TO LOG5O
+           MOVE NOMUSU  TO LNOM5O
+           MOVE APEUSU  TO LAPE5O
+           MOVE CED     TO CEDO CEDI
+           MOVE NOM     TO NOMO NOMI
+           MOVE APE     TO APEO APEI
+           MOVE DIR     TO DIRO DIRI
+           EXEC CICS
+                SEND MAP('MSNES05') MAPSET('MSNES05')
+                     ERASE
+                     FROM(MSNES05O)
+                     NOHANDLE
+           END-EXEC.
+       0225-RECIBE-MAP.
+      ********************************************
+      * RECIBIMOS EL MAP CON LOS DATOS DEL CRUD Y *
+      * LO LLEVAMOS AL COMMAREA PARA QUE NO SE NOS*
+      * SI SE DEBE RETORNAR LA TRANSACCION        *
+      *********************************************
+           EXEC CICS RECEIVE MAP('MSNES05')
+                INTO(MSNES05I)
+                NOHANDLE
+           END-EXEC
+           EXEC CICS
+                IGNORE CONDITION MAPFAIL
+           END-EXEC
+           .
+      *
+      *****************************************
+      * FIN DE TODO LO RELACIONADOS CON LOS   *
+      * MAPAS                                 *
+      *****************************************
+      *
+      ********************************************
+      * EN ESTA SECCION VERIFICAMOS SI ESCOGIO    *
+      * LA TECLA PF3 PARA RETORNAR A LA OPERACION *
+      * ANTERIOR                                  *
+      *********************************************
+      *
+      ********************************************
+      * SE SALE DEL TODO DEL SISTEMA              *
+      *********************************************
+       0230-VALIDE-PF3.
+              IF EIBAID EQUAL DFHPF3   THEN
+                PERFORM 0300-FIN
+              ELSE
+                MOVE 'TECLA INCORRECTA ¡¡¡¡¡¡¡' TO MSGO
+                PERFORM 0240-ENVIAR-MSG
+              END-IF
+              .
+       0232-VALIDE-MENUPF3.
+           IF EIBAID EQUAL DFHPF3   THEN
+             EVALUATE TRUE
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
+                  WS-INGR = 'SI' AND WS-MODI = 'SI'
+                  MOVE LOW-VALUE          TO MSNOP03O
+                  MOVE USU                TO LOG03O
+                  MOVE NOMUSU             TO LNOM03O
+                  MOVE APEUSU             TO LAPE03O
+                  PERFORM 0222-SEND-MAPMENU03
+                  MOVE '01' TO CICLO
+                  PERFORM 8200-RETORNO-TRANS
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                  WS-INGR = 'NO' AND WS-MODI = 'SI'
+                  MOVE LOW-VALUE          TO MSNOP04O
+                  MOVE USU                TO LOG04O
+                  MOVE NOMUSU             TO LNOM04O
+                  MOVE APEUSU             TO LAPE04O
+                  PERFORM 0222-SEND-MAPMENU04
+                  MOVE '01' TO CICLO
+                  PERFORM 8200-RETORNO-TRANS
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                  WS-INGR = 'NO' AND WS-MODI = 'NO'
+                 MOVE LOW-VALUE          TO MSNOP05O
+                 MOVE USU                TO LOG05O
+                 MOVE NOMUSU             TO LNOM05O
+                 MOVE APEUSU             TO LAPE05O
+                 PERFORM 0222-SEND-MAPMENU05
+                 MOVE '01' TO CICLO
+                 PERFORM 8200-RETORNO-TRANS
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                  WS-INGR = 'SI' AND WS-MODI = 'NO'
+                 MOVE LOW-VALUE          TO MSNOP06O
+                 MOVE USU                TO LOG06O
+                 MOVE NOMUSU             TO LNOM06O
+                 MOVE APEUSU             TO LAPE06O
+                 PERFORM 0222-SEND-MAPMENU06
+                 MOVE '01' TO CICLO
+                 PERFORM 8200-RETORNO-TRANS
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
+                  WS-INGR = 'NO' AND WS-MODI = 'NO'
+                 MOVE LOW-VALUE          TO MSNOP07O
+                 MOVE USU                TO LOG07O
+                 MOVE NOMUSU             TO LNOM07O
+                 MOVE APEUSU             TO LAPE07O
+                 PERFORM 0222-SEND-MAPMENU07
+                 MOVE '01' TO CICLO
+                 PERFORM 8200-RETORNO-TRANS
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+                  WS-INGR = 'SI' AND WS-MODI = 'NO'
+                 MOVE LOW-VALUE          TO MSNOP08O
+                 MOVE USU                TO LOG08O
+                 MOVE NOMUSU             TO LNOM08O
+                 MOVE APEUSU             TO LAPE08O
+                 PERFORM 0222-SEND-MAPMENU08
+                 MOVE '01' TO CICLO
+                 PERFORM 8200-RETORNO-TRANS
+               WHEN OTHER
+                   MOVE "                 TECLA  NO PERMITIDA "
+                                             TO MSGO
+                PERFORM 0224-SEND-MAP1
+                PERFORM 8200-RETORNO-TRANS
+             END-EVALUATE
+           ELSE
+             MOVE "             TECLA NO PERMITIDA      "
+                                             TO MSGO
+             PERFORM 0224-SEND-MAP1
+             PERFORM 8200-RETORNO-TRANS
+           END-IF
+              .
+      *
+       0232-VALIDE-SCROLLPF3.
+           IF EIBAID EQUAL DFHPF3   THEN
+               MOVE 'CUALQUIER TECLA CONTINUE' TO TECO
+               MOVE '09' TO CICLO
+               PERFORM MOVER-ETIQUETAS
+               PERFORM MOVER-SELECT
+               MOVE CEDI TO CED
+               PERFORM PROTEJA-CEDI
+               PERFORM 0224-SEND-MAP1
+               PERFORM 8200-RETORNO-TRANS
+           END-IF
+           .
+      *
+      *
+      ***************************************************
+      * EN ESTA SECCION SE ENCUENTRA TODOS LOS PERFORM  *
+      * RELACIONADOS A LA PREPARACION DE LA INFORMACION *
+      * PARA REALIZAR SELECT,UPDATE,INSERT O DELETE     *
+      ***************************************************
+      *
+       0250-PROCESE-CONS.
+           MOVE SPACES TO NOM APE DIR EXISTE
+           MOVE "SELECT" TO TIPO
+           MOVE '01' TO SUB-TIPO
+           PERFORM 9000-PROCESE-CRUD
+           MOVE LOW-VALUES TO MSNES05I
+           IF EXISTE = '0'  THEN
+             MOVE 'CONSULTA DE ESTUDIANTES' TO TITO
+             MOVE 'REGISTRO LEIDO            ' TO MSGO
+             MOVE 'F3=END ENTER= LEER F7=ANTERIOR F8=PROXIMO' TO TECO
+             PERFORM MOVER-ETIQUETAS
+             PERFORM MOVER-SELECT
+             PERFORM 0224-SEND-MAP1
+             MOVE '02' TO CICLO
+           ELSE
+             MOVE 'CONSULTA DE ESTUDIANTES' TO TITO
+             MOVE 'EL ESTUDIANTE NO EXISTE   ' TO MSGO
+             MOVE 'F3=END ENTER= LEER F7=ANTERIOR F8=PROXIMO' TO TECO
+             PERFORM MOVER-NO-EXISTE
+             PERFORM 0224-SEND-MAP1
+             MOVE    '02' TO CICLO
+           END-IF
+           PERFORM 8200-RETORNO-TRANS
+           .
+       0251-PROCESE-PROXIMO.
+           PERFORM VALIDE-CEDI
+           MOVE ZEROS TO WS-CEDI-PROXIMO
+           MOVE 8 TO WS-OPERACION
+           PERFORM 0264-LEA-ELPROXIMO
+           IF WS-CEDI-PROXIMO NOT EQUAL ZEROS
+              PERFORM MOVER-ETIQUETAS
+              MOVE 'ESTE ES EL PROXIMO  ' TO MSGO
+              PERFORM MOVER-REGISTROP
+           ELSE
+              MOVE 'NO EXISTEN MAS REGISTROS  ' TO MSGO
+              PERFORM MOVER-NO-EXISTE
+           END-IF
+           MOVE 'CONSULTA DE ESTUDIANTES' TO TITO
+           MOVE 'F3=END ENTER= LEER F7=ANTERIOR F8=PROXIMO' TO TECO
+           PERFORM 0224-SEND-MAP1
+           PERFORM 8200-RETORNO-TRANS
+              .
+       0252-PROCESE-ANTERIOR.
+           PERFORM VALIDE-CEDI
+           MOVE ZEROS TO WS-CEDI-PROXIMO
+           MOVE 7 TO WS-OPERACION
+           PERFORM 0264-LEA-ELPROXIMO
+           IF WS-CEDI-PROXIMO NOT EQUAL ZEROS
+              PERFORM MOVER-ETIQUETAS
+              MOVE 'ESTE ES EL ANTERIOR ' TO MSGO
+              PERFORM MOVER-REGISTROP
+           ELSE
+              MOVE 'NO EXISTEN MAS REGISTROS  ' TO MSGO
+              PERFORM MOVER-NO-EXISTE
+           END-IF
+           MOVE 'CONSULTA DE ESTUDIANTES' TO TITO
+           MOVE 'F3=END ENTER= LEER F7=ANTERIOR F8=PROXIMO' TO TECO
+           PERFORM 0224-SEND-MAP1
+           PERFORM 8200-RETORNO-TRANS
+              .
+       0253-MOD-FILE.
+           PERFORM MOVER-UPDATE
+           MOVE 'UPDATE' TO TIPO
+           MOVE '01' TO SUB-TIPO
+           PERFORM 9000-PROCESE-CRUD
+           MOVE LOW-VALUES TO MSNES05I
+           IF EXISTE = '0'  THEN
+             MOVE 'MODIFICACION DE ESTUDIANTES' TO TITO
+             MOVE 'REGISTRO MODIFICADO       ' TO MSGO
+             MOVE 'F3=END ENTER= MOFIFICAR1' TO TECO
+           ELSE
+             MOVE 'MODIFICACION DE ESTUDIANTES' TO TITO
+             MOVE 'FATAL ERROR EN MODIFICACION' TO MSGO
+             MOVE 'F3=END ENTER= MOFIFICAR2' TO TECO
+           END-IF
+           PERFORM MOVER-REGISTRO-AMAP
+           PERFORM MOVER-ETIQUETAS
+           .
+       0254-INS-FILE.
+           PERFORM MOVER-INSERT
+           MOVE 'INSERT' TO TIPO
+           MOVE '01' TO SUB-TIPO
+           PERFORM 9000-PROCESE-CRUD
+           MOVE LOW-VALUES TO MSNES05I
+           IF EXISTE = '0'  THEN
+             MOVE 'ADICION DE ESTUDIANTES' TO TITO
+             MOVE 'REGISTRO ADICIONADO       ' TO MSGO
+             MOVE 'F3=END ENTER= ADICIONAR' TO TECO
+           ELSE
+             MOVE 'ADICION DE ESTUDIANTES' TO TITO
+             MOVE 'FATAL ERROR EN ADICIONAR   ' TO MSGO
+             MOVE 'F3=END ENTER= ADICIONAR' TO TECO
+           END-IF
+           PERFORM MOVER-REGISTRO-AMAP
+           PERFORM MOVER-ETIQUETAS
+           .
+       0255-RET-FILE.
+           MOVE CED TO CEDI
+           PERFORM MOVER-UPDATE
+           MOVE 'DELETE' TO TIPO
+           MOVE '01' TO SUB-TIPO
+           PERFORM 9000-PROCESE-CRUD
+           MOVE LOW-VALUES TO MSNES05I
+           IF EXISTE = '0'  THEN
+             PERFORM 0260-LEA-PERMISOS
+             IF EXISTE = '0'
+               MOVE 'RETIRO  DE ESTUDIANTES' TO TITO
+               MOVE 'ESTUDIANTE CON PERMISOS,RETIRE SUS PERMISOS'
+                    TO MSGO
+               MOVE 'F3=END ENTER= LEER     ' TO TECO
+             ELSE
+               MOVE 'RETIRO  DE ESTUDIANTES' TO TITO
+               MOVE 'REGISTRO RETIRADO         ' TO MSGO
+               MOVE 'F3=END ENTER= LEER     ' TO TECO
+             END-IF
+           ELSE
+             MOVE 'RETIRO  DE ESTUDIANTES' TO TITO
+             MOVE 'FATAL ERROR EN RETIRO      ' TO MSGO
+             MOVE 'F3=END ENTER= LEER     ' TO TECO
+           END-IF
+           PERFORM MOVER-REGISTRO-AMAP
+           PERFORM MOVER-ETIQUETAS
+           .
+      *
+      ****************************************************
+      * EN ESTA SECCION VAMOS A PONER TODO LO RELACIONADO*
+      * CON EL CICS SOBRE TODO MANEJO DE TABLAS          *
+      ****************************************************
+      *
+       0264-LEA-ELPROXIMO.
+           MOVE 1 TO WS-NUM-ELMENT
+           EXEC CICS READQ  TS
+                ITEM(WS-NUM-ELMENT)
+                QUEUE (WS-NOMBRECOLA)
+                INTO (COLA-ESTUD)
+                RESP (RESPUESTA)
+           END-EXEC
+           IF RESPUESTA = DFHRESP(NORMAL)
+             MOVE 'N' TO WS-EOF
+           ELSE
+             IF RESPUESTA = DFHRESP(NOTFND)
+               MOVE 'Y' TO WS-EOF
+             END-IF
+           END-IF
+           PERFORM LEA-COLA UNTIL WS-EOF = 'Y'
+           .
+       0260-LEA-PERMISOS.
+           MOVE 9         TO LK-PM-COD-RET
+           MOVE 1         TO LK-PM-TIPO-OPE
+           MOVE 1         TO LK-PM-SUBTIPO-OPE
+           MOVE CED       TO LK-PM-DNI
+           MOVE WS-TRANSA TO LK-PM-TRAN
+
+           EXEC CICS LINK
+                     PROGRAM('RSNPERMI')
+                     COMMAREA(AREA-LINK)
+                     LENGTH(LENGTH OF AREA-LINK)
+                     RESP(WS-RESPUESTA)
+           END-EXEC
+           EVALUATE LK-PM-COD-RET
+              WHEN 0
+                 MOVE 0 TO EXISTE
+              WHEN OTHER
+                 MOVE 1 TO EXISTE
+           END-EVALUATE
+      *     MOVE 'US04'         TO PM-TRAN
+      *     MOVE CED            TO PM-DNI
+      *     EXEC SQL
+      *       SELECT
+      *            TRAN,
+      *            DNI,
+      *            IDPERFIL,
+      *            NROACCESOS,
+      *            FECHAUL,
+      *            HORAUL
+      *            INTO
+      *                :PM-TRAN
+      *               ,:PM-DNI
+      *               ,:PM-IDPERFIL
+      *               ,:PM-NROACCESOS
+      *               ,:PM-FECHAUL
+      *               ,:PM-HORAUL
+      *            FROM
+      *                PERMISOS
+      *            WHERE
+      *                TRAN = :PM-TRAN AND
+      *                DNI = :PM-DNI
+      *     END-EXEC
+      *     IF SQLCODE = 0
+      *       MOVE 0 TO EXISTE
+      *     ELSE
+      *       MOVE 1 TO EXISTE
+      *     END-IF
+            .
+      ****************************************************
+      * EN ESTA SECCION VAMOS A PONER TODO LO RELACIONADO*
+      * CON LA VALIDACION DE CAMPOS                      *
+      ****************************************************
+      *
+      *
+       VALIDE-NOMI.
+           IF NOMI EQUAL LOW-VALUES OR NOMI = SPACES
+             IF APEI NOT = LOW-VALUES AND APEI NOT = SPACES
+               MOVE APEI TO APE
+             END-IF
+             IF DIRI NOT = LOW-VALUES AND DIRI NOT = SPACES
+               MOVE DIRI TO DIR
+             END-IF
+             MOVE 'INGRESA EL NOMBRE ¡¡¡¡¡¡¡' TO MSGO
+             PERFORM MOVER-ETIQUETAS
+             PERFORM DESPROTEJA-CAMPOS
+             MOVE CED  TO CEDI
+             PERFORM 0224-SEND-MAP1
+             PERFORM 0240-ENVIAR-MSG
+             PERFORM 8200-RETORNO-TRANS
+           ELSE
+             MOVE NOMI    TO NOM
+           END-IF
+              .
+       VALIDE-APEI.
+           IF APEI EQUAL LOW-VALUES OR APEI = SPACES
+             IF DIRI NOT = LOW-VALUES AND DIRI NOT = SPACES
+               MOVE DIRI TO DIR
+             END-IF
+             MOVE 'INGRESA EL APELLIDO¡¡¡¡¡¡' TO MSGO
+             PERFORM MOVER-ETIQUETAS
+             PERFORM DESPROTEJA-CAMPOS
+             MOVE CED TO CEDI
+             PERFORM 0224-SEND-MAP1
+             PERFORM 0240-ENVIAR-MSG
+             PERFORM 8200-RETORNO-TRANS
+           ELSE
+             MOVE APEI TO APE
+           END-IF
+              .
+       VALIDE-DIRI.
+           IF DIRI EQUAL LOW-VALUES OR DIRI = SPACES
+             MOVE 'INGRESA LA DIRECCION¡¡¡¡¡' TO MSGO
+             PERFORM MOVER-ETIQUETAS
+             PERFORM DESPROTEJA-CAMPOS
+             MOVE WC-CUR-DIR TO WC-CUR-POS
+             MOVE CED TO CEDI
+             PERFORM 0224-SEND-MAP1
+             PERFORM 0240-ENVIAR-MSG
+             PERFORM 8200-RETORNO-TRANS
+           ELSE
+             MOVE DIRI  TO DIR
+           END-IF
+              .
+       VALIDE-CEDI.
+           IF CEDI EQUAL LOW-VALUES OR '_________' OR SPACES
+              MOVE 'INGRESA UNA CEDULA¡¡¡¡¡¡¡' TO MSGO
+              PERFORM 0240-ENVIAR-MSG
+              PERFORM 8200-RETORNO-TRANS
+           END-IF
+              .
+      **********************************************************
+      * MOVER DATOS                                            *
+      **********************************************************
+       MOVER-ETIQUETAS.
+           MOVE USU                           TO LOG5O
+           MOVE '              NOMBRE       ' TO TNOMO
+           MOVE '              APELLIDO     ' TO TAPEO
+           MOVE '              DIRECCION    ' TO TDIRO
+             .
+      ***************************************************
+      * EL SELECT SE REALIZO CON EL ENCAPSULADOR Y ESTE *
+      * NOS RETORNA LA INFORMACION EN EL COMMAREA Y AQUI*
+      * LLEVAMOS LAS VARIABLES DEL COMMAREA AL MAPA     *
+      ***************************************************
+       MOVER-SELECT.
+           MOVE CED                   TO CEDO CEDI
+           MOVE NOM                   TO NOMO NOMI
+           MOVE APE                   TO APEO APEI
+           MOVE DIR                   TO DIRO DIRI
+           .
+       LEA-COLA.
+           IF C-DNI = CED
+             PERFORM COMPARAR
+           END-IF
+           IF WS-EOF NOT = 'Y'
+              ADD  1 TO WS-NUM-ELMENT
+              EXEC CICS READQ  TS
+                ITEM(WS-NUM-ELMENT)
+                QUEUE (WS-NOMBRECOLA)
+                INTO (COLA-ESTUD)
+                RESP (RESPUESTA)
+              END-EXEC
+              IF RESPUESTA = DFHRESP(NORMAL)
+                MOVE 'N' TO WS-EOF
+              ELSE
+                IF RESPUESTA = DFHRESP(NOTFND)
+                  MOVE 'Y' TO WS-EOF
+                ELSE
+                  MOVE 'Y' TO WS-EOF
+                END-IF
+              END-IF
+           END-IF
+           .
+       COMPARAR.
+           IF WS-OPERACION = 8
+             ADD  1 TO WS-NUM-ELMENT
+           ELSE
+             IF WS-OPERACION = 7
+               COMPUTE WS-NUM-ELMENT = WS-NUM-ELMENT - 1
+               IF WS-NUM-ELMENT = 0
+                 MOVE ZEROS TO WS-CEDI-PROXIMO
+                 MOVE 'Y' TO WS-EOF
+               END-IF
+             END-IF
+           END-IF
+           EXEC CICS READQ  TS
+               ITEM(WS-NUM-ELMENT)
+               QUEUE (WS-NOMBRECOLA)
+               INTO (COLA-ESTUD)
+               RESP (RESPUESTA)
+           END-EXEC
+           IF RESPUESTA = DFHRESP(NORMAL)
+             MOVE C-DNI TO WS-CEDI-PROXIMO
+             MOVE 'Y' TO WS-EOF
+           ELSE
+             IF RESPUESTA = DFHRESP(NOTFND)
+               MOVE 'Y' TO WS-EOF
+             ELSE
+               IF RESPUESTA = DFHRESP(ENDFILE)
+                 MOVE ZEROS TO WS-CEDI-PROXIMO
+                 MOVE 'Y' TO WS-EOF
+               ELSE
+                 MOVE ZEROS TO WS-CEDI-PROXIMO
+                 MOVE 'Y' TO WS-EOF
+               END-IF
+             END-IF
+           END-IF
+           .
+       MOVER-REGISTROP.
+           IF WS-CEDI-PROXIMO NOT EQUAL  ZEROS
+             MOVE C-DNI                  TO CED
+             MOVE C-NOMBRE               TO NOM
+             MOVE C-APELLIDOS            TO APE
+             MOVE C-DIRECCION            TO DIR
+           ELSE
+             PERFORM 0250-FALLO-FICHERO
+           END-IF
+           .
+       MOVER-NO-EXISTE.
+            MOVE SPACES TO CED
+            MOVE SPACES TO NOM
+            MOVE SPACES TO APE
+            MOVE SPACES TO DIR
+            .
+      **********************************************************
+      * MOVE DATOS DEL MAPA AL COMMAREA                        *
+      **********************************************************
+       MOVER-UPDATE.
+            MOVE 'ESTUD'   TO TIPOUSUA
+            MOVE CEDI      TO CED
+            MOVE NOMI      TO NOM
+            MOVE APEI      TO APE
+            MOVE DIRI      TO DIR
+            MOVE APEI(1:3) TO CLAVE(1:3)
+            MOVE NOMI(1:3) TO CLAVE(4:3)
+            MOVE '  '      TO CLAVE(7:2)
+            MOVE SPACES TO EXISTE
+            .
+       MOVER-INSERT.
+            MOVE 'ESTUD' TO TIPOUSUA
+            MOVE APEI(1:3) TO CLAVE(1:3)
+            MOVE NOMI(1:3) TO CLAVE(4:3)
+            MOVE '  '      TO CLAVE(7:2)
+            MOVE 'ESTUDIANTE' TO CARGO
+            MOVE 'A' TO ESTADO
+            MOVE CEDI   TO CED
+            MOVE NOMI   TO NOM
+            MOVE APEI   TO APE
+            MOVE DIRI   TO DIR
+            MOVE SPACES TO EXISTE
+            .
+       DESPROTEJA-CAMPOS.
+           MOVE DFHBMPRO   TO CEDF
+           MOVE DFHBMUNP   TO NOMF
+           MOVE DFHBMUNP   TO APEF
+           MOVE DFHBMUNP   TO DIRF
+      *    MOVE DFHMFSET   TO NOMF
+      *    MOVE DFHMFSET   TO APEF
+      *    MOVE DFHMFSET   TO DIRF
+            .
+       PROTEJA-CEDI.
+           MOVE DFHBMPRO   TO CEDF
+            .
+       MOVER-REGISTRO-AMAP.
+            MOVE CED                  TO CEDI CEDO
+            MOVE NOM                  TO NOMI NOMO
+            MOVE APE                  TO APEI APEO
+            MOVE DIR                  TO DIRI DIRO
+           .
+       0240-ENVIAR-MSG.
+      *    MOVE DFHBLINK   TO MSGH
+           MOVE USU TO LOG5O
+           EXEC CICS SEND MAP('MSNES05')
+
+                     FROM(MSNES05O)
+                     NOHANDLE
+           END-EXEC
+           PERFORM 8200-RETORNO-TRANS
+           .
+       0250-FALLO-FICHERO.
+             MOVE 1 TO WS-EXISTE
+             MOVE 'EL ESTUDIANTE NO EXISTE'
+                  TO MSGO
+             MOVE SPACES                 TO NOMO
+                                             APEO
+                                             DIRO
+           .
+      *****************************************
+      * DEVUELVE EL CONTROL A LA TRANSACCION  *
+      *****************************************
+       8200-RETORNO-TRANS.
+           MOVE EIBTRMID   TO TERM
+           MOVE 'SN05'     TO TRANS
+           EXEC CICS RETURN
+                TRANSID('SN05')
+                COMMAREA(MI-COMMAREA)
+                LENGTH(LENGTH OF MI-COMMAREA)
+           END-EXEC
+           GOBACK
+           .
+       9000-PROCESE-CRUD.
+      ************************************************************
+      * LLAMAMOS AL PROGRAMA QUE REALIZA LAS OPERACIONES DEL CRUD*
+      ************************************************************
+           MOVE MI-COMMAREA TO RC-COMMAREA
+           MOVE LOW-VALUES  TO MI-COMMAREA
+           MOVE 'LINK'      TO TRANS
+           EXEC CICS LINK
+                PROGRAM('RENUSUA2')
+                COMMAREA(RC-COMMAREA)
+                LENGTH(LENGTH OF MI-COMMAREA)
+                RESP(RESPUESTA)
+           END-EXEC
+           IF RESPUESTA = DFHRESP(NORMAL) THEN
+             MOVE RC-COMMAREA TO    MI-COMMAREA
+           END-IF
+           .
+

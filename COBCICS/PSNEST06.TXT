@@ -1,0 +1,1037 @@
+      ***********************************************************
+      *    SCROLL DE ESTUDIANTES Y PERMITE LLAMAR AL PROGRAMA   *
+      *    DEL CRUD                                             *
+      ***********************************************************
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PSNEST06.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       COPY CSNES06.
+       COPY CCICS67.
+      *COMMAREA
+      *COMMAREA
+       01 MI-COMMAREA.
+          03 TRANS             PIC X(04).
+          03 TERM              PIC X(04).
+          03 CICLO             PIC X(02).
+          03 TIPOUSUA          PIC X(05).
+          03 USU               PIC X(09).
+          03 NOMUSU            PIC X(20).
+          03 APEUSU            PIC X(20).
+          03 PAS               PIC X(08).
+          03 PERFIL            PIC X(16).
+          03 CED               PIC X(09).
+          03 CLAVE             PIC X(8).
+          03 NOM               PIC X(20).
+          03 APE               PIC X(20).
+          03 DIR               PIC X(35).
+          03 CARGO             PIC X(20).
+          03 ESTADO            PIC X.
+          03 TIPO              PIC X(06).
+          03 SUB-TIPO          PIC XX.
+          03 EXISTE            PIC X.
+          03 NUM-REGISTRO      PIC 9(5).
+          03 CONTADOR-REGISTRO PIC S9(5).
+          03 CODIGO-CURSOR     PIC XX.
+          03 MLIKE             PIC X(35).
+       01 RC-COMMAREA.
+          03 RTRANS             PIC X(04).
+          03 RTERM              PIC X(04).
+          03 RCICLO             PIC X(02).
+          03 RTIPOUSUA          PIC X(05).
+          03 RUSU               PIC X(09).
+          03 RNOMUSU            PIC X(20).
+          03 RAPEUSU            PIC X(20).
+          03 RPAS               PIC X(08).
+          03 RPERFIL            PIC X(16).
+          03 RCED               PIC X(09).
+          03 RCLAVE             PIC X(8).
+          03 RNOM               PIC X(20).
+          03 RAPE               PIC X(20).
+          03 RDIR               PIC X(35).
+          03 RCARGO             PIC X(20).
+          03 RESTADO            PIC X.
+          03 RTIPO              PIC X(06).
+          03 RSUB-TIPO          PIC XX.
+          03 REXISTE            PIC X.
+          03 RNUM-REGISTRO      PIC 9(5).
+          03 RCONTADOR-REGISTRO PIC S9(5).
+          03 RCODIGO-CURSOR     PIC XX.
+          03 RMLIKE             PIC X(35).
+       01 WS-PERFIL.
+          02 WS-TRAN         PIC X(4).
+          02 WS-IDPERFIL     PIC X(3).
+          02 WS-CONSUL       PIC X(2).
+          02 WS-BORRAR       PIC X(2).
+          02 WS-INGRESAR     PIC X(2).
+          02 WS-MODIF        PIC X(2).
+          02 WS-FILLER       PIC X.
+      *COMMAREA HOL
+       01 CH-COMMAREA-HOL.
+          03 CH-HOLS.
+             05  CH-S-CODIGO-CURSOR      PIC X(2).
+             05  CH-S-BUSCAR             PIC X(35).
+             05  CH-S-COMIENZA           PIC X.
+             05  CH-S-CONTIENE           PIC X.
+             05  CH-S-DNI-SELECCION      PIC X(9).
+             05  CH-S-DNI1               PIC X(9).
+             05  CH-S-DNI4               PIC X(9).
+             05  CH-S-NOMBRE1            PIC X(25).
+             05  CH-S-NOMBRE4            PIC X(25).
+             05  CH-S-APELLIDOS1         PIC X(25).
+             05  CH-S-APELLIDOS4         PIC X(25).
+             05  CH-S-UP-MORE            PIC X(1).
+             05  CH-S-DOWN-MORE          PIC X(1).
+      *VARIABLES
+       01 MSG-FIN-SESION PIC X(40) VALUE '          FIN SESION'.
+       01  WC-CONSTANTES.
+          03 SW-HAY-FILTRO-COMIENZA       PIC X    VALUE 'N'.
+             88 HAY-FILTRO-COMIENZA                VALUE 'S'.
+      *
+          03 SW-HAY-FILTRO-CONTIENE       PIC X    VALUE 'N'.
+             88 HAY-FILTRO-CONTIENE                VALUE 'S'.
+       01 WC-CONSTANTES.
+          03 WC-PROGRAMA          PIC X(8)  VALUE 'PHOLS'.
+          03 WC-TRANSACCION       PIC X(4)  VALUE 'HOLS'.
+          03 WC-MAP               PIC X(8)  VALUE 'HOLSMP'.
+          03 WC-MAPSET            PIC X(8)  VALUE 'HOLSMP'.
+          03 WC-CURPOS            PIC S9(4) VALUE +172.
+          03 WC-LONGITUD-TITULO   PIC 99    VALUE 55.
+      *
+          03 WC-CUR-TEXTO         PIC S9(4) COMP VALUE +172.
+          03 WC-CUR-COMIENZA      PIC S9(4) COMP VALUE +219.
+          03 WC-CUR-CONTIENE      PIC S9(4) COMP VALUE +234.
+          03 WC-CUR-ORD-DNI       PIC S9(4) COMP VALUE +325.
+          03 WC-CUR-ORD-NOMBRE    PIC S9(4) COMP VALUE +338.
+          03 WC-CUR-ORD-APELLIDOS PIC S9(4) COMP VALUE +367.
+          03 WC-CUR-SEL1          PIC S9(4) COMP VALUE +485.
+          03 WC-CUR-SEL2          PIC S9(4) COMP VALUE +725.
+          03 WC-CUR-SEL3          PIC S9(4) COMP VALUE +965.
+          03 WC-CUR-SEL4          PIC S9(4) COMP VALUE +1205.
+      *ESTA COLA LA USO PARA LLEVAR LOS REGISTROS LEIDOS EN TABLA
+      *DE ESTUDIANTES Y DESPUES MOSTRAR POR CONSULTA ESTOS DATOS
+       01 COLA-ESTUD.
+          05 C-DNI       PIC X(09).
+          05 C-NOMBRE    PIC X(20).
+          05 C-APELLIDOS PIC X(20).
+          05 C-DIRECCION PIC X(35).
+      *01 FILLER PIC X(20) VALUE 'TABLA678901234567890'.
+
+       01 DB2-ERR.
+          03 DB2-SQLCODE              PIC S9(9).
+          03 DB2-SQLCODE-Z            PIC -ZZZZZZZZ9.
+          03 DB2-ERROR.
+             05 DB2-ERR-MSG           PIC X(50).
+             05 DB2-ERR-CODE          PIC X(20).
+       01 RESPUESTA      PIC S9(08) COMP.
+       01 SW-CICLO       PIC X(02).
+          88 CICLO-0     VALUE '00'.
+          88 CICLO-1     VALUE '01'.
+          88 CICLO-99    VALUE '99'.
+       01 SW-ERROR-VALIDACION          PIC X    VALUE 'N'.
+          88 ERROR-VALIDACION                   VALUE 'S'.
+      * AYUSASA COLATS
+       77 WS-NOMBRECOLA        PIC X(08) VALUE 'KCICS03'.
+       77 WS-NUM-REGISTRO      PIC S9(4) COMP.
+       77 WS-PRIMER-REGISTRO   PIC S9(4) COMP.
+       77 WS-CONTADOR-REGISTRO PIC S9(5) COMP.
+       77 WS-SCROLL            PIC 9(2) VALUE 4.
+       77 WS-RESULTADO         PIC 9(2).
+       77 WS-COCIENTE          PIC S9(2).
+       77 WS-RESIDUO           PIC S9(2).
+       77 WS-ITEM              PIC X(5) VALUE SPACES.
+       77 WX-NUM               PIC 99.
+       77 WX-ACCION            PIC X.
+       77 WX-LONG              PIC 9(5) VALUE ZEROS.
+       77 WX-LIKE              PIC X(35) VALUE  SPACES.
+       77 WS-EOF               PIC X VALUE SPACES.
+       77 WS-EXISTE            PIC 9 VALUE ZEROS.
+       77 WS-PROXIMO      PIC 9    VALUE ZEROS.
+       77 WS-CEDI-PREV    PIC X(9) VALUE SPACES.
+       77 WS-CEDI-PROXIMO PIC X(9) VALUE SPACES.
+       77 WS-OPERACION   PIC 9.
+      * AYUDAS DE MBS
+       COPY DFHAID.
+       COPY DFHBMSCA.
+       LINKAGE SECTION.
+       01 DFHCOMMAREA    PIC X(257).
+
+       PROCEDURE DIVISION.
+
+      *EXCEPCIONES DB2
+           PERFORM 0100-INICIO
+           PERFORM 0200-PROCESO
+           MOVE '99' TO CICLO
+           PERFORM 0300-FIN
+           .
+      **********************************************************
+      *INICIO DEL PROGRAMA, LA COMMAREA TRAE EL CICLO EN QUE   *
+      * ESTAMOS TRABAJANDO Y NOS LLEVA A CONTINUAR EN ESE CICLO*
+      **********************************************************
+       0100-INICIO.
+           EVALUATE TRUE
+            WHEN EIBCALEN = 0
+              SET CICLO-0 TO TRUE
+            WHEN OTHER
+               MOVE DFHCOMMAREA       TO MI-COMMAREA
+               MOVE PERFIL            TO  WS-PERFIL
+               MOVE NUM-REGISTRO      TO WS-NUM-REGISTRO
+               MOVE CONTADOR-REGISTRO TO WS-CONTADOR-REGISTRO
+               EVALUATE CICLO
+                 WHEN '00'
+                   SET CICLO-0 TO TRUE
+                 WHEN '01'
+                   SET CICLO-1 TO TRUE
+                 WHEN '99'
+                   SET CICLO-0 TO TRUE
+                 WHEN OTHER
+                   MOVE "                  CICLO NO PROGRAMADO"
+                                             TO MSG-FIN-SESION
+                   MOVE '99' TO CICLO
+                   PERFORM 0300-FIN
+               END-EVALUATE
+           END-EVALUATE
+           .
+      ***************************************************
+      *   CICLO-1 DIGITACION DE USUARIO Y CONTRASEÑA    *
+      *   SI ES VALIDA ACTIVA EL CICLO-2                *
+      ***************************************************
+       0200-PROCESO.
+           EVALUATE TRUE
+               WHEN CICLO-0
+                 PERFORM 0201-CICLO-0
+               WHEN CICLO-1
+                 PERFORM 0202-CICLO-1
+               WHEN CICLO-99
+                 SET CICLO-0 TO TRUE
+           END-EVALUATE
+             .
+      ********************************************************
+      * FIN DE LA TRANSACCION, LLAMA O RETORNA AL PROGRAMA DE*
+      *                SEGURIDAD                             *
+      ********************************************************
+       0300-FIN.
+           MOVE 'XCTL'     TO TRANS
+           EXEC CICS XCTL
+                PROGRAM('PSNEST05')
+                COMMAREA(MI-COMMAREA)
+                LENGTH(LENGTH OF MI-COMMAREA)
+                RESP(RESPUESTA)
+           END-EXEC
+           EXEC CICS RETURN
+           END-EXEC
+           GOBACK
+           .
+      ***************************************************
+      *   CICLO INICIAL MUESTRA EN PANTALLA EL MENU DEL *
+      *   CRUD                                          *
+      ***************************************************
+       0201-CICLO-0.
+           MOVE 'DA' TO CODIGO-CURSOR
+           MOVE '01'     TO CICLO
+           MOVE 'CURSOR' TO TIPO
+           MOVE '01'     TO SUB-TIPO
+           PERFORM 9000-PROCESE-CRUD
+           MOVE LOW-VALUE          TO MSNES06O
+           MOVE CONTADOR-REGISTRO TO NUMCO
+           MOVE 0 TO NUM-REGISTRO WS-NUM-REGISTRO
+           MOVE 8 TO WS-PROXIMO
+           PERFORM 0130-LIMPIA-SELECCION
+           PERFORM 3200-PRESENTA
+           PERFORM 0224-SEND-MAP
+           MOVE '01'     TO CICLO
+           PERFORM 8200-RETORNO-TRANS
+           .
+      ***************************************************
+      *   EN ESTE CICLO REALIZAMOS LAS CONSULTAS YA SEA *
+      * INDIVIDUAL , SIGUIENTE O ANTERIOR               *
+      ***************************************************
+       0202-CICLO-1.
+           PERFORM 0225-RECIBE-MAP
+           EVALUATE EIBAID
+             WHEN DFHENTER
+                PERFORM 0250-PROCESE-TRAN
+             WHEN DFHPF5
+                PERFORM 1300-PROCESO-ORDENAR
+             WHEN DFHPF8
+                MOVE 8 TO WS-PROXIMO
+                PERFORM 0251-PROCESE-PROXIMO
+             WHEN DFHPF7
+                MOVE 7 TO WS-PROXIMO
+                PERFORM 0252-PROCESE-ANTERIOR
+      *--- F9: Buscamos los registros que cumplen los filtros
+      *
+             WHEN DFHPF9
+                   PERFORM 1700-PROCESO-BUSCAR
+             WHEN OTHER
+                PERFORM 0230-VALIDE-PF3
+           END-EVALUATE
+           .
+       0251-PROCESE-PROXIMO.
+           IF WS-NUM-REGISTRO > CONTADOR-REGISTRO
+             DIVIDE CONTADOR-REGISTRO  BY   WS-SCROLL
+                 GIVING WS-COCIENTE REMAINDER WS-RESIDUO
+             IF WS-RESIDUO = 0
+               COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE - 1) * WS-SCROLL
+             ELSE
+               COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE) * WS-SCROLL
+             END-IF
+           END-IF
+           MOVE LOW-VALUE          TO MSNES06O
+           PERFORM 0130-LIMPIA-SELECCION
+           PERFORM 3200-PRESENTA
+           MOVE CONTADOR-REGISTRO TO NUMCO
+           PERFORM 0224-SEND-MAP
+           MOVE '01'     TO CICLO
+           PERFORM 8200-RETORNO-TRANS
+              .
+      *
+       0252-PROCESE-ANTERIOR.
+           IF WS-NUM-REGISTRO > CONTADOR-REGISTRO
+              COMPUTE WS-NUM-REGISTRO = CONTADOR-REGISTRO
+           END-IF
+           MOVE LOW-VALUE          TO MSNES06O
+           DIVIDE WS-NUM-REGISTRO BY   WS-SCROLL
+                  GIVING WS-COCIENTE REMAINDER WS-RESIDUO
+           IF WS-RESIDUO > 0
+             COMPUTE WS-NUM-REGISTRO = WS-NUM-REGISTRO - WS-SCROLL
+                                                       - WS-RESIDUO
+           ELSE
+             COMPUTE WS-NUM-REGISTRO = WS-NUM-REGISTRO - 2 * WS-SCROLL
+           END-IF
+           IF WS-NUM-REGISTRO  < 1
+             MOVE 0 TO NUM-REGISTRO WS-NUM-REGISTRO
+             MOVE DFHGREEN                   TO MSGC
+             MOVE 'PAGINA INICIAL        '   TO MSGO
+           END-IF
+           MOVE 8 TO WS-PROXIMO
+           PERFORM 0130-LIMPIA-SELECCION
+           PERFORM 3200-PRESENTA
+           MOVE CONTADOR-REGISTRO TO NUMCO
+           PERFORM 0224-SEND-MAP
+           MOVE '01'     TO CICLO
+           PERFORM 8200-RETORNO-TRANS
+              .
+      *
+      *****************************************
+      * EN ESTE MAPA ESTA LA INFORMACION DEL  *
+      * ESTUDIANTE                            *
+      *****************************************
+       0224-SEND-MAP.
+           EXEC CICS
+                SEND MAP('MSNES06') MAPSET('MSNES06')
+                     ERASE
+                     FROM(MSNES06O)
+                     NOHANDLE
+           END-EXEC.
+      **********************************************
+      * ENVIA EL MAPA                              *
+      **********************************************
+       0224-SEND-MAP1.
+           EXEC CICS
+                SEND MAP('MSNES06') MAPSET('MSNES06')
+                     ERASE
+                     FROM(MSNES06O)
+                     NOHANDLE
+           END-EXEC.
+       0225-RECIBE-MAP.
+      ********************************************
+      * RECIBIMOS EL MAP CON LOS DATOS DEL CRUD Y *
+      * LO LLEVAMOS AL COMMAREA PARA QUE NO SE NOS*
+      * SI SE DEBE RETORNAR LA TRANSACCION        *
+      *********************************************
+           EXEC CICS RECEIVE MAP('MSNES06')
+                INTO(MSNES06I)
+                NOHANDLE
+           END-EXEC
+           EXEC CICS
+                IGNORE CONDITION MAPFAIL
+           END-EXEC
+           .
+      *
+      *****************************************
+      * FIN DE TODO LO RELACIONADOS CON LOS   *
+      * MAPAS                                 *
+      *****************************************
+      *
+      ********************************************
+      * EN ESTA SECCION VERIFICAMOS SI ESCOGIO    *
+      * LA TECLA PF3 PARA RETORNAR A LA OPERACION *
+      * ANTERIOR                                  *
+      *********************************************
+      *
+      ********************************************
+      * SE SALE DEL TODO DEL SISTEMA              *
+      *********************************************
+       0230-VALIDE-PF3.
+              IF EIBAID EQUAL DFHPF3   THEN
+                MOVE '99'     TO CICLO
+                PERFORM 0300-FIN
+              END-IF
+              .
+      *
+      *****************************************
+      * DEVUELVE EL CONTROL A LA TRANSACCION  *
+      *****************************************
+       8200-RETORNO-TRANS.
+           MOVE EIBTRMID             TO TERM
+           MOVE 'SN06'               TO TRANS
+           MOVE WS-NUM-REGISTRO      TO NUM-REGISTRO
+           EXEC CICS RETURN
+                TRANSID('SN06')
+                COMMAREA(MI-COMMAREA)
+                LENGTH(LENGTH OF MI-COMMAREA)
+           END-EXEC
+           GOBACK
+           .
+      ************************************************************
+      * LLAMAMOS AL PROGRAMA QUE REALIZA LAS OPERACIONES DEL CRUD*
+      ************************************************************
+       9000-PROCESE-CRUD.
+           MOVE ZEROS TO CONTADOR-REGISTRO
+           MOVE 'ESTUD' TO TIPOUSUA
+           MOVE MI-COMMAREA TO RC-COMMAREA
+           MOVE LOW-VALUES  TO MI-COMMAREA
+           MOVE 'LINK'      TO TRANS
+           EXEC CICS LINK
+                PROGRAM('RENUSUA2')
+                COMMAREA(RC-COMMAREA)
+                LENGTH(LENGTH OF MI-COMMAREA)
+                RESP(RESPUESTA)
+           END-EXEC
+           IF RESPUESTA = DFHRESP(NORMAL) THEN
+             MOVE RC-COMMAREA TO    MI-COMMAREA
+           END-IF
+           .
+      ************************************************************
+      *----------------------------------------------------------------
+      *--- LIMPIA LOS CAMPOS DE SELECCION DE FILA
+
+      *----------------------------------------------------------------
+       0130-LIMPIA-SELECCION.
+      *
+           SET L                           TO 1
+           PERFORM UNTIL L > 4
+              MOVE SPACE                   TO SEL-VALOR(L)
+              SET L                        UP BY 1
+           END-PERFORM
+           .
+      *
+       0130-LIMPIA-SELECCION-EXIT.
+           EXIT.
+      ************************************************************
+      *--- IMPORTANTE: ESTA PENDIENTE CONTAR REGISTROS F(FILTROS)*
+      *--- ESTO SE HAR A SOBRE EL DATO DB2-COUNT1 *
+      *--- SI NU HUBIERA NO SE PODR A MOSRTAR NADA -> MENSAJE *
+      *--- POR AHORA FORZAMOS... *
+      *
+       3200-PRESENTA.
+      *
+           SET L    TO 1
+           MOVE 'N' TO WS-EOF
+           IF WS-NUM-REGISTRO - 4 < 0
+             MOVE '-' TO MUPO
+           ELSE
+             MOVE '+' TO MUPO
+           END-IF
+           IF WS-NUM-REGISTRO + 4 < CONTADOR-REGISTRO
+             MOVE '+' TO MDOWNO
+           ELSE
+             MOVE '-' TO MDOWNO
+           END-IF
+           MOVE 'N' TO WS-EOF
+           PERFORM 3090-PROCESA-SCROLL UNTIL WS-EOF = 'Y' OR L > 4
+           IF WS-EOF = 'Y' AND L < 4
+             PERFORM 3100-NO-HAY-MAS
+           .
+      ***************************************************
+      *--- PROCESA SCROLL                               *
+      ***************************************************
+       3090-PROCESA-SCROLL.
+           IF WS-PROXIMO = 8
+                COMPUTE WS-NUM-REGISTRO = WS-NUM-REGISTRO + 1
+           ELSE
+             IF WS-PROXIMO = 7
+                 COMPUTE WS-NUM-REGISTRO = WS-NUM-REGISTRO - 1
+             END-IF
+           END-IF
+           EXEC CICS READQ  TS
+                ITEM(WS-NUM-REGISTRO)
+                QUEUE (WS-NOMBRECOLA)
+                INTO (COLA-ESTUD)
+                RESP (RESPUESTA)
+           END-EXEC
+           IF RESPUESTA = DFHRESP(NORMAL) AND
+              WS-NUM-REGISTRO <= CONTADOR-REGISTRO
+             PERFORM 3100-PRESENTA-LINEA
+             SET L UP BY 1
+           ELSE
+             MOVE 'Y' TO WS-EOF
+           END-IF
+           .
+      ***************************************************
+      *--- PRESENTA LA LINEA DEFINIDA POR EL INDICE L EN*
+      *    PANTALLA                                     *
+      ***************************************************
+       3100-PRESENTA-LINEA.
+      *
+           MOVE ' '                       TO SEL-VALOR(L)
+           MOVE C-DNI                     TO DNI-VALOR(L)
+           MOVE C-NOMBRE                  TO NOM-VALOR(L)
+           MOVE C-APELLIDOS               TO APE-VALOR(L)
+           MOVE C-DIRECCION               TO DIR-VALOR(L)
+           MOVE DFHBMUNP                  TO SEL-ATTR(L).
+      *
+      *--- INFORMAR PRIMER Y ULTIMO REGISTRO DE CA
+      *
+           IF L = 1
+             MOVE WS-NUM-REGISTRO TO WS-PRIMER-REGISTRO
+             MOVE C-DNI                  TO CH-S-DNI1
+             MOVE C-DNI                  TO CH-S-DNI4
+             MOVE C-NOMBRE               TO CH-S-NOMBRE1
+             MOVE C-NOMBRE               TO CH-S-NOMBRE4
+             MOVE C-APELLIDOS            TO CH-S-APELLIDOS1
+             MOVE C-APELLIDOS            TO CH-S-APELLIDOS4
+           ELSE
+             MOVE C-DNI                  TO CH-S-DNI4
+             MOVE C-NOMBRE               TO CH-S-NOMBRE4
+             MOVE C-APELLIDOS            TO CH-S-APELLIDOS4
+           END-IF.
+       3100-PRESENTA-LINEA-EXIT.
+           EXIT.
+      *----------------------------------------------------------------
+      *--- NO HAY MAS CLIENTES EN EL CURSOR ACTUAL
+       3100-NO-HAY-MAS.
+      *
+           PERFORM UNTIL L > 4
+             MOVE DFHBMPRO                TO SEL-ATTR(L)
+             MOVE SPACES                  TO DNI-VALOR(L)
+             MOVE SPACES                  TO NOM-VALOR(L)
+             MOVE SPACES                  TO APE-VALOR(L)
+             MOVE SPACES                  TO DIR-VALOR(L)
+             SET L                        UP BY 1
+           END-PERFORM
+           MOVE DFHGREEN                   TO MSGC
+           MOVE 'NO HAY MAS PAGINAS    '   TO MSGO
+           .
+      *
+       3100-NO-HAY-MAS-EXIT.
+           EXIT.
+      *----------------------------------------------------------------
+      *--- Procesa la tecla F5                                      ---
+      *---    Cambiamos la ordenacion seg n cambio criterios        ---
+      *----------------------------------------------------------------
+       1300-PROCESO-ORDENAR.
+      *
+      *
+      *--- Utilizamos el SW de Error de Validacion para saber si se
+      *--- cambia alguna ordenacion en esta seccion. Por defecto TRUE
+      *
+      *
+      *--- Ordenaciones por DNI
+      *      MOVE LOW-VALUE          TO MSNES06O
+             SET ERROR-VALIDACION    TO TRUE
+           MOVE '01'     TO CICLO
+           MOVE 'CURSOR' TO TIPO
+           IF EIBCPOSN = WC-CUR-ORD-DNI
+      *--- De Ascendente a Descendente
+              IF ORDI = '*' AND ADDI = 'A'
+                 MOVE 'DD'                 TO CH-S-CODIGO-CURSOR
+                 MOVE 'D'                  TO ADDO
+                 MOVE '*'                  TO ORDO
+                 MOVE SPACES               TO ORNO
+                 MOVE SPACES               TO ADNO
+                 MOVE SPACES               TO ORAO
+                 MOVE SPACES               TO ADAO
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION
+                 MOVE 02 TO SUB-TIPO
+              ELSE
+      *--- De Descendente a Ascendente
+                 MOVE 'DA'                 TO CH-S-CODIGO-CURSOR
+                 MOVE 'A'                  TO ADDO
+                 MOVE '*'                  TO ORNO
+                 MOVE SPACES               TO ORNO
+                 MOVE SPACES               TO ADNO
+                 MOVE SPACES               TO ORAO
+                 MOVE SPACES               TO ADAO
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION
+                 MOVE 01 TO SUB-TIPO
+              END-IF
+           END-IF
+      *
+      *--- Ordenaciones por NOMBRE
+           IF EIBCPOSN = WC-CUR-ORD-NOMBRE
+      *--- De Ascendente a Descendente
+              IF ORNI = '*' AND ADNI = 'A'
+                 MOVE 'ND'                 TO CH-S-CODIGO-CURSOR
+                 MOVE 'D'                  TO ADNO
+                 MOVE '*'                  TO ORNO
+                 MOVE SPACES               TO ORDO
+                 MOVE SPACES               TO ADDO
+                 MOVE SPACES               TO ORAO
+                 MOVE SPACES               TO ADAO
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION
+                 MOVE 04 TO SUB-TIPO
+              ELSE
+      *--- De Descendente a Ascendente
+                 MOVE 'NA'                 TO CH-S-CODIGO-CURSOR
+                 MOVE 'A'                  TO ADNO
+                 MOVE '*'                  TO ORNO
+                 MOVE SPACES               TO ORDO
+                 MOVE SPACES               TO ADDO
+                 MOVE SPACES               TO ORAO
+                 MOVE SPACES               TO ADAO
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION
+                 MOVE 03 TO SUB-TIPO
+              END-IF
+           END-IF
+      *
+      *--- Ordenaciones por APELLIDOS
+           IF EIBCPOSN = WC-CUR-ORD-APELLIDOS
+      *--- De Ascendente a Descendente
+              IF ORAI = '*' AND ADAI = 'A'
+                 MOVE 'AD'                 TO CH-S-CODIGO-CURSOR
+                 MOVE 'D'                  TO ADAO
+                 MOVE '*'                  TO ORAO
+                 MOVE SPACES               TO ORDO
+                 MOVE SPACES               TO ADDO
+                 MOVE SPACES               TO ORNO
+                 MOVE SPACES               TO ADNO
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION
+                 MOVE 06 TO SUB-TIPO
+              ELSE
+      *--- De Descendente a Ascendente
+                 MOVE 'AA'                 TO CH-S-CODIGO-CURSOR
+                 MOVE 'A'                  TO ADAO
+                 MOVE '*'                  TO ORAO
+                 MOVE SPACES               TO ORDO
+                 MOVE SPACES               TO ADDO
+                 MOVE SPACES               TO ORNO
+                 MOVE SPACES               TO ADNO
+                 MOVE 'N'                  TO SW-ERROR-VALIDACION
+                 MOVE 05 TO SUB-TIPO
+              END-IF
+           END-IF
+      *
+      *
+           IF NOT ERROR-VALIDACION
+
+              MOVE DFHGREEN                TO MSGC
+              IF CH-S-CODIGO-CURSOR = 'DA'
+                 MOVE 'OK - Orden cambiado a DNI ascendente '
+                   TO MSGO
+              END-IF
+              IF CH-S-CODIGO-CURSOR = 'DD'
+                 MOVE 'OK - Orden cambiado a DNI descendente'
+                   TO MSGO
+              END-IF
+              IF CH-S-CODIGO-CURSOR = 'NA'
+                 MOVE 'OK - Orden cambiado a NOMBRE ascendente '
+                   TO MSGO
+              END-IF
+              IF CH-S-CODIGO-CURSOR = 'ND'
+                 MOVE 'OK - Orden cambiado a NOMBRE descendente'
+                   TO MSGO
+              END-IF
+              IF CH-S-CODIGO-CURSOR = 'AA'
+                 MOVE 'OK - Orden cambiado a APELLIDOS ascendente'
+                   TO MSGO
+              END-IF
+              IF CH-S-CODIGO-CURSOR = 'AD'
+                 MOVE 'OK - Orden cambiado a APELLIDOS descendente'
+                   TO MSGO
+              END-IF
+              MOVE CH-S-CODIGO-CURSOR TO CODIGO-CURSOR
+              PERFORM 9000-PROCESE-CRUD
+              MOVE 0 TO NUM-REGISTRO WS-NUM-REGISTRO
+              MOVE 8 TO WS-PROXIMO
+              PERFORM 0130-LIMPIA-SELECCION
+              PERFORM 3200-PRESENTA
+              MOVE CONTADOR-REGISTRO TO NUMCO
+              PERFORM 0224-SEND-MAP
+              MOVE '01'     TO CICLO
+              PERFORM 8200-RETORNO-TRANS
+           ELSE
+             DIVIDE WS-NUM-REGISTRO BY   WS-SCROLL
+                  GIVING WS-COCIENTE REMAINDER WS-RESIDUO
+             IF WS-RESIDUO > 0
+              COMPUTE WS-NUM-REGISTRO = WS-COCIENTE * WS-SCROLL
+             ELSE
+              COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE - 1) * WS-SCROLL
+             END-IF
+             MOVE 8 TO WS-PROXIMO
+             PERFORM 0130-LIMPIA-SELECCION
+             PERFORM 3200-PRESENTA
+             MOVE 'Continua mismo orden                 '
+                   TO MSGO
+             MOVE CONTADOR-REGISTRO TO NUMCO
+             PERFORM 0224-SEND-MAP
+             MOVE '01'     TO CICLO
+             PERFORM 8200-RETORNO-TRANS
+           END-IF
+           .
+       1300-PROCESO-ORDENAR-EXIT.
+           EXIT.
+      *----------------------------------------------------------------
+      *--- Procesa la tecla F9                                      ---
+      *---    Rellenamos la pantalla con nuevos datos por cambio    ---
+      *---    de filtros o texto de busqueda                        ---
+      *----------------------------------------------------------------
+       1700-PROCESO-BUSCAR.
+      *
+      *--- Validamos los filtros que el usuario ha podido cambiar
+      *
+           MOVE INII                       TO SW-HAY-FILTRO-COMIENZA
+           MOVE CONI                       TO SW-HAY-FILTRO-CONTIENE
+      *
+           IF ((HAY-FILTRO-COMIENZA OR HAY-FILTRO-CONTIENE)     AND
+              (BUSI NOT = SPACES AND BUSI NOT = HIGH-VALUES     AND
+               BUSI NOT = LOW-VALUES))
+      *        BUSI NOT = LOW-VALUES))                          OR
+      *       ((NOT HAY-FILTRO-COMIENZA AND NOT HAY-FILTRO-CONTIENE)
+      *        AND (BUSI = SPACES OR BUSI = LOW-VALUES          OR
+      *             BUSI = HIGH-VALUES))
+      *
+              IF HAY-FILTRO-COMIENZA AND HAY-FILTRO-CONTIENE
+                DIVIDE WS-NUM-REGISTRO BY   WS-SCROLL
+                  GIVING WS-COCIENTE REMAINDER WS-RESIDUO
+                IF WS-RESIDUO > 0
+                 COMPUTE WS-NUM-REGISTRO = WS-COCIENTE * WS-SCROLL
+                ELSE
+                 COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE - 1) * WS-SCROLL
+                END-IF
+                MOVE 8 TO WS-PROXIMO
+                PERFORM 0130-LIMPIA-SELECCION
+                PERFORM 3200-PRESENTA
+                MOVE DFHRED               TO MSGC
+                MOVE 'Revise o es comienza o es contiene no ambos'
+                   TO MSGO
+                MOVE CONTADOR-REGISTRO TO NUMCO
+                PERFORM 0224-SEND-MAP
+                MOVE '01'     TO CICLO
+                PERFORM 8200-RETORNO-TRANS
+              ELSE
+               MOVE BUSI                   TO CH-S-BUSCAR
+               MOVE INII                   TO CH-S-COMIENZA
+               MOVE CONI                   TO CH-S-CONTIENE
+               PERFORM 00100-REFRESCA-MAPA
+              END-IF
+           ELSE
+             DIVIDE WS-NUM-REGISTRO BY   WS-SCROLL
+                  GIVING WS-COCIENTE REMAINDER WS-RESIDUO
+             IF WS-RESIDUO > 0
+              COMPUTE WS-NUM-REGISTRO = WS-COCIENTE * WS-SCROLL
+             ELSE
+              COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE - 1) * WS-SCROLL
+             END-IF
+             MOVE 8 TO WS-PROXIMO
+             PERFORM 0130-LIMPIA-SELECCION
+             PERFORM 3200-PRESENTA
+             MOVE DFHRED               TO MSGC
+             MOVE 'Revise bien el filtro,comienza y contiene'
+                   TO MSGO
+             MOVE CONTADOR-REGISTRO TO NUMCO
+             PERFORM 0224-SEND-MAP
+             MOVE '01'     TO CICLO
+             PERFORM 8200-RETORNO-TRANS
+           END-IF
+           .
+      *
+       1700-PROCESO-BUSCAR-EXIT.
+           EXIT.
+      *----------------------------------------------------------------
+      *--- Refrescamos mapa segun la CA que tengamos                ---
+      *----------------------------------------------------------------
+       00100-REFRESCA-MAPA.
+      *
+           MOVE CH-S-COMIENZA              TO SW-HAY-FILTRO-COMIENZA
+           MOVE CH-S-CONTIENE              TO SW-HAY-FILTRO-CONTIENE
+      *
+      *--- Filtros
+      *--- Filtro Comienza por texto a buscar
+      *
+           IF HAY-FILTRO-COMIENZA
+              MOVE CH-S-BUSCAR             TO BUSO
+              MOVE CH-S-COMIENZA           TO INIO
+              PERFORM 0110-LIKE-COMIENZA
+           ELSE
+              MOVE 'N'                     TO INIO
+           END-IF
+      *
+      *--- Filtro Contiene el texto a buscar
+      *
+           IF HAY-FILTRO-CONTIENE
+              MOVE CH-S-BUSCAR             TO BUSO
+              MOVE CH-S-CONTIENE           TO CONO
+              PERFORM 0120-LIKE-CONTIENE
+           ELSE
+              MOVE 'N'                     TO CONO
+           END-IF
+      *
+      *--- Ordenacion a partir del codigo cursor de CA
+      *
+           MOVE CODIGO-CURSOR TO CH-S-CODIGO-CURSOR
+           EVALUATE TRUE
+              WHEN CH-S-CODIGO-CURSOR = 'DA'
+                   MOVE '*'                TO ORDO
+                   MOVE 'A'                TO ADDO
+                   MOVE SPACE              TO ORNO
+                   MOVE SPACE              TO ADNO
+                   MOVE SPACE              TO ORAO
+                   MOVE SPACE              TO ADAO
+                   MOVE '07'               TO SUB-TIPO
+              WHEN CH-S-CODIGO-CURSOR = 'DD'
+                   MOVE '*'                TO ORDO
+                   MOVE 'D'                TO ADDO
+                   MOVE SPACE              TO ORNO
+                   MOVE SPACE              TO ADNO
+                   MOVE SPACE              TO ORAO
+                   MOVE SPACE              TO ADAO
+                   MOVE '08'               TO SUB-TIPO
+              WHEN CH-S-CODIGO-CURSOR = 'NA'
+                   MOVE SPACE              TO ORDO
+                   MOVE SPACE              TO ADDO
+                   MOVE '*'                TO ORNO
+                   MOVE 'A'                TO ADNO
+                   MOVE SPACE              TO ORAO
+                   MOVE SPACE              TO ADAO
+                   MOVE '09'               TO SUB-TIPO
+              WHEN CH-S-CODIGO-CURSOR = 'ND'
+                   MOVE SPACE              TO ORDO
+                   MOVE SPACE              TO ADDO
+                   MOVE '*'                TO ORNO
+                   MOVE 'D'                TO ADNO
+                   MOVE SPACE              TO ORAO
+                   MOVE SPACE              TO ADAO
+                   MOVE '10'               TO SUB-TIPO
+              WHEN CH-S-CODIGO-CURSOR = 'AA'
+                   MOVE SPACE              TO ORDO
+                   MOVE SPACE              TO ADDO
+                   MOVE SPACE              TO ORNO
+                   MOVE SPACE              TO ADNO
+                   MOVE '*'                TO ORAO
+                   MOVE 'A'                TO ADAO
+                   MOVE '11'               TO SUB-TIPO
+              WHEN CH-S-CODIGO-CURSOR = 'AD'
+                   MOVE SPACE              TO ORDO
+                   MOVE SPACE              TO ADDO
+                   MOVE SPACE              TO ORNO
+                   MOVE SPACE              TO ADNO
+                   MOVE '*'                TO ORAO
+                   MOVE 'D'                TO ADAO
+                   MOVE '12'               TO SUB-TIPO
+              WHEN OTHER
+                   MOVE DFHRED             TO MSGC
+                   MOVE 'Error de Orden en refresco de pantalla'
+                     TO MSGO
+           END-EVALUATE
+           PERFORM 9000-PROCESE-CRUD
+           MOVE 0 TO NUM-REGISTRO WS-NUM-REGISTRO
+           MOVE 8 TO WS-PROXIMO
+           PERFORM 0130-LIMPIA-SELECCION
+           PERFORM 3200-PRESENTA
+           MOVE CONTADOR-REGISTRO TO NUMCO
+           PERFORM 0224-SEND-MAP
+           MOVE '01'     TO CICLO
+           PERFORM 8200-RETORNO-TRANS
+           .
+      *
+       0100-REFRESCA-MAPA-EXIT.
+           EXIT.
+      *----------------------------------------------------------------
+      *--- Calculamos el LIKE para los cursores Comienza por        ---
+      *----------------------------------------------------------------
+       0110-LIKE-COMIENZA.
+      *
+           MOVE 35                         TO WX-LONG
+      *
+           PERFORM
+              UNTIL WX-LONG = 0                               OR
+                    (CH-S-BUSCAR(WX-LONG:1) NOT = SPACE       AND
+                     CH-S-BUSCAR(WX-LONG:1) NOT = LOW-VALUES  AND
+                     CH-S-BUSCAR(WX-LONG:1) NOT = HIGH-VALUES)
+                    SUBTRACT 1             FROM WX-LONG
+           END-PERFORM
+      *
+           IF WX-LONG NOT = 0
+              ADD 1                        TO WX-LONG
+              MOVE CH-S-BUSCAR             TO WX-LIKE
+              MOVE '%'                     TO WX-LIKE(WX-LONG:1)
+              ADD 1                        TO WX-LONG
+              IF WX-LONG < 35
+                 MOVE ALL '%'              TO WX-LIKE(WX-LONG:)
+              END-IF
+              move WX-LIKE TO MLIKE
+           END-IF
+      *
+           MOVE FUNCTION UPPER-CASE(WX-LIKE) TO WX-LIKE.
+      *
+       0110-LIKE-COMIENZA-EXIT.
+           EXIT.
+      *----------------------------------------------------------------
+      *--- Calculamos el LIKE para los cursores Comienza por        ---
+      *----------------------------------------------------------------
+       0120-LIKE-CONTIENE.
+      *
+           MOVE 35                         TO WX-LONG
+      *
+           PERFORM
+              UNTIL WX-LONG = 0                               OR
+                    (CH-S-BUSCAR(WX-LONG:1) NOT = SPACE       AND
+                     CH-S-BUSCAR(WX-LONG:1) NOT = LOW-VALUES  AND
+                     CH-S-BUSCAR(WX-LONG:1) NOT = HIGH-VALUES)
+                    SUBTRACT 1             FROM WX-LONG
+           END-PERFORM
+      *
+           IF WX-LONG NOT = 0
+              ADD 1                        TO WX-LONG
+              MOVE '%'                     TO WX-LIKE(1:1)
+              MOVE CH-S-BUSCAR(1:WX-LONG)  TO WX-LIKE(2:)
+              ADD 1                        TO WX-LONG
+              MOVE ALL '%'                 TO WX-LIKE(WX-LONG:)
+           END-IF
+           MOVE WX-LIKE TO MLIKE
+      *
+           MOVE FUNCTION UPPER-CASE(WX-LIKE) TO WX-LIKE.
+      *
+       0120-LIKE-CONTIENE-EXIT.
+           EXIT.
+      *----------------------------------------------------------------
+      *--- Ver si el usuario selecciona fila y accion               ---
+      *----------------------------------------------------------------
+       0250-PROCESE-TRAN.
+      *
+           MOVE 0                          TO WX-NUM
+           move spaces                     to wx-accion
+           MOVE SPACES                     TO CED
+           SET L                           TO 1
+      *
+           PERFORM UNTIL L > 4
+           EVALUATE TRUE
+             WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'SI' AND
+                  WS-INGRESAR = 'SI' AND WS-MODIF = 'SI'
+                IF SEL-VALOR(L) = 'S' OR
+                   SEL-VALOR(L) = 'C' OR
+                   SEL-VALOR(L) = 'M' OR
+                   SEL-VALOR(L) = 'A' OR
+                   SEL-VALOR(L) = 'R'
+                   ADD 1                     TO WX-NUM
+                   MOVE DNI-VALOR(L)         TO CED
+                   MOVE SEL-VALOR(L)         TO WX-ACCION
+                END-IF
+             WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'NO' AND
+                  WS-INGRESAR = 'NO' AND WS-MODIF = 'SI'
+                  IF SEL-VALOR(L) = 'S'        OR
+                      SEL-VALOR(L) = 'C'        OR
+                      SEL-VALOR(L) = 'M'
+                      ADD 1                     TO WX-NUM
+                      MOVE DNI-VALOR(L)         TO CED
+                      MOVE SEL-VALOR(L)         TO WX-ACCION
+                  END-IF
+             WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'NO' AND
+                  WS-INGRESAR = 'NO' AND WS-MODIF = 'NO'
+                  IF SEL-VALOR(L) = 'S'        OR
+                      SEL-VALOR(L) = 'C'
+                      ADD 1                   TO WX-NUM
+                      MOVE DNI-VALOR(L)       TO CED
+                      MOVE SEL-VALOR(L)       TO WX-ACCION
+                    END-IF
+             WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'NO' AND
+                  WS-INGRESAR = 'SI' AND WS-MODIF = 'NO'
+                    IF SEL-VALOR(L) = 'S' OR SEL-VALOR(L) = 's' OR
+                      SEL-VALOR(L) = 'C' OR SEL-VALOR(L) = 'c' OR
+                      SEL-VALOR(L) = 'A'
+                      ADD 1                   TO WX-NUM
+                      MOVE DNI-VALOR(L)       TO CED
+                      MOVE SEL-VALOR(L)       TO WX-ACCION
+                    END-IF
+             WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'SI' AND
+                  WS-INGRESAR = 'NO' AND WS-MODIF = 'NO'
+                    IF SEL-VALOR(L) = 'S' OR SEL-VALOR(L) = 's' OR
+                      SEL-VALOR(L) = 'C' OR SEL-VALOR(L) = 'c' OR
+                      SEL-VALOR(L) = 'R' OR SEL-VALOR(L) = 'r'
+                      ADD 1                   TO WX-NUM
+                      MOVE DNI-VALOR(L)       TO CED
+                      MOVE SEL-VALOR(L)       TO WX-ACCION
+                    END-IF
+            END-EVALUATE
+            SET L                        UP BY 1
+           END-PERFORM
+      *
+           EVALUATE TRUE
+             WHEN WX-NUM = 0
+               EVALUATE TRUE
+                 WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'SI' AND
+                      WS-INGRESAR = 'SI' AND WS-MODIF = 'SI'
+                  MOVE 'Digite "A" "C" "S" "M" o "R" a nivel de fila'
+                     To MSGO
+                WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'NO' AND
+                  WS-INGRESAR = 'NO' AND WS-MODIF = 'SI'
+                  MOVE 'Digite "C" "S" "M"  a nivel de fila'
+                     To MSGO
+                WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'NO' AND
+                  WS-INGRESAR = 'NO' AND WS-MODIF = 'NO'
+                  MOVE 'Digite "C"   a nivel de fila'
+                     To MSGO
+                WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'NO' AND
+                  WS-INGRESAR = 'SI' AND WS-MODIF = 'NO'
+                  MOVE 'Digite "A" "C" "S"  a nivel de fila'
+                     To MSGO
+                WHEN WS-CONSUL = 'SI' AND WS-BORRAR = 'SI' AND
+                  WS-INGRESAR = 'NO' AND WS-MODIF = 'NO'
+                  MOVE 'Digite "C" "S" "R"  a nivel de fila'
+                     To MSGO
+               END-EVALUATE
+      *
+             WHEN WX-NUM = 1
+               PERFORM 1422-PROCESO-PCICS54
+             WHEN WX-NUM > 1
+               MOVE 'Solo se puede seleccionar una fila'
+                     TO MSGO
+             WHEN OTHER
+               MOVE 'Solo "A" "C" "S" "M" o "R" a nivel de fila'
+                     TO MSGO
+           END-EVALUATE
+           DIVIDE WS-NUM-REGISTRO BY   WS-SCROLL
+                  GIVING WS-COCIENTE REMAINDER WS-RESIDUO.
+           IF WS-RESIDUO > 0
+              COMPUTE WS-NUM-REGISTRO = WS-COCIENTE * WS-SCROLL
+           ELSE
+              COMPUTE WS-NUM-REGISTRO = (WS-COCIENTE - 1) * WS-SCROLL
+           END-IF
+           MOVE 8 TO WS-PROXIMO
+           PERFORM 0130-LIMPIA-SELECCION
+           PERFORM 3200-PRESENTA
+           MOVE CONTADOR-REGISTRO TO NUMCO
+           PERFORM 0224-SEND-MAP
+           MOVE '01'     TO CICLO
+           PERFORM 8200-RETORNO-TRANS
+           .
+      *
+       0250-PROCESE-TRAN-EXIT.
+           EXIT.
+      *----------------------------------------------------------------
+      *--- Llamamos al programa Accion sobre un Estudiante PCICS54  ---
+      *----------------------------------------------------------------
+       1422-PROCESO-PCICS54.
+      *
+           IF WX-ACCION = 'S'  OR WX-ACCION = 'C' or
+              WX-ACCION = 's'  OR wx-accion = 'c'
+              MOVE 'C'      TO WX-ACCION
+              MOVE '20'     TO CICLO
+           END-IF
+      *
+           IF WX-ACCION = 'M' OR WX-ACCION = 'm'
+              MOVE '30'     TO CICLO
+           END-IF
+           IF WX-ACCION = 'A' OR WX-ACCION = 'a'
+              MOVE '50'     TO CICLO
+           END-IF
+           IF WX-ACCION = 'R' OR WX-ACCION = 'r'
+              MOVE '70'     TO CICLO
+           END-IF
+           PERFORM 0300-FIN.
+      *
+       1422-PROCESO-HOLX-EXIT.
+
