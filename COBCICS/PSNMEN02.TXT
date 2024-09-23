@@ -1,321 +1,337 @@
-      *-----------------------------------------------------------*     00010003
-      *  PROGRAMA QUE MANEJA EL MENU DEL SISTEMA DE NOTAS               00020003
-      *  RECIBE LOS DATOS DEL USUARIO EN LA COMMAREA                    00030003
-      *  Y LOS PASA A LOS PROGRAMAS QUE ENLAZA EN LAS                   00040003
-      *  OPCIONES. PF3: SALE DEL SISTEMA DE NOTAS.                      00050003
-      *-----------------------------------------------------------*     00060003
-      *                                                                 00070003
-      *------------------------*                                        00080003
-       IDENTIFICATION DIVISION.                                         00090003
-      *------------------------*                                        00100003
-         PROGRAM-ID. PSNMEN02.                                          00110003
-      *                                                                 00120003
-      *---------------------*                                           00130003
-       ENVIRONMENT DIVISION.                                            00140003
-      *---------------------*                                           00150003
-      *                                                                 00160003
-      *--------------*                                                  00170003
-       DATA DIVISION.                                                   00180003
-      *--------------*                                                  00190003
-      *                                                                 00200003
-       WORKING-STORAGE SECTION.                                         00210003
-      *                                                                 00220003
-      * COPY DEL MAPA DE MENU                                           00230003
-      *                                                                 00240003
-       COPY CSNME02.                                                    00250003
-      *                                                                 00260003
-      * FIN DE COPY DEL MAPA GENERADO                                   00270003
-      *--------------------------------------------------------------*  00280003
-      * VARIABLES DE TRABAJO                                            00290003
-      *                                                                 00300003
-       01  WS-VARIABLES-DE-TRABAJO.                                     00310003
-           03  WS-RESPUESTA             PIC S9(08)  COMP.               00320003
-           03  WS-CURRENT-DATE.                                         00330003
-               05 WS-CURRENT-YEAR       PIC 9(4).                       00340003
-               05 WS-CURRENT-MONTH      PIC 9(2).                       00350003
-               05 WS-CURRENT-DAY        PIC 9(2).                       00360003
-           03  WS-FECHA-SALIDA.                                         00370003
-               05 WS-AAAA               PIC X(04).                      00380003
-               05 FILLER                PIC X       VALUE "-".          00390003
-               05 WS-MES                PIC XX.                         00400003
-               05 FILLER                PIC X       VALUE "-".          00410003
-               05 WS-DIA                PIC XX.                         00420003
-      *                                                                 00430003
-      * DEFINICION DE LA COMMAREA                                       00440003
-      *                                                                 00450003
-       01  MI-COMMAREA              PIC X(95).                          00460003
-       01  MI-COMMAREA-RD           REDEFINES MI-COMMAREA.              00470003
-           05 CA-TRANS              PIC X(04).                          00480003
-           05 CA-TERM               PIC X(04).                          00490003
-           05 CA-CICLO              PIC X(02).                          00500003
-           05 CA-US-DNI             PIC X(09).                          00510003
-           05 CA-US-TIPOUSUA        PIC X(05).                          00520003
-           05 CA-US-NOMBRE          PIC X(20).                          00530003
-           05 CA-US-APELLIDOS       PIC X(20).                          00540003
-           05 CA-PR-PERFIL          PIC X(03).                          00550003
-           05 CA-PR-NOMBRE          PIC X(20).                          00560003
-           05 CA-PR-CONSUL          PIC X(02).                          00570003
-           05 CA-PR-BORRAR          PIC X(02).                          00580003
-           05 CA-PR-INGRESAR        PIC X(02).                          00590003
-           05 CA-PR-MODIF           PIC X(02).                          00600003
-      *                                                                 00610003
-       01  WC-CONSTANTES.                                               00620003
-           05  WC-TRANSID           PIC X(4)    VALUE "SN02".           00630003
-           05  WC-TERMID            PIC X(4)    VALUE "L702".           00640003
-           05  WC-PROG-CLAVE        PIC X(8)    VALUE "PSNIDU01".       00650003
-           05  WC-PROG-ESTUD        PIC X(8)    VALUE "PSNNES03".       00660003
-           05  WC-DESC-ESTUD  PIC X(20) VALUE "CONSULTA ESTUDIANTES".   00670003
-           05  WC-PROG-PROFE        PIC X(8)    VALUE "PSNNPR04".       00680003
-           05  WC-DESC-PROFE  PIC X(20) VALUE "CONSULTA PROFESORES ".   00690003
-           05  WC-PROG-ADMIN        PIC X(8)    VALUE "PSNEST05".       00700003
-           05  WC-DESC-ADMIN  PIC X(20) VALUE "MANTTO ESTUDIANTES  ".   00710003
-      *                                                                 00720003
-       01  WS-MJES-LOG.                                                 00730003
-           03 WS-OPT-ERR  PIC X(23) VALUE "OPCION INVALIDA.       ".    00740003
-           03 WS-TEC-ERR  PIC X(23) VALUE "TECLA INVALIDA.        ".    00750003
-           03 WS-AUT-ERR  PIC X(23) VALUE "NO ESTA AUTORIZADO.    ".    00760003
-           03 WS-OPT-PEND PIC X(23) VALUE "POR IMPLEMENTAR.       ".    00770003
-           03 WS-LLAMADO  PIC X(45)                                     00780003
-              VALUE "ESTE MENU DEBE SER LLAMADO DESDE UN PROGRAMA ".    00790003
-           03 WS-MSG-FIN-SESION     PIC X(45)                           00800003
-              VALUE "*** FIN SISTEMA DE NOTAS *** ".                    00810003
-           03 WS-MSG-LINK.                                              00820003
-              05 WS-PROG-SAL        PIC X(8).                           00830003
-              05 FILLER             PIC XX.                             00840003
-              05 WS-DESCRIP         PIC X(20).                          00850003
-              05 FILLER             PIC XX.                             00860003
-              05 WS-MSG-PEND        PIC X(23).                          00870003
-      *                                                                 00880003
-      *---------------------------------------------------------------* 00890003
-      * AYUDAS DE BMS                                                   00900003
-      *                                                                 00910003
-       COPY DFHAID.                                                     00920003
-       COPY DFHBMSCA.                                                   00930003
-      *                                                                 00940003
-      * FIN COPY AYUDAS                                                 00950003
-      *---------------------------------------------------------------* 00960003
-       LINKAGE SECTION.                                                 00970003
-       01  DFHCOMMAREA              PIC X(95).                          00980003
-      *                                                                 00990003
-      *-------------------*                                             01000003
-       PROCEDURE DIVISION.                                              01010003
-      *-------------------*                                             01020003
-      *                                                                 01030003
-       0000-PRINCIPAL.                                                  01040003
-           PERFORM 100-RECIBIR-TXN                                      01050003
-           PERFORM 200-PROCESAR-TXN                                     01060003
-           PERFORM 780-RETORNAR-TXN                                     01070003
-           .                                                            01080003
-      *                                                                 01090003
-      * RECIBIR-TXN                                                     01100003
-      *    EL PROGRAMA QUE LLAMA ESTE MENU PASA CA-CICLO EN 99          01110003
-      *    VALIDO QUE LA EIBCALEN ES 0 PARA QUE NO SE EJECUTE ESTA      01120003
-      *    TRANSACCION DIRECTAMENTE DESDE CICS.                         01130003
-      *                                                                 01140003
-       100-RECIBIR-TXN.                                                 01150003
-           MOVE DFHCOMMAREA  TO MI-COMMAREA                             01160003
-      *    DISPLAY "PSNMEN02 MI-COMMAREA AL ENTRAR: " MI-COMMAREA       01170003
-      *                                                                 01180003
-           IF (EIBCALEN = 0) THEN                                       01190003
-               MOVE WS-LLAMADO TO WS-MSG-FIN-SESION                     01250005
-               PERFORM 900-TERMINAR                                     01260005
-           ELSE                                                         01270003
-               IF (CA-CICLO NOT EQUAL '99') THEN                        01280003
-                  EXEC CICS RECEIVE MAP('MSNME02')                      01290003
-                            INTO       (MSNME02I)                       01300003
-                            NOHANDLE                                    01310003
-                  END-EXEC                                              01320003
-      *                                                                 01330003
-                  EXEC CICS                                             01340003
-                       IGNORE CONDITION MAPFAIL                         01350003
-                  END-EXEC                                              01360003
-               END-IF                                                   01370003
-           END-IF                                                       01380003
-           .                                                            01390003
-      *                                                                 01400003
-      * PROCESAR-TXN                                                    01410003
-      *                                                                 01420003
-       200-PROCESAR-TXN.                                                01430003
-           MOVE SPACES           TO MSGLOGO                             01440003
-           MOVE CA-US-NOMBRE     TO MNOMBREO                            01450003
-           MOVE FUNCTION CURRENT-DATE TO WS-CURRENT-DATE                01460003
-           MOVE WS-CURRENT-YEAR  TO WS-AAAA                             01470003
-           MOVE WS-CURRENT-MONTH TO WS-MES                              01480003
-           MOVE WS-CURRENT-DAY   TO WS-DIA                              01490003
-           MOVE WS-FECHA-SALIDA  TO MFECHAO                             01500003
-      *                                                                 01510003
-           IF (CA-CICLO = '99') THEN                                    01520003
-              MOVE LOW-VALUES      TO MSNME02O                          01530003
-              MOVE CA-US-NOMBRE    TO MNOMBREO                          01531004
-              MOVE WS-FECHA-SALIDA TO MFECHAO                           01540003
-              MOVE '88'            TO CA-CICLO                          01550003
-           ELSE                                                         01560003
-              EVALUATE EIBAID                                           01570003
-                  WHEN DFHENTER                                         01580003
-      *                DISPLAY "ENTER"                                  01590003
-                       PERFORM 300-VALIDAR-OPCION                       01600003
-                  WHEN DFHPF3                                           01610003
-      *                DISPLAY "F3"                                     01620003
-                       PERFORM 900-TERMINAR-PROG                        01630003
-                  WHEN OTHER                                            01640003
-      *                DISPLAY "TECLA INVALIDA"                         01650003
-                       MOVE WS-TEC-ERR TO MSGLOGO                       01660003
-              END-EVALUATE                                              01670003
-           END-IF                                                       01680003
-           .                                                            01690003
-      *                                                                 01700003
-      * VALIDAR OPCION                                                  01710003
-      *                                                                 01720003
-       300-VALIDAR-OPCION.                                              01730003
-      *    DISPLAY "EVALUO OPCION: " MOPCIONI                           01740003
-           EVALUATE MOPCIONI                                            01750003
-               WHEN '1'                                                 01760003
-                    PERFORM 790-LINK-CONSULTA-PROFE                     01770003
-               WHEN '2'                                                 01780003
-                    PERFORM 790-LINK-CONSULTA-ESTUD                     01790003
-               WHEN '3'                                                 01800003
-                    PERFORM 790-LINK-ADMIN-ESTUD                        01810003
-               WHEN OTHER                                               01820003
-      *             DISPLAY "OPCION INVALIDA " MOPCIONI                 01830003
-                    MOVE WS-OPT-ERR TO MSGLOGO                          01840003
-           END-EVALUATE                                                 01850003
-           .                                                            01860003
-      *                                                                 01870003
-      * RETORNAR-TXN                                                    01880003
-      *                                                                 01890003
-       780-RETORNAR-TXN.                                                01900003
-           EXEC CICS SEND MAP('MSNME02')                                01910003
-                     FROM(MSNME02O)                                     01920003
-                     ERASE                                              01930003
-           END-EXEC                                                     01940003
-                                                                        01950003
-           MOVE EIBTRNID    TO CA-TRANS                                 01960003
-           MOVE EIBTRMID    TO CA-TERM                                  01970003
-      *                                                                 01980003
-           EXEC CICS RETURN                                             01990003
-                     TRANSID  (WC-TRANSID)                              02000003
-                     COMMAREA (MI-COMMAREA)                             02010003
-                     LENGTH   (LENGTH OF MI-COMMAREA)                   02020003
-           END-EXEC                                                     02030003
-      *                                                                 02040003
-      *    LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO             02050003
-      *    O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN        02060003
-           GOBACK                                                       02070003
-           .                                                            02080003
-      *                                                                 02090003
-      * 790-LINK-CONSULTA-PROFE: ENLAZA CON LA CONSULTA DE LOS          02100003
-      * ESTUDIANTES DE UN PROFESOR                                      02110003
-      *                                                                 02120003
-       790-LINK-CONSULTA-PROFE.                                         02130003
-      *                                                                 02140003
-           MOVE '88'          TO CA-CICLO                               02150003
-           MOVE SPACES        TO WS-MSG-LINK                            02160003
-           MOVE WC-PROG-PROFE TO WS-PROG-SAL                            02170003
-           MOVE WC-DESC-PROFE TO WS-DESCRIP                             02180003
-           MOVE WS-OPT-PEND   TO WS-MSG-PEND                            02190003
-           MOVE WS-MSG-LINK   TO MSGLOGO                                02200003
-      *                                                                 02210003
-      *    LINEAS PARA ENLAZAR PROGRAMA OJO- COMMAREA                   02220003
-      *    MOVE '99' TO CA-CICLO                                        02230003
-      *                                                                 02240003
-      *    EXEC CICS XCTL                                               02250003
-      *         PROGRAM  (WC-PROG-PROFE)                                02260003
-      *         COMMAREA (MI-COMMAREA)                                  02270003
-      *         LENGTH   (LENGTH OF MI-COMMAREA)                        02280003
-      *         RESP     (WS-RESPUESTA)                                 02290003
-      *    END-EXEC                                                     02300003
-      *                                                                 02310003
-           .                                                            02320003
-      *                                                                 02330003
-      * 790-LINK-CONSULTA-ESTUD: ENLAZA CO LA CONSULTA DE LOS CURSOS    02340003
-      * DE UN ESTUDIANTE                                                02350003
-      *                                                                 02360003
-       790-LINK-CONSULTA-ESTUD.                                         02370003
-           MOVE '88'          TO CA-CICLO                               02380003
-           MOVE SPACES        TO WS-MSG-LINK                            02390003
-           MOVE WC-PROG-ESTUD TO WS-PROG-SAL                            02400003
-           MOVE WC-DESC-ESTUD TO WS-DESCRIP                             02410003
-           MOVE WS-OPT-PEND   TO WS-MSG-PEND                            02420003
-           MOVE WS-MSG-LINK   TO MSGLOGO                                02430003
-      *                                                                 02440003
-      *    LINEAS PARA ENLAZAR PROGRAMA OJO- COMMAREA                   02450003
-      *    MOVE '99' TO CA-CICLO                                        02460003
-      *                                                                 02470003
-      *                                                                 02480003
-      *    EXEC CICS XCTL                                               02490003
-      *         PROGRAM  (WC-PROG-ESTUD)                                02500003
-      *         COMMAREA (MI-COMMAREA)                                  02510003
-      *         LENGTH   (LENGTH OF MI-COMMAREA)                        02520003
-      *         RESP     (WS-RESPUESTA)                                 02530003
-      *    END-EXEC                                                     02540003
-      *                                                                 02550003
-           .                                                            02560003
-      *                                                                 02570003
-      *  ENLAZA CON ADMIN ESTUDIANTES                                   02580003
-      *                                                                 02590003
-       790-LINK-ADMIN-ESTUD.                                            02600003
-      *                                                                 02610003
-           MOVE '88'          TO CA-CICLO                               02620003
-           MOVE SPACES        TO WS-MSG-LINK                            02630003
-           MOVE WC-PROG-ADMIN TO WS-PROG-SAL                            02640003
-           MOVE WC-DESC-ADMIN TO WS-DESCRIP                             02650003
-           MOVE WS-OPT-PEND   TO WS-MSG-PEND                            02660003
-           MOVE WS-MSG-LINK   TO MSGLOGO                                02670003
-      *                                                                 02680003
-      *    LINEAS PARA ENLAZAR PROGRAMA OJO- COMMAREA                   02690003
-      *    MOVE '99' TO CA-CICLO                                        02700003
-      *                                                                 02710003
-      *    EXEC CICS XCTL                                               02720003
-      *         PROGRAM  (WC-PROG-ADMIN)                                02730003
-      *         COMMAREA (MI-COMMAREA)                                  02740003
-      *         LENGTH   (LENGTH OF MI-COMMAREA)                        02750003
-      *         RESP     (WS-RESPUESTA)                                 02760003
-      *    END-EXEC                                                     02770003
-      *                                                                 02780003
-           .                                                            02790003
-      *                                                                 02800003
-      * 900-TERMINAR-PROG: PARA FACILITAR LAS PRUEBAS ESTE              02810003
-      *     MENU ENLAZA CON EL PROGRAMA QUE PIDE USUARIO-CLAVE.         02820003
-      * VIENE ACA CON PF3 Y ENLAZA CON PSNIDU01.                        02830003
-      *                                                                 02840003
-       900-TERMINAR-PROG.                                               02850003
-      *     DISPLAY "TERMINA PROGRAMA PSNMEN02"                         02860003
-      *                                                                 02870003
-           MOVE LOW-VALUES TO MI-COMMAREA                               02880003
-           MOVE WC-TRANSID TO CA-TRANS                                  02890003
-           MOVE WC-TERMID  TO CA-TERM                                   02900003
-           MOVE '00'       TO CA-CICLO                                  02910003
-      *                                                                 02920003
-           EXEC CICS XCTL                                               02930003
-                PROGRAM  (WC-PROG-CLAVE)                                02940003
-                COMMAREA (MI-COMMAREA)                                  02950003
-                LENGTH   (LENGTH OF MI-COMMAREA)                        02960003
-                RESP     (WS-RESPUESTA)                                 02970003
-           END-EXEC                                                     02980003
-           .                                                            02990003
-      *                                                                 03000003
-      *                                                                 03010003
-      * 900-TERMINAR: LA TRANSACCION TERMINA COMPLETAMENTE              03020003
-      *                                                                 03030003
-      *                                                                 03040003
-       900-TERMINAR.                                                    03050003
-      *                                                                 03060003
-            EXEC CICS                                                   03070003
-                 SEND TEXT FROM(WS-MSG-FIN-SESION)                      03080003
-                 ERASE                                                  03090003
-                 FREEKB                                                 03100003
-            END-EXEC                                                    03110003
-                                                                        03120003
-            EXEC CICS RETURN                                            03130003
-            END-EXEC                                                    03140003
-      *                                                                 03150003
-      *     LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO            03160003
-      *     O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN       03170003
-      *                                                                 03180003
-            GOBACK                                                      03190003
-            .                                                           03200003
-      *                                                                 03210003
-      *  -------- FIN DE PROGRAMA                                       03220003
-      *                                                                 03230003
-                                                                        03240003
-
+      *-----------------------------------------------------------*
+      *  PROGRAMA QUE MANEJA EL MENU DEL SISTEMA DE NOTAS
+      *  RECIBE LOS DATOS DEL USUARIO EN LA COMMAREA
+      *  Y LOS PASA A LOS PROGRAMAS QUE ENLAZA EN LAS
+      *  OPCIONES. PF3: SALE DEL SISTEMA DE NOTAS.
+      *-----------------------------------------------------------*
+      *
+      *------------------------*
+       IDENTIFICATION DIVISION.
+      *------------------------*
+         PROGRAM-ID. PSNMEN02.
+      *
+      *---------------------*
+       ENVIRONMENT DIVISION.
+      *---------------------*
+      *
+      *--------------*
+       DATA DIVISION.
+      *--------------*
+      *
+       WORKING-STORAGE SECTION.
+      *
+      * COPY DEL MAPA DE MENU
+      *
+       COPY CSNME02.
+      *
+      * FIN DE COPY DEL MAPA GENERADO
+      *--------------------------------------------------------------*
+      * VARIABLES DE TRABAJO
+      *
+       01  WS-VARIABLES-DE-TRABAJO.
+           03  WS-RESPUESTA             PIC S9(08)  COMP.
+           03  WS-CURRENT-DATE.
+               05 WS-CURRENT-YEAR       PIC 9(4).
+               05 WS-CURRENT-MONTH      PIC 9(2).
+               05 WS-CURRENT-DAY        PIC 9(2).
+           03  WS-FECHA-SALIDA.
+               05 WS-AAAA               PIC X(04).
+               05 FILLER                PIC X       VALUE "-".
+               05 WS-MES                PIC XX.
+               05 FILLER                PIC X       VALUE "-".
+               05 WS-DIA                PIC XX.
+      *
+      * DEFINICION DE LA COMMAREA
+      *
+       01  MI-COMMAREA              PIC X(95).
+       01  MI-COMMAREA-RD           REDEFINES MI-COMMAREA.
+           05 CA-TRANS              PIC X(04).
+           05 CA-TERM               PIC X(04).
+           05 CA-CICLO              PIC X(02).
+           05 CA-US-DNI             PIC X(09).
+           05 CA-US-TIPOUSUA        PIC X(05).
+           05 CA-US-NOMBRE          PIC X(20).
+           05 CA-US-APELLIDOS       PIC X(20).
+           05 CA-PR-PERFIL          PIC X(03).
+           05 CA-PR-NOMBRE          PIC X(20).
+           05 CA-PR-CONSUL          PIC X(02).
+           05 CA-PR-BORRAR          PIC X(02).
+           05 CA-PR-INGRESAR        PIC X(02).
+           05 CA-PR-MODIF           PIC X(02).
+      *
+       01  WC-CONSTANTES.
+           05  WC-TRANSID           PIC X(4)    VALUE "SN02".
+           05  WC-TERMID            PIC X(4)    VALUE "L702".
+           05  WC-PROG-CLAVE        PIC X(8)    VALUE "PSNIDU01".
+           05  WC-PROG-ESTUD        PIC X(8)    VALUE "PSNNES03".
+           05  WC-DESC-ESTUD  PIC X(20) VALUE "CONSULTA ESTUDIANTES".
+           05  WC-PROG-PROFE        PIC X(8)    VALUE "PSNNPR04".
+           05  WC-DESC-PROFE  PIC X(20) VALUE "CONSULTA PROFESORES ".
+           05  WC-PROG-ADMIN        PIC X(8)    VALUE "PSNEST05".
+           05  WC-DESC-ADMIN  PIC X(20) VALUE "MANTTO ESTUDIANTES  ".
+      *
+       01  WS-MJES-LOG.
+           03 WS-OPT-ERR  PIC X(23) VALUE "OPCION INVALIDA.       ".
+           03 WS-TEC-ERR  PIC X(23) VALUE "TECLA INVALIDA.        ".
+           03 WS-AUT-ERR  PIC X(23) VALUE "NO ESTA AUTORIZADO.    ".
+           03 WS-OPT-PEND PIC X(23) VALUE "POR IMPLEMENTAR.       ".
+           03 WS-LLAMADO  PIC X(45)
+              VALUE "ESTE MENU DEBE SER LLAMADO DESDE UN PROGRAMA ".
+           03 WS-MSG-FIN-SESION     PIC X(45)
+              VALUE "*** FIN SISTEMA DE NOTAS *** ".
+           03 WS-MSG-LINK.
+              05 WS-PROG-SAL        PIC X(8).
+              05 FILLER             PIC XX.
+              05 WS-DESCRIP         PIC X(20).
+              05 FILLER             PIC XX.
+              05 WS-MSG-PEND        PIC X(23).
+      *
+      *---------------------------------------------------------------*
+      * AYUDAS DE BMS
+      *
+       COPY DFHAID.
+       COPY DFHBMSCA.
+      *
+      * FIN COPY AYUDAS
+      *---------------------------------------------------------------*
+       LINKAGE SECTION.
+       01  DFHCOMMAREA              PIC X(95).
+      *
+      *-------------------*
+       PROCEDURE DIVISION.
+      *-------------------*
+      *
+       0000-PRINCIPAL.
+           PERFORM 100-RECIBIR-TXN
+           PERFORM 200-PROCESAR-TXN
+           PERFORM 780-RETORNAR-TXN
+           .
+      *
+      * RECIBIR-TXN
+      *    EL PROGRAMA QUE LLAMA ESTE MENU PASA CA-CICLO EN 99
+      *    VALIDO QUE LA EIBCALEN ES 0 PARA QUE NO SE EJECUTE ESTA
+      *    TRANSACCION DIRECTAMENTE DESDE CICS.
+      *
+       100-RECIBIR-TXN.
+           MOVE DFHCOMMAREA  TO MI-COMMAREA
+      *
+           IF (EIBCALEN = 0) THEN
+      *    ESTAS LINEAS SE ACTIVAN CUANDO SE NECESITE CORRER
+      *    EL MENU COMO SN02 DESDE CICS
+      *        MOVE '99'                   TO CA-CICLO
+      *        MOVE '*- NOMBRE USUARIO -*' TO CA-US-NOMBRE
+      *        MOVE LOW-VALUES             TO MSNME02O
+      *
+      *    SI SE EJECUTA SN02 DESDE CICS, TERMINA EL PROGRAMA
+      *
+               MOVE WS-LLAMADO TO WS-MSG-FIN-SESION
+               PERFORM 900-TERMINAR
+           ELSE
+               IF (CA-CICLO NOT EQUAL '99') THEN
+                  EXEC CICS RECEIVE MAP('MSNME02')
+                            INTO       (MSNME02I)
+                            NOHANDLE
+                  END-EXEC
+      *
+                  EXEC CICS
+                       IGNORE CONDITION MAPFAIL
+                  END-EXEC
+               END-IF
+           END-IF
+           .
+      *
+      * PROCESAR-TXN
+      *
+       200-PROCESAR-TXN.
+           MOVE SPACES           TO MSGLOGO
+           MOVE CA-US-NOMBRE     TO MNOMBREO
+           MOVE FUNCTION CURRENT-DATE TO WS-CURRENT-DATE
+           MOVE WS-CURRENT-YEAR  TO WS-AAAA
+           MOVE WS-CURRENT-MONTH TO WS-MES
+           MOVE WS-CURRENT-DAY   TO WS-DIA
+           MOVE WS-FECHA-SALIDA  TO MFECHAO
+      *
+           IF (CA-CICLO = '99') THEN
+              MOVE LOW-VALUES      TO MSNME02O
+              MOVE WS-FECHA-SALIDA TO MFECHAO
+              MOVE CA-US-NOMBRE    TO MNOMBREO
+              MOVE '88'            TO CA-CICLO
+           ELSE
+              EVALUATE EIBAID
+                  WHEN DFHENTER
+      *                DISPLAY "ENTER"
+                       PERFORM 300-VALIDAR-OPCION
+                  WHEN DFHPF3
+      *                DISPLAY "F3"
+                       PERFORM 900-TERMINAR-PROG
+                  WHEN OTHER
+      *                DISPLAY "TECLA INVALIDA"
+                       MOVE WS-TEC-ERR TO MSGLOGO
+              END-EVALUATE
+           END-IF
+           .
+      *
+      * VALIDAR OPCION
+      *
+       300-VALIDAR-OPCION.
+      *
+           EVALUATE MOPCIONI
+               WHEN '1'
+                    PERFORM 790-LINK-CONSULTA-PROFE
+               WHEN '2'
+                    PERFORM 790-LINK-CONSULTA-ESTUD
+               WHEN '3'
+                    PERFORM 790-LINK-ADMIN-ESTUD
+               WHEN OTHER
+      *             DISPLAY "OPCION INVALIDA " MOPCIONI
+                    MOVE WS-OPT-ERR TO MSGLOGO
+           END-EVALUATE
+           .
+      *
+      * RETORNAR-TXN
+      *
+       780-RETORNAR-TXN.
+           EXEC CICS SEND MAP('MSNME02')
+                     FROM(MSNME02O)
+                     ERASE
+           END-EXEC
+
+           MOVE EIBTRNID    TO CA-TRANS
+           MOVE EIBTRMID    TO CA-TERM
+      *
+           EXEC CICS RETURN
+                     TRANSID  (WC-TRANSID)
+                     COMMAREA (MI-COMMAREA)
+                     LENGTH   (LENGTH OF MI-COMMAREA)
+           END-EXEC
+      *
+      *    LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO
+      *    O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN
+           GOBACK
+           .
+      *
+      * 790-LINK-CONSULTA-PROFE: ENLAZA CON LA CONSULTA DE LOS
+      * ESTUDIANTES DE UN PROFESOR
+      *
+       790-LINK-CONSULTA-PROFE.
+      *    ESTAS LINEAS MUESTRAN UN MENSAJE CUANDO NO SE
+      *    ENLAZA UN PROG Y PERMITEN CONTINUAR PROBANDO
+      *    EL MENU
+      *
+           MOVE '88'          TO CA-CICLO
+           MOVE SPACES        TO WS-MSG-LINK
+           MOVE WC-PROG-PROFE TO WS-PROG-SAL
+           MOVE WC-DESC-PROFE TO WS-DESCRIP
+           MOVE WS-OPT-PEND   TO WS-MSG-PEND
+           MOVE WS-MSG-LINK   TO MSGLOGO
+      *
+      *    LINEAS PARA ENLAZAR PROGRAMA -OJO- COMMAREA
+      *
+           MOVE '00' TO CA-CICLO
+      *
+           EXEC CICS XCTL
+                PROGRAM  (WC-PROG-PROFE)
+                COMMAREA (MI-COMMAREA)
+                LENGTH   (LENGTH OF MI-COMMAREA)
+                RESP     (WS-RESPUESTA)
+           END-EXEC
+      *
+           .
+      *
+      * 790-LINK-CONSULTA-ESTUD: ENLAZA CON LA CONSULTA DE
+      *     LOS CURSOS DE UN ESTUDIANTE
+      *
+       790-LINK-CONSULTA-ESTUD.
+      *    ESTAS LINEAS MUESTRAN UN MENSAJE CUANDO NO SE
+      *    ENLAZA UN PROG Y PERMITEN CONTINUAR PROBANDO
+      *    EL MENU
+      *
+           MOVE '88'          TO CA-CICLO
+           MOVE SPACES        TO WS-MSG-LINK
+           MOVE WC-PROG-ESTUD TO WS-PROG-SAL
+           MOVE WC-DESC-ESTUD TO WS-DESCRIP
+           MOVE WS-OPT-PEND   TO WS-MSG-PEND
+           MOVE WS-MSG-LINK   TO MSGLOGO
+      *
+      *    LINEAS PARA ENLAZAR PROGRAMA -OJO- COMMAREA
+      *
+           MOVE '00' TO CA-CICLO
+      *
+           EXEC CICS XCTL
+                PROGRAM  (WC-PROG-ESTUD)
+                COMMAREA (MI-COMMAREA)
+                LENGTH   (LENGTH OF MI-COMMAREA)
+                RESP     (WS-RESPUESTA)
+           END-EXEC
+      *
+           .
+      *
+      *  790-LINK-ADMIN-ESTUD: ENLAZA CON ADMIN ESTUDIANTES
+      *
+       790-LINK-ADMIN-ESTUD.
+      *    ESTAS LINEAS MUESTRAN UN MENSAJE CUANDO NO SE
+      *    ENLAZA UN PROG Y PERMITEN CONTINUAR PROBANDO
+      *    EL MENU
+      *
+           MOVE '88'          TO CA-CICLO
+           MOVE SPACES        TO WS-MSG-LINK
+           MOVE WC-PROG-ADMIN TO WS-PROG-SAL
+           MOVE WC-DESC-ADMIN TO WS-DESCRIP
+           MOVE WS-OPT-PEND   TO WS-MSG-PEND
+           MOVE WS-MSG-LINK   TO MSGLOGO
+      *
+      *    LINEAS PARA ENLAZAR PROGRAMA -OJO- COMMAREA
+      *
+           MOVE '99' TO CA-CICLO
+
+           EXEC CICS XCTL
+                PROGRAM  (WC-PROG-ADMIN)
+                COMMAREA (MI-COMMAREA)
+                LENGTH   (LENGTH OF MI-COMMAREA)
+                RESP     (WS-RESPUESTA)
+           END-EXEC
+      *
+           .
+      *
+      * 900-TERMINAR-PROG: PARA FACILITAR LAS PRUEBAS ESTE
+      *     MENU ENLAZA CON EL PROGRAMA QUE PIDE USUARIO-CLAVE.
+      * VIENE ACA CON PF3 Y ENLAZA CON PSNIDU01.
+      *
+       900-TERMINAR-PROG.
+      *
+           MOVE LOW-VALUES TO MI-COMMAREA
+           MOVE WC-TRANSID TO CA-TRANS
+           MOVE WC-TERMID  TO CA-TERM
+           MOVE '00'       TO CA-CICLO
+      *
+           EXEC CICS XCTL
+                PROGRAM  (WC-PROG-CLAVE)
+                COMMAREA (MI-COMMAREA)
+                LENGTH   (LENGTH OF MI-COMMAREA)
+                RESP     (WS-RESPUESTA)
+           END-EXEC
+           .
+      *
+      *
+      * 900-TERMINAR: LA TRANSACCION TERMINA COMPLETAMENTE
+      *
+      *
+       900-TERMINAR.
+      *
+            EXEC CICS
+                 SEND TEXT FROM(WS-MSG-FIN-SESION)
+                 ERASE
+                 FREEKB
+            END-EXEC
+
+            EXEC CICS RETURN
+            END-EXEC
+      *
+      *     LA INSTRUCCION ANTERIOR HACE UN GOBACK IMPLICITO
+      *     O SEA QUE LAS INSTRUCCIONES QUE SIGUEN NO SE EJECUTAN
+      *
+            GOBACK
+            .
+      *
+      *  -------- FIN DE PROGRAMA
+      *
