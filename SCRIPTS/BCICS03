@@ -1,0 +1,11 @@
+DSN    SYSTEM     (DSN1)                                                00010005
+BIND   PLAN       (PDB203)  -                                           00020008
+       MEMBER     (PCICS03) -                                           00030008
+       ACTION     (REPLACE) -                                           00040005
+       ISOLATION  (CS)      -                                           00050005
+       VALIDATE   (BIND)    -                                           00060005
+       RELEASE    (COMMIT)  -                                           00070005
+       OWNER      (P390)    -                                           00080008
+       QUALIFIER  (P390)                                                00090008
+END                                                                     00100005
+

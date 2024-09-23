@@ -1,0 +1,1419 @@
+       IDENTIFICATION DIVISION.
+         PROGRAM-ID. PCICS03.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      *
+      *MODIFICACION JUNIO-22-2024
+      *  MANEJO DE COLAS PARA ELIMINAR DISPLAY Y DEJAR LOG DE
+      *  LA ACTIVIDAD DEL USUARIO
+      *  MANEJO DE SEGURIDAD PARA EJECUTAR ACCIONES DE CONSULTA,
+      *  MODIFICAR, BORRAR O INSERTAR ESTUDIANTES DE PROGRAMA QUE
+      *  CONSULTA ACCESO DE USUARIO Y PERFIL DEL MISMO
+      *
+       COPY CCICS03.
+      *
+      * COMMAREA
+      *
+       01  MI-COMMAREA.
+           03 TRANS         PIC X(04).
+           03 TERM          PIC X(04).
+           03 CICLO         PIC X(02).
+           03 VECES         PIC 9(04).
+           03 ID-ALUMNO     PIC X(09).
+           03 OPE           PIC X(02).
+           03 ID-US         PIC X(9).
+           03 NOM-US        PIC X(20).
+           03 APE-US        PIC X(20).
+           03 PERFIL        PIC X(3).
+           03 NOM-PERFIL    PIC X(20).
+           03 CONS          PIC X(2).
+           03 BORR          PIC X(2).
+           03 INGR          PIC X(2).
+           03 MODI          PIC X(2).
+      *
+      * VARIABLES
+      *
+       01  MSG-FIN-SESION   PIC X(40) VALUE  'FIN SESION'.
+       01  IND-OPE          PIC X(02) VALUE  SPACES.
+       01  IND-CED          PIC X(02) VALUE  SPACES.
+       01  WTRANSAP         PIC X(05) VALUE  'PTR03'.
+       01  WTRANSA          PIC X(04) VALUE  'TR03'.
+       01  WIDPERF          PIC X(03) VALUE  SPACES.
+       01  IND-PROTEGER     PIC X(02) VALUE  SPACES.
+       01  IND-VALIDA       PIC X(03) VALUE  SPACES.
+       01  WS-ALUMNO.
+           05 WS-DNI        PIC X(9).
+           05 WS-NOMBRE     PIC X(20).
+           05 WS-APELLIDOS  PIC X(20).
+           05 WS-DIRECCION  PIC X(35).
+       01  RESPUESTA        PIC S9(8) COMP.
+       01  WS-TIT-EST.
+           05 WS-LINEARRIBA.
+              15 WS-LAR1    PIC X(15) VALUE SPACES.
+              15 WS-LAR2    PIC X(23) VALUE '***********************'.
+              15 WS-LAR3    PIC X(23) VALUE '***********************'.
+              15 WS-LAR4    PIC X(18) VALUE SPACES.
+           05 WS-LINEAMEDIO.
+              15 WS-LM1     PIC X(15) VALUE SPACES.
+              15 WS-LM2     PIC X(23) VALUE '***  CONSULTA DE ESTUDI'.
+              15 WS-LM3     PIC X(23) VALUE 'ANTES GRUPO COBOL   ***'.
+              15 WS-LM4     PIC X(18) VALUE SPACES.
+           05 WS-LINEABAJO.
+              15 WS-LAB1    PIC X(20) VALUE '********************'.
+              15 WS-LAB2    PIC X(20) VALUE '********************'.
+              15 WS-LAB3    PIC X(20) VALUE '********************'.
+              15 WS-LAB4    PIC X(19) VALUE '*******************'.
+       01  WS-LIN23-C1.
+           05 WL23A-C1      PIC X(20) VALUE 'F3=FIN_SESION       '.
+           05 WL23B-C1.
+              10 FILLER     PIC X(23) VALUE 'ENTER=CONSULTAR_REG    '.
+              10 FILLER     PIC X(17) VALUE 'F7=REG_PREVIO    '.
+              10 FILLER     PIC X(16) VALUE 'F8=REG_SIGUIENTE'.
+       01  WS-LIN23-C2.
+           05 WL23A-C2      PIC X(20) VALUE 'F3=CANCELAR OPER   '.
+           05 WL23B-C2      PIC X(56) VALUE SPACES.
+       01  WS-LIN24.
+           05 FILLER        PIC X(20) VALUE '                    '.
+           05 WL24A         PIC X(20) VALUE 'F10=INGRESAR_REG    '.
+           05 WL24B         PIC X(20) VALUE '   F11=BORRAR_REG   '.
+           05 WL24C         PIC X(17) VALUE 'F12=MODIFICAR_REG'.
+       01  SW-CICLO         PIC X(2).
+           88 CICLO-0       VALUE '00'.
+           88 CICLO-1       VALUE '01'.
+           88 CICLO-2       VALUE '02'.
+           88 CICLO-3       VALUE '03'.
+       01  WS-AREA-FECHOR.
+           05  WS-CURRENT-DATE-DATA.
+               10  WS-CURRENT-DATE.
+                   15  WS-CURRENT-YEAR     PIC 9(04).
+                   15  WS-CURRENT-MES      PIC 9(02).
+                   15  WS-CURRENT-DIA      PIC 9(02).
+               10  WS-CURRENT-TIME.
+                   15  WS-CURRENT-HRA      PIC 9(02).
+                   15  WS-CURRENT-MIN      PIC 9(02).
+                   15  WS-CURRENT-SEG      PIC 9(02).
+                   15  WS-CURRENT-MSEG     PIC 9(02).
+           05 WS-COD-RET                   PIC X(02).
+       01  WS-FECHOR.
+           05  WS-LAFECHA.
+               10  WS-ELANO                PIC 9(04).
+               10  FILLER                  PIC X(01) VALUE "/".
+               10  WS-ELMES                PIC 9(02).
+               10  FILLER                  PIC X(01) VALUE "/".
+               10  WS-ELDIA                PIC 9(02).
+           05  WSEPARADOR                  PIC X(02) VALUE "--".
+           05  WS-LATIME.
+               10  WS-LAHORA               PIC 9(02).
+               10  FILLER                  PIC X(01) VALUE ":".
+               10  WS-ELMINUTO             PIC 9(02).
+               10  FILLER                  PIC X(01) VALUE ":".
+               10  WS-ELSEGUNDO            PIC 9(02).
+      *
+      *SE DEFINEN 4 COLAS
+      *
+      *KCICS03C PARA VER LOS VALORES DEL COMMAREA EN DIVERSAS PARTES
+      *
+       01  COLA-COM.
+           05 C1-OBSER1     PIC X(20).
+           05 C1-OBSER2     PIC X(101).
+       77  WS-KOLA-COM      PIC X(9)   VALUE 'KCICS03C'.
+       77  WS-C1-NUMEL      PIC S9(4)  COMP VALUE 1.
+      *
+      *KCICS03L QUE VA REGISTRANDO LAS ACCIONES QUE HACE EL USUARIO
+      *SOBRE LOS ESTUDIANTES DE ACUERDO A SU PERFIL. ES UN LOG
+      *
+       01  COLA-LOG.
+           05 C2-FECHA      PIC X(10).
+           05 C2-ESP1       PIC X(1)  VALUE SPACES.
+           05 C2-HORA       PIC X(8).
+           05 C2-ESP2       PIC X(1)  VALUE SPACES.
+           05 C2-TRANSA     PIC X(2).
+           05 C2-ESP3       PIC X(1)  VALUE SPACES.
+           05 C2-ID-ALUM    PIC X(9).
+           05 C2-NOM-ALUM   PIC X(20).
+           05 C2-APE-ALUM   PIC X(20).
+           05 C2-DIR-ALUM   PIC X(35).
+           05 C2-RESULT     PIC X(6).
+           05 C2-OBSER      PIC X(30).
+       77  WS-KOLA-LOG      PIC X(9)   VALUE 'KCICS03L'.
+       77  WS-C2-NUMEL      PIC S9(4)  COMP VALUE 1.
+      *
+      *KCICS03A VA REGISTRANDO LA FECHA Y HORA DE LOS ACCESOS DE
+      *LOS DIFERENTES USUARIOS SOBRE LA TABLA DE ESTUDIANTES.
+      *
+       01  COLA-ACC.
+           05 C3-ID-USU     PIC X(9).
+           05 C3-NOM-USU    PIC X(20).
+           05 C3-APE-USU    PIC X(20).
+           05 C3-PERFIL     PIC X(3).
+           05 C3-ESP1       PIC X(1)   VALUE SPACES.
+           05 C3-NOMPERF    PIC X(20).
+           05 C3-FECHA      PIC X(10).
+           05 C3-ESP2       PIC X(1)   VALUE SPACES.
+           05 C3-HORA       PIC X(08).
+           05 C3-OBSER      PIC X(18).
+       77  WS-KOLA-ACC      PIC X(9)   VALUE 'KCICS03A'.
+       77  WS-C3-NUMEL      PIC S9(4)  COMP VALUE 1.
+      *
+      *KCICS03D PARA HACER DEBUG AL PROGRAMA Y NO UTILIZAR DISPLAY
+      *
+       01  COLA-DIS.
+           05 C4-OBSER1     PIC X(26).
+           05 C4-OBSER2     PIC X(26).
+           05 C4-OBSER3     PIC X(26).
+       77  WS-KOLA-DIS      PIC X(9)   VALUE 'KCICS03D'.
+       77  WS-C4-NUMEL      PIC S9(4)  COMP VALUE 1.
+      *
+      * MODSQL - DEFINICON TABLA SQL
+      *
+           EXEC SQL
+                INCLUDE ESTUD
+           END-EXEC.
+           EXEC SQL
+                INCLUDE USUARIOS
+           END-EXEC.
+           EXEC SQL
+                INCLUDE PERMISOS
+           END-EXEC.
+           EXEC SQL
+                INCLUDE PERFILES
+           END-EXEC.
+      *
+      * MODSQL - SE TIENE QUE UTILIZAR SQLCA
+      *
+           EXEC SQL
+                INCLUDE SQLCA
+           END-EXEC.
+      *
+      * MODSQL CAMPOS PARA ERROR DE DB2
+      *
+       01  DB2-ERR.
+           03  DB2-SQLCODE                PIC S9(9).
+           03  DB2-SQLCODE-Z              PIC -ZZZZZZZZ9.
+           03  DB2-ERROR.
+               05  DB2-ERR-MSG            PIC X(50).
+               05  DB2-ERR-CODE           PIC X(20).
+      *
+      * AYUDAS DE BMS
+      *
+       COPY DFHAID.
+       COPY DFHBMSCA.
+      *
+       LINKAGE SECTION.
+      *
+       01  DFHCOMMAREA    PIC X(105).
+      *
+       PROCEDURE DIVISION.
+      *
+      * PROGRAMA PRINCIPAL
+      * 000-PRINCIPAL
+      *
+       000-PRINCIPAL.
+      *
+      *  LAS SIGUIENTES INSTS ANTES LLAMAR PROGRAMA INICIAL SON
+      *  TEMPORALES PARA VER COMO SE MUEVE LA COMMAREAS
+      *
+           MOVE "DFHCOMMAREA PRG PPAL"      TO C1-OBSER1
+           PERFORM 775-GRABAR-COLA-COM
+           MOVE "COMMAREA PROG PPAL  "      TO C1-OBSER1
+           MOVE MI-COMMAREA TO C1-OBSER2
+           ADD 1 TO VECES
+      *
+
+           EXEC CICS WRITEQ TS
+              QUEUE (WS-KOLA-COM)
+              FROM  (COLA-COM)
+           END-EXEC
+      *
+           PERFORM 100-INICIAR
+           PERFORM 200-PROCESAR
+           PERFORM 900-TERMINAR
+           .
+      *
+      * 100-INICIAR
+      *
+       100-INICIAR.
+      *
+      *    MODSQL EXCEPCIONES SQL DB2
+      *
+           EXEC SQL
+                WHENEVER  SQLERROR    CONTINUE
+           END-EXEC
+           EXEC SQL
+                WHENEVER  SQLWARNING  CONTINUE
+           END-EXEC
+           EXEC SQL
+                WHENEVER  NOT FOUND   CONTINUE
+           END-EXEC
+
+           INITIALIZE WS-CURRENT-DATE-DATA
+                      WS-COD-RET
+
+           EVALUATE TRUE
+             WHEN EIBCALEN = 0
+               SET CICLO-0 TO TRUE
+             WHEN OTHER
+               MOVE DFHCOMMAREA TO MI-COMMAREA
+               EVALUATE CICLO
+                 WHEN 'OO'
+                   SET CICLO-0 TO TRUE
+                 WHEN '01'
+                   SET CICLO-1 TO TRUE
+                 WHEN '02'
+                   SET CICLO-2 TO TRUE
+                 WHEN '03'
+                   SET CICLO-3 TO TRUE
+                 WHEN OTHER
+                   MOVE "CICLO NO PROGRAMADO" TO MSG-FIN-SESION
+                   PERFORM 900-TERMINAR
+               END-EVALUATE
+           END-EVALUATE
+      *
+           IF CICLO = '00'  THEN
+
+              EXEC CICS DELETEQ TS
+                 QUEUE (WS-KOLA-COM)
+                 RESP  (RESPUESTA)
+              END-EXEC
+
+              EXEC CICS DELETEQ TS
+                 QUEUE (WS-KOLA-DIS)
+                 RESP  (RESPUESTA)
+              END-EXEC
+
+              EXEC CICS DELETEQ TS
+                 QUEUE (WS-KOLA-LOG)
+                 RESP  (RESPUESTA)
+              END-EXEC
+
+              MOVE "ENTRO RUTINA DE INICIO--"  TO C4-OBSER1
+              MOVE "BORRA COLAS DE DIS Y LOG"  TO C4-OBSER2
+              MOVE CICLO                       TO C4-OBSER3
+              PERFORM 770-GRABAR-COLA-DIS
+
+           END-IF
+
+           MOVE "COMMAREA RUTINA INIC"      TO C1-OBSER1
+           PERFORM 775-GRABAR-COLA-COM
+           .
+      *
+      * 200-PROCESAR
+      *
+       200-PROCESAR.
+
+           EVALUATE TRUE
+             WHEN CICLO-0
+               PERFORM 210-CICLO-0
+             WHEN CICLO-1
+               PERFORM 220-CICLO-1
+             WHEN CICLO-2
+               PERFORM 230-CICLO-2
+             WHEN CICLO-3
+               PERFORM 240-CICLO-3
+           END-EVALUATE
+           .
+      *
+      * 210-CICLO-0.  PARA CAPTURAR ID-USUARIO Y CLAVE
+      *
+      *
+       210-CICLO-0.
+
+           MOVE "COMMAREA CICLO 0    "      TO C1-OBSER1
+           PERFORM 775-GRABAR-COLA-COM
+           MOVE "ENTRA PROCESAR CICLO 0--"  TO C4-OBSER1
+           MOVE " DE ID DE USUARIO       "  TO C4-OBSER2
+           MOVE CICLO                       TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           MOVE LOW-VALUES                  TO MCICS03I
+           MOVE SPACES                      TO ID-ALUMNO
+           MOVE "US"                        TO IND-CED
+           MOVE "01" TO CICLO
+
+           EXEC CICS SEND MAP('MCICS03')
+                     MAPONLY
+                     ERASE
+                     NOHANDLE
+           END-EXEC
+
+           MOVE "HIZO PRIMER SEND MAP  --"  TO C4-OBSER1
+           MOVE "Y MUEVE A 1 AL CICLO    "  TO C4-OBSER2
+           MOVE "PARA VALIDAR ID USUARIO "  TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           MOVE "01" TO CICLO
+           PERFORM 740-RETORNAR-TRANS
+           .
+      *
+      * 220-CICLO-1 CON ID-USUARIO Y CLAVE CAPTURADOS
+      *             VALIDA QUE EXISTA COMO USUARIO CON CLAVE CORRECTA
+      *             Y EVALUA SI TIENE PERMISO Y CON QUE PERFIL
+      *             SI TODO OK, PIDE ID-ALUMNO Y ACCION A EJECUTAR
+      *
+       220-CICLO-1.
+
+           MOVE "COMMAREA CICLO 1    "      TO C1-OBSER1
+           PERFORM 775-GRABAR-COLA-COM
+           MOVE "ENTRA PROCESAR CICLO 1--" TO C4-OBSER1
+           MOVE "VER ATRIBUTOS USUARIO   " TO C4-OBSER2
+           MOVE CICLO                      TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           MOVE "US"                       TO IND-CED
+           PERFORM 720-RECIBIR-MAPA
+      *    PERFORM 810-VALIDAR-CEDULA
+
+           EVALUATE EIBAID
+               WHEN DFHENTER
+                    PERFORM 250-CONSULTAR-USUARIO
+               WHEN DFHPF3
+                    MOVE "F3 - FIN SESION NORMAL -1" TO C4-OBSER1
+                    MOVE "PERO SIN GESTIONAR       " TO C4-OBSER2
+                    MOVE "CON LA ID DEL USUARIO    " TO C4-OBSER3
+                    PERFORM 770-GRABAR-COLA-DIS
+                    PERFORM 900-TERMINAR
+               WHEN OTHER
+                    MOVE "--- TECLA INCORRECTA .. " TO C4-OBSER1
+                    MOVE "EN CICLO 1 DE ID DE     " TO C4-OBSER2
+                    MOVE "USUARIO.  SIGUE ....... " TO C4-OBSER3
+                    PERFORM 770-GRABAR-COLA-DIS
+                    MOVE 'TECLA INCORRECTA -1- '    TO MSGO
+                   PERFORM 730-ENVIAR-MSG
+            END-EVALUATE
+            .
+      *
+      * 230-CICLO-2 CAPTURA ID-ALUMNO Y CAPTURA OPCION A SEGUIR
+      *             SI EXISTE EL ALUMNO, LO MUESTRA
+      * SI ES INGRESO, BORRADO O MODIFICACION LO
+      * PROCESA EN OTRO CICLO
+      *
+       230-CICLO-2.
+
+           MOVE "COMMAREA CICLO 2    "      TO C1-OBSER1
+           PERFORM 775-GRABAR-COLA-COM
+           MOVE "ENTRA PROCESAR CICLO 2--" TO C4-OBSER1
+           MOVE "CAPTURA ID-ALUMNO Y VAL " TO C4-OBSER2
+           MOVE CICLO                      TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           MOVE "AL"                       TO IND-CED
+           PERFORM 720-RECIBIR-MAPA
+           PERFORM 810-VALIDAR-CEDULA
+           MOVE SPACES TO IND-OPE
+
+           EVALUATE EIBAID
+               WHEN DFHENTER
+                  IF CONS = 'SI' THEN
+                     MOVE "C " TO IND-OPE
+                     PERFORM 310-CONSULTAR-REGISTRO
+                  ELSE
+                     PERFORM 640-USUARIO-SIN-PERMISO
+                  END-IF
+               WHEN DFHPF7
+                  IF CONS = 'SI' THEN
+                     MOVE "P " TO IND-OPE
+                     PERFORM 320-CONSULTAR-PREVIO
+                  ELSE
+                     PERFORM 640-USUARIO-SIN-PERMISO
+                  END-IF
+               WHEN DFHPF8
+                  IF CONS = 'SI' THEN
+                     MOVE "N " TO IND-OPE
+                     PERFORM 330-CONSULTAR-PROXIMO
+                  ELSE
+                     PERFORM 640-USUARIO-SIN-PERMISO
+                  END-IF
+               WHEN DFHPF10
+                  IF INGR = 'SI' THEN
+                     MOVE "I " TO IND-OPE
+                     MOVE "03" TO CICLO
+                     PERFORM 310-CONSULTAR-REGISTRO
+                  ELSE
+                     PERFORM 640-USUARIO-SIN-PERMISO
+                  END-IF
+               WHEN DFHPF11
+                  IF BORR = 'SI' THEN
+                     MOVE "B " TO IND-OPE
+                     MOVE "03" TO CICLO
+                     PERFORM 310-CONSULTAR-REGISTRO
+                  ELSE
+                     PERFORM 640-USUARIO-SIN-PERMISO
+                  END-IF
+               WHEN DFHPF12
+                  IF MODI = 'SI' THEN
+                     MOVE "A " TO IND-OPE
+                     MOVE "03" TO CICLO
+                     PERFORM 310-CONSULTAR-REGISTRO
+                  ELSE
+                     PERFORM 640-USUARIO-SIN-PERMISO
+                  END-IF
+               WHEN DFHPF3
+                  MOVE "F3 - FIN SESION NORMAL  " TO C4-OBSER1
+                  MOVE EIBAID                     TO C4-OBSER2
+                  MOVE SPACES                     TO C4-OBSER3
+                  PERFORM 770-GRABAR-COLA-DIS
+                  PERFORM 900-TERMINAR
+               WHEN OTHER
+                  MOVE "-- TECLA       "        TO C4-OBSER1
+                  MOVE EIBAID                   TO C4-OBSER2
+                  MOVE " ES INCORRECTA "        TO C4-OBSER3
+                  PERFORM 770-GRABAR-COLA-DIS
+                  MOVE 'TECLA INCORRECTA -C2-'    TO MSGO
+                  PERFORM 730-ENVIAR-MSG
+           END-EVALUATE
+           .
+      *
+      * 240-CICLO-3 EN ESTE CICLO PROCESA PARA LAS ACCIONES DE
+      * INGRESO, BORRADO Y MODIFICACION SIEMPRE Y
+      * CUANDO CONFIRME LA ACCION CON LA MISMA TECLA
+      *
+       240-CICLO-3.
+      *
+           MOVE "COMMAREA CICLO 3    "    TO C1-OBSER1
+           PERFORM 775-GRABAR-COLA-COM
+           MOVE "ENTRA PROCESAR CICLO 3 " TO C4-OBSER1
+           MOVE CICLO                     TO C4-OBSER2
+           MOVE "DE ING-MOD O RETIRO... " TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           MOVE 'AL' TO IND-CED
+           PERFORM 720-RECIBIR-MAPA
+           MOVE "02" TO CICLO
+           MOVE ID-ALUMNO TO DNII
+           PERFORM 810-VALIDAR-CEDULA
+           MOVE SPACES TO IND-OPE
+
+           EVALUATE EIBAID
+              WHEN DFHPF10
+                 MOVE 'I '                   TO IND-OPE
+              WHEN DFHPF11
+                 MOVE 'B '                   TO IND-OPE
+              WHEN DFHPF12
+                 MOVE 'A '                   TO IND-OPE
+              WHEN DFHPF3
+                 MOVE "PRESIONO "            TO C4-OBSER1
+                 MOVE EIBAID                 TO C4-OBSER2
+                 MOVE " QUE CANCELA ACCION " TO C4-OBSER3
+                 PERFORM 770-GRABAR-COLA-DIS
+                 MOVE DFHBLINK               TO  MSGH
+                 MOVE 'PRESIONO PF3 Y SE CANCELA ACCION ..' TO MSGO
+                 PERFORM 730-ENVIAR-MSG
+              WHEN OTHER
+                  MOVE '03'                    TO CICLO
+                  MOVE DFHBLINK  TO  MSGH
+                  MOVE "TECLA INCORRECTA PARA" TO C4-OBSER1
+                  MOVE "LA ACCION.  PRESIONO " TO C4-OBSER2
+                  MOVE EIBAID                  TO C4-OBSER3
+                  PERFORM 770-GRABAR-COLA-DIS
+                  MOVE 'TECLA NO VALIDA. DEBE CORREGIR -3-'  TO MSGO
+                  PERFORM 730-ENVIAR-MSG
+           END-EVALUATE
+
+           MOVE "ENTRA A INSERTAR,   "  TO C4-OBSER1
+           MOVE "BORRAR O ACTUALIZAR "  TO C4-OBSER2
+           MOVE EIBAID                  TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+
+           IF OPE = IND-OPE THEN
+
+              PERFORM 820-HACER-LECTURA
+
+              EVALUATE EIBAID
+
+                 WHEN DFHPF10
+                    PERFORM 400-INGRESAR-REGISTRO
+                 WHEN DFHPF11
+                    PERFORM 500-BORRAR-REGISTRO
+                 WHEN DFHPF12
+                    PERFORM 600-REWRITE-REGISTRO
+
+              END-EVALUATE
+
+           ELSE
+              MOVE "NO ES TECLA CORRECTA    " TO C4-OBSER1
+              MOVE "PARA CONFIRMAR ACCION-> " TO C4-OBSER2
+              MOVE EIBAID                      TO C4-OBSER3
+              PERFORM 770-GRABAR-COLA-DIS
+              MOVE DFHBLINK                    TO  MSGH
+              MOVE "03"                        TO CICLO
+              PERFORM 730-ENVIAR-MSG
+           END-IF
+           .
+      *
+      * 250-CONSULTAR-USUARIO
+      *
+       250-CONSULTAR-USUARIO.
+
+           IF IDUSUI EQUAL LOW-VALUES OR '_________' OR SPACES THEN
+              MOVE "NO DIGITO NINGUNA       -" TO C4-OBSER1
+              MOVE "IDENTIFICACION DE USUARIO" TO C4-OBSER2
+              MOVE SPACES                      TO C4-OBSER3
+              PERFORM 770-GRABAR-COLA-DIS
+              MOVE "DEBE DIGITAR IDENTIFICACION DEL USUARIO" TO MSGO
+              PERFORM 730-ENVIAR-MSG
+           END-IF
+
+           IF CLAVEI EQUAL LOW-VALUES OR '________' OR SPACES THEN
+              MOVE "NO DIGITO NINGUNA       -" TO C4-OBSER1
+              MOVE "CLAVE                    " TO C4-OBSER2
+              MOVE SPACES                      TO C4-OBSER3
+              PERFORM 770-GRABAR-COLA-DIS
+              MOVE "NO DIGITO CLAVE DEL USUARIO...." TO MSGO
+              PERFORM 730-ENVIAR-MSG
+           END-IF
+
+           MOVE IDUSUI                     TO ID-US
+           MOVE IDUSUI                     TO ET-DNIUS
+           MOVE "VA A MIRAR SI USUARIO --" TO C4-OBSER1
+           MOVE "EXISTE EN BASE DATOS    " TO C4-OBSER2
+           MOVE ID-US                      TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+      *
+           EXEC SQL
+           SELECT
+                DNIUS, NOMBREUS, APELLIDOSUS, CLAVEUS, CARGOUS
+             INTO
+                :ET-DNIUS, :ET-NOMBREUS, :ET-APELLIDOSUS,
+                :ET-CLAVEUS, :ET-CARGOUS
+                FROM USUARIOS
+                WHERE DNIUS = :ET-DNIUS
+           END-EXEC
+      *
+           IF SQLCODE =  +100 THEN
+
+              MOVE DFHBLINK  TO  MSGH
+              MOVE 'USUARIO NO EXISTE ......' TO MSGO
+              MOVE 'EL USUARIO NO EXISTE  --' TO C4-OBSER1
+              MOVE ID-US                      TO C4-OBSER2
+              MOVE CICLO                      TO C4-OBSER3
+              PERFORM 770-GRABAR-COLA-DIS
+              PERFORM 730-ENVIAR-MSG
+
+           END-IF
+
+           IF SQLCODE =  0    THEN
+
+              MOVE "USUARIO EXISTE EN LA ---" TO C4-OBSER1
+              MOVE "BASE DE DATOS. VER CLAVE" TO C4-OBSER2
+              MOVE ID-US                      TO C4-OBSER3
+              PERFORM 770-GRABAR-COLA-DIS
+
+              IF CLAVEI NOT = ET-CLAVEUS THEN
+
+                 MOVE DFHBLINK  TO  MSGH
+                 MOVE 'CLAVE ERRONEA ......... ' TO MSGO
+                 MOVE 'CLAVE ERRONEA ........'   TO C4-OBSER1
+                 MOVE ET-CLAVEUS                 TO C4-OBSER2
+                 MOVE CLAVEI                     TO C4-OBSER3
+                 PERFORM 770-GRABAR-COLA-DIS
+                 PERFORM 730-ENVIAR-MSG
+
+              END-IF
+
+           END-IF
+      *
+      * AHORA SE VERA SI EL USUARIO TIENE PERMISO Y A CUALES
+      * OPCIONES PUEDE ACCEDER
+      *
+           MOVE  WTRANSAP  TO  ET-TRANPERM
+           MOVE  ID-US     TO  ET-IDPERM
+
+           EXEC SQL
+             SELECT
+                TRANPERM, IDPERM, IDPERFILPERM
+             INTO
+                :ET-TRANPERM, :ET-IDPERM, :ET-IDPERFILPERM
+                FROM PERMISOS
+                WHERE TRANPERM = :ET-TRANPERM AND IDPERM = :ET-IDPERM
+           END-EXEC
+
+           IF SQLCODE =  0 THEN
+              MOVE 'USUARIO TIENE PERMISOS -'  TO C4-OBSER1
+              MOVE 'EN LA BASE DE DATOS     '  TO C4-OBSER2
+              MOVE ID-US                       TO C4-OBSER3
+              PERFORM 770-GRABAR-COLA-DIS
+           ELSE
+              MOVE DFHBLINK                    TO  MSGH
+              MOVE 'USUARIO SIN PERMISOS ... ' TO MSGO
+              MOVE 'USUARIO SIN PERMISOS  --'  TO C4-OBSER1
+              MOVE ID-US                       TO C4-OBSER2
+              MOVE CICLO                       TO C4-OBSER3
+              PERFORM 770-GRABAR-COLA-DIS
+              PERFORM 730-ENVIAR-MSG
+           END-IF
+      *
+      * SE CONSULTA QUE PERFIL TIENE
+      *
+           MOVE ET-TRANPERM       TO ET-TRANPERF
+           MOVE ET-IDPERFILPERM   TO ET-IDPERF
+
+           EXEC SQL
+             SELECT
+                TRANPERF, IDPERF, NOMBREPERF, CONSULPERF,
+                BORRARPERF, INGRESPERF, MODIFIPERF
+             INTO
+                :ET-TRANPERF, :ET-IDPERF, :ET-NOMBREPERF,
+                :ET-CONSULPERF, :ET-BORRARPERF, :ET-INGRESPERF,
+                :ET-MODIFIPERF
+                FROM PERFILES
+                WHERE TRANPERF = :ET-TRANPERF AND IDPERF = :ET-IDPERF
+           END-EXEC
+      *
+           IF SQLCODE =  0 THEN
+              MOVE 'USUARIO TIENE PERMISOS--'  TO C4-OBSER1
+              MOVE 'BIEN GESTIONADOS -------'  TO C4-OBSER2
+              MOVE ID-US                       TO C4-OBSER3
+              PERFORM 770-GRABAR-COLA-DIS
+           ELSE
+              MOVE DFHBLINK  TO  MSGH
+              MOVE 'USUARIO CON PERMISOS Y SIN PERFIL. RARO' TO MSGO
+              MOVE 'EL DPTO DE SEGURIDAD NO-'  TO C4-OBSER1
+              MOVE 'GESTIONO BIEN EL PERFIL '  TO C4-OBSER2
+              MOVE ID-US                       TO C4-OBSER3
+              PERFORM 770-GRABAR-COLA-DIS
+              PERFORM 730-ENVIAR-MSG
+           END-IF
+      *
+      * USUARIO YA ESTA HABILITADO. SE GUARDAN DATOS COMMAREA
+      * SE PROTEGEN CAMPOS DE USUARIO Y CONTRASEÑA Y SE DESPROTEGE
+      * CAMPO DE ID-ALUMNO Y SE POSESIONA CURSOR PARA SGTE CICLO
+      *
+           MOVE 'PERFIL USUARIO OK. SELECIONA OPCION SGTE. ' TO MSGO
+           MOVE "USUARIO ESTA HABILITADO " TO C4-OBSER1
+           MOVE "CON PERMISO Y PERFIL    " TO C4-OBSER2
+           MOVE WIDPERF                    TO C4-OBSER3
+           MOVE "02"                       TO CICLO
+           PERFORM 770-GRABAR-COLA-DIS
+           PERFORM 260-GUARDAR-COMMAREA
+           MOVE "ENTRA AL SISTEMA"  TO C3-OBSER
+           PERFORM 785-GRABAR-COLA-ACC
+
+           MOVE "AL" TO IND-CED
+           MOVE "SI" TO IND-PROTEGER
+           PERFORM 630-PROTEGER-Y-DESPROTEGER
+           MOVE "US" TO IND-CED
+           PERFORM 270-MOVER-SALIDA-USUARIO
+           .
+      *
+      * 260-GUARDAR-COMMAREA.
+      *
+        260-GUARDAR-COMMAREA.
+      *
+           MOVE 'GUARDA DATOS EN COMMAREA'  TO C4-OBSER1
+           MOVE 'CUANDO YA GESTIONO DATO '  TO C4-OBSER2
+           MOVE 'COMPLETOS DEL USUARIO   '  TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+
+           MOVE SPACES            TO  ID-ALUMNO
+           MOVE SPACES            TO  OPE
+      *
+           MOVE ET-DNIUS          TO  ID-US
+           MOVE ET-NOMBREUS       TO  NOM-US
+           MOVE ET-APELLIDOSUS    TO  APE-US
+           MOVE ET-IDPERF         TO  PERFIL
+           MOVE ET-NOMBREPERF     TO  NOM-PERFIL
+           MOVE ET-CONSULPERF     TO  CONS
+           MOVE ET-BORRARPERF     TO  BORR
+           MOVE ET-INGRESPERF     TO  INGR
+           MOVE ET-MODIFIPERF     TO  MODI
+           .
+      *
+      * 270-MOVER-SALIDA-USUARIO.
+      *
+       270-MOVER-SALIDA-USUARIO.
+      *
+           MOVE 'MUEVE DATOS DE USUARIO  '  TO C4-OBSER1
+           MOVE 'A LA PANTALLA O MAPA    '  TO C4-OBSER2
+           MOVE 'MCICS03                 '  TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+
+           MOVE ID-US                       TO IDUSUO
+           MOVE SPACES                      TO CLAVEO
+      *
+           MOVE DFHBMPRO  TO IDUSUA
+           MOVE DFHBMPRO  TO CLAVEA
+           MOVE DFHBMCUR  TO DNIA
+           MOVE DFHBMUNP  TO DNIA
+
+           MOVE 'NOMBRE USUARIO -->     '   TO T07O
+           MOVE NOM-US                      TO NOM07O
+           MOVE APE-US                      TO APE07O
+           PERFORM 790-CONSEGUIR-FECHOR
+           MOVE  WS-LAFECHA                 TO FEC08O
+           MOVE  WS-LATIME                  TO HOR08O
+           MOVE 'FECHA / HORA INGRESO ->'   TO T08O
+           MOVE 'PERFIL DE SEGURIDAD -->'   TO T09O
+           MOVE PERFIL                      TO PER09O
+           MOVE NOM-PERFIL                  TO NPE09O
+           MOVE 'CON'                       TO T10AO
+           MOVE CONS                        TO CON10O
+           MOVE 'BOR'                       TO T10BO
+           MOVE BORR                        TO BOR10O
+           MOVE 'ING'                       TO T10CO
+           MOVE INGR                        TO ING10O
+           MOVE 'MOD'                       TO T10DO
+           MOVE MODI                        TO MOD10O
+           MOVE WS-LINEARRIBA               TO T12O
+           MOVE WS-LINEAMEDIO               TO T13O
+           MOVE WS-LINEABAJO                TO T14O
+           MOVE 'DIGITE ID ALUMNO -->   '   TO T16O
+           MOVE NOM-US                      TO NOM07O
+           MOVE WL23A-C1                    TO T23AO
+           MOVE WL23B-C1                    TO T23BO
+
+           IF INGR = "SI" THEN
+              MOVE WL24A                    TO T24AO
+           ELSE
+              MOVE SPACES                   TO T24AO
+           END-IF
+           IF BORR = "SI" THEN
+              MOVE WL24B                    TO T24BO
+           ELSE
+              MOVE SPACES                   TO T24BO
+           END-IF
+           IF MODI = "SI" THEN
+              MOVE WL24C                    TO T24CO
+           ELSE
+              MOVE SPACES                   TO T24CO
+           END-IF
+
+           IF IND-CED = "US" THEN
+              EXEC CICS SEND MAP('MCICS03')
+                   FROM(MCICS03O)
+                   CURSOR(1226)
+                   NOHANDLE
+              END-EXEC
+
+              PERFORM 740-RETORNAR-TRANS
+           END-IF
+           .
+      *
+      * 310-CONSULTAR-REGISTRO
+      *
+       310-CONSULTAR-REGISTRO.
+      *
+           MOVE 'EL USUARIO ESTA         '  TO C4-OBSER1
+           MOVE 'CONSULTANDO REGISTRO    '  TO C4-OBSER2
+           MOVE ID-ALUMNO                   TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           PERFORM 820-HACER-LECTURA
+           PERFORM 760-EVALUE-Y-SIGA
+           .
+      *
+      * 320-CONSULTA-PREVIO
+      *
+       320-CONSULTAR-PREVIO.
+      *
+           MOVE 'SE ESTA X EJECUTAR      '  TO C4-OBSER1
+           MOVE 'OPCION REG PREVIOS      '  TO C4-OBSER2
+           MOVE ID-ALUMNO                   TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           MOVE ID-ALUMNO        TO ET-DNI
+
+           EXEC SQL
+                DECLARE CURPREV CURSOR FOR
+                   SELECT DNI
+                        , NOMBRE
+                        , APELLIDOS
+                        , DIRECCION
+                   FROM ESTUD
+                   WHERE DNI < :ID-ALUMNO
+                     ORDER BY DNI DESC
+           END-EXEC
+
+           EXEC SQL
+                OPEN CURPREV
+           END-EXEC
+
+           EXEC SQL
+                FETCH CURPREV
+                INTO
+                     :ET-DNI
+                   , :ET-NOMBRE
+                   , :ET-APELLIDOS
+                   , :ET-DIRECCION
+           END-EXEC
+
+           MOVE "P "  TO  IND-OPE
+           PERFORM 760-EVALUE-Y-SIGA
+           .
+      *
+      * 330-CONSULTA-PROXIMO
+      *
+       330-CONSULTAR-PROXIMO.
+      *
+           MOVE 'SE ESTA X EJECUTAR      '  TO C4-OBSER1
+           MOVE 'OPCION REG PROXIMOS     '  TO C4-OBSER2
+           MOVE ID-ALUMNO                   TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           MOVE ID-ALUMNO        TO ET-DNI
+
+           EXEC SQL
+                DECLARE CURNEXT CURSOR FOR
+                   SELECT DNI
+                        , NOMBRE
+                        , APELLIDOS
+                        , DIRECCION
+                   FROM ESTUD
+                   WHERE DNI > :ID-ALUMNO
+                     ORDER BY DNI ASC
+           END-EXEC
+
+           EXEC SQL
+                OPEN CURNEXT
+           END-EXEC
+
+           EXEC SQL
+                FETCH CURNEXT
+                INTO
+                     :ET-DNI
+                   , :ET-NOMBRE
+                   , :ET-APELLIDOS
+                   , :ET-DIRECCION
+           END-EXEC
+
+           MOVE "N "  TO  IND-OPE
+           PERFORM 760-EVALUE-Y-SIGA
+           .
+      *
+      * 400-INGRESAR-REGISTRO
+      *
+       400-INGRESAR-REGISTRO.
+      *
+           MOVE "II"      TO IND-OPE
+           MOVE ID-ALUMNO TO DNII
+
+           IF NOMI = SPACES OR NOMI EQUAL LOW-VALUES OR
+              APEI = SPACES OR APEI EQUAL LOW-VALUES OR
+              DIRI = SPACES OR DIRI EQUAL LOW-VALUES THEN
+                 MOVE "NO INGRESO TODOS LOS     " TO C4-OBSER1
+                 MOVE "CAMPOS PARA EL INGRESO   " TO C4-OBSER2
+                 MOVE "DEL ALUMNO "               TO C4-OBSER3
+                 PERFORM 770-GRABAR-COLA-DIS
+                 MOVE 'FALTA INGRESAR DATOS. CORREGIR !' TO MSGO
+                 PERFORM 730-ENVIAR-MSG
+                 MOVE '03' TO CICLO
+           ELSE
+                 MOVE ID-ALUMNO  TO ET-DNI
+                 MOVE NOMO       TO ET-NOMBRE
+                 MOVE APEO       TO ET-APELLIDOS
+                 MOVE DIRO       TO ET-DIRECCION
+      *
+                 EXEC SQL
+                     INSERT INTO ESTUD
+                                (
+                                 DNI,
+                                 NOMBRE,
+                                 APELLIDOS,
+                                 DIRECCION
+                                 )
+                           VALUES
+                                (
+                                 :ET-DNI,
+                                 :ET-NOMBRE,
+                                 :ET-APELLIDOS,
+                                 :ET-DIRECCION
+                                )
+                 END-EXEC
+      *
+                 MOVE 'SE ACABA DE EJECUTAR    '  TO C4-OBSER1
+                 MOVE 'INGRESO ALUMNO          '  TO C4-OBSER2
+                 MOVE ET-DNI                      TO C4-OBSER3
+                 PERFORM 770-GRABAR-COLA-DIS
+
+                 MOVE "SI"  TO  IND-PROTEGER
+                 PERFORM 630-PROTEGER-Y-DESPROTEGER
+                 MOVE "02" TO CICLO
+                 PERFORM 760-EVALUE-Y-SIGA
+           END-IF
+           .
+      *
+      * 500-BORRAR-REGISTRO
+      *
+       500-BORRAR-REGISTRO.
+      *
+           MOVE "BB" TO IND-OPE
+           MOVE "APLICANDO DELETE AL      " TO C4-OBSER1
+           MOVE "ALUMNO CON IDENTIFICACION" TO C4-OBSER2
+           MOVE ID-ALUMNO                   TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           MOVE ID-ALUMNO             TO ET-DNI
+           MOVE ET-DNI                TO WS-DNI
+           MOVE ET-DNI                TO ID-ALUMNO
+           MOVE ET-NOMBRE             TO WS-NOMBRE
+           MOVE ET-APELLIDOS          TO WS-APELLIDOS
+           MOVE ET-DIRECCION          TO WS-DIRECCION
+           MOVE DFHDFHI               TO MSGH
+           MOVE "02"                  TO CICLO
+      *
+           EXEC SQL
+                DELETE FROM ESTUD
+                WHERE DNI = :ET-DNI
+           END-EXEC
+      *
+           PERFORM 760-EVALUE-Y-SIGA
+           .
+      *
+      * 600-REWRITE-REGISTRO
+      *
+       600-REWRITE-REGISTRO.
+      *
+           MOVE "AA"  TO  IND-OPE
+           PERFORM 620-MOVER-SALIDA-REWRITE
+
+           EXEC SQL
+                UPDATE ESTUD
+                       SET NOMBRE      = :ET-NOMBRE,
+                           APELLIDOS   = :ET-APELLIDOS,
+                           DIRECCION   = :ET-DIRECCION
+                WHERE  DNI             = :ET-DNI
+           END-EXEC
+
+           MOVE 'SE ACABA DE EJECUTAR    '  TO C4-OBSER1
+           MOVE 'MODIFICACION AL ALUMNO  '  TO C4-OBSER2
+           MOVE ET-DNI                      TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+
+           MOVE "SI"  TO  IND-PROTEGER
+           MOVE "02"  TO  CICLO
+           PERFORM 630-PROTEGER-Y-DESPROTEGER
+           PERFORM 760-EVALUE-Y-SIGA
+           .
+      *
+      * 620-MOVER-SALIDA-REWRITE.
+      *
+       620-MOVER-SALIDA-REWRITE.
+      *
+           MOVE ET-NOMBRE     TO WS-NOMBRE
+           MOVE ET-APELLIDOS  TO WS-APELLIDOS
+           MOVE ET-DIRECCION  TO WS-DIRECCION
+
+           IF  NOML = 0  THEN
+               MOVE WS-NOMBRE    TO ET-NOMBRE
+           ELSE
+               MOVE NOMI         TO ET-NOMBRE
+           END-IF
+
+           IF  APEL = 0  THEN
+               MOVE WS-APELLIDOS TO ET-APELLIDOS
+           ELSE
+               MOVE APEI         TO ET-APELLIDOS
+           END-IF
+
+           IF  DIRL = 0  THEN
+               MOVE WS-DIRECCION TO ET-DIRECCION
+           ELSE
+               MOVE DIRI         TO ET-DIRECCION
+           END-IF
+           .
+      *
+      * 630-PROTEGER-Y-DESPROTEGER.
+      *
+       630-PROTEGER-Y-DESPROTEGER.
+      *
+           MOVE 'SE ACABA DE PROTEGER    '  TO C4-OBSER1
+           MOVE 'O DESPROTEGER CAMPOS    '  TO C4-OBSER2
+           MOVE IND-CED                     TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+
+           IF IND-PROTEGER = "SI" THEN
+              MOVE DFHBMCUR   TO DNIA
+              MOVE DFHBMUNP   TO DNIA
+              MOVE DFHBMPRO   TO NOMA
+              MOVE DFHBMPRO   TO APEA
+              MOVE DFHBMPRO   TO DIRA
+           ELSE
+              MOVE DFHBMPRO   TO DNIA
+              MOVE DFHBMCUR   TO NOMA
+              MOVE DFHBMUNP   TO NOMA
+              MOVE DFHBMUNP   TO APEA
+              MOVE DFHBMUNP   TO DIRA
+           END-IF
+           .
+      *
+      * 640-USUARIO-SIN-PERMISO
+      *
+       640-USUARIO-SIN-PERMISO.
+      *
+           MOVE "USUARIO SIN PERMISO  "    TO C4-OBSER1
+           MOVE EIBAID                     TO C4-OBSER2
+           MOVE ID-US                      TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           MOVE 'USUARIO SIN PERMISO  '    TO MSGO
+           PERFORM 730-ENVIAR-MSG
+           .
+      *
+      * 720-RECIBIR-MAPA
+      *
+       720-RECIBIR-MAPA.
+      *
+           EXEC CICS RECEIVE MAP('MCICS03')
+                INTO(MCICS03I)
+                NOHANDLE
+           END-EXEC
+		
+           EXEC CICS
+                IGNORE CONDITION MAPFAIL
+           END-EXEC
+           .
+      *
+      * 730-ENVIAR-MSG.
+      *
+       730-ENVIAR-MSG.
+      *
+           MOVE DFHBLINK  TO  MSGH
+
+           IF IND-CED = "US" THEN
+              MOVE "COMMAREA MS USUARIO "    TO C1-OBSER1
+              PERFORM 775-GRABAR-COLA-COM
+              EXEC CICS SEND MAP('MCICS03')
+                   FROM(MCICS03O)
+                   CURSOR(426)
+                   NOHANDLE
+              END-EXEC
+           ELSE
+              MOVE "COMMAREA MS ALUMNO  "    TO C1-OBSER1
+              PERFORM 775-GRABAR-COLA-COM
+              PERFORM 270-MOVER-SALIDA-USUARIO
+              MOVE SPACES    TO  NOMO
+                                 APEO
+                                 DIRO
+              EXEC CICS SEND MAP('MCICS03')
+                   FROM(MCICS03O)
+                   CURSOR(1226)
+                   NOHANDLE
+              END-EXEC
+           END-IF
+           PERFORM 740-RETORNAR-TRANS
+           .
+      *
+      * 740-RETORNAR-TRANS
+      *
+       740-RETORNAR-TRANS.
+
+           MOVE EIBTRMID      TO TERM
+           MOVE EIBTRNID      TO TRANS
+           MOVE IND-OPE       TO OPE
+
+           IF IND-OPE = "P " THEN
+              EXEC SQL
+                 CLOSE CURPREV
+              END-EXEC
+           ELSE IF IND-OPE = "N " THEN
+                   EXEC SQL
+                        CLOSE CURNEXT
+                   END-EXEC
+                END-IF
+           END-IF
+
+           EXEC CICS RETURN
+                TRANSID(EIBTRNID)
+                COMMAREA(MI-COMMAREA)
+                LENGTH(105)
+           END-EXEC
+
+           GOBACK
+           .
+      *
+      * 750-MOVER-SALIDA
+      *
+       750-MOVER-SALIDA.
+      *
+           PERFORM 270-MOVER-SALIDA-USUARIO
+           MOVE WS-LAR2                     TO T17O
+           MOVE 'NOMBRE COMPLETO  -->   '   TO T18O
+           MOVE 'DIRECCION        -->   '   TO T19O
+           MOVE NOM-US                      TO NOM07O
+
+           IF IND-OPE = "BB" THEN
+              MOVE WS-DNI                TO ID-ALUMNO
+              MOVE WS-DNI                TO DNIO
+              MOVE WS-NOMBRE             TO NOMO
+              MOVE WS-APELLIDOS          TO APEO
+              MOVE WS-DIRECCION          TO DIRO
+           ELSE
+              IF IND-OPE = "I " THEN
+                 MOVE SPACES             TO NOMO
+                 MOVE SPACES             TO APEO
+                 MOVE SPACES             TO DIRO
+              ELSE
+                 MOVE ET-DNI             TO ID-ALUMNO
+                 MOVE ET-DNI             TO DNIO
+                 MOVE ET-NOMBRE          TO NOMO
+                 MOVE ET-APELLIDOS       TO APEO
+                 MOVE ET-DIRECCION       TO DIRO
+              END-IF
+           END-IF
+
+           MOVE DFHDFHI                  TO MSGH
+
+           MOVE "- VA EN CICLO Y TRANSAC. " TO C4-OBSER1
+           MOVE CICLO                       TO C4-OBSER2
+           MOVE IND-OPE                     TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+
+           IF CICLO = '02'  THEN
+              MOVE WL23A-C1                 TO T23AO
+              MOVE WL23B-C1                 TO T23BO
+           ELSE IF CICLO = '03' THEN
+                   MOVE WL23A-C2            TO T23AO
+                   MOVE SPACES              TO T23BO
+                END-IF
+           END-IF
+
+           IF IND-OPE = "I " OR IND-OPE = "A " THEN
+              EXEC CICS SEND MAP('MCICS03')
+                   FROM(MCICS03O)
+                   CURSOR(1386)
+                   NOHANDLE
+              END-EXEC
+           ELSE
+              EXEC CICS SEND MAP('MCICS03')
+                   FROM(MCICS03O)
+                   CURSOR(1226)
+                   NOHANDLE
+              END-EXEC
+           END-IF
+
+           MOVE "ESTAMOS EN LA SALIDA DE  "  TO C4-OBSER1
+           MOVE "DATOS DE ALUMNO CON OPER "  TO C4-OBSER2
+           MOVE IND-OPE                      TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           MOVE DNIO                         TO C4-OBSER1
+           MOVE NOMO                         TO C4-OBSER2
+           MOVE APEO                         TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+           PERFORM 780-GRABAR-COLA-LOG
+           PERFORM 740-RETORNAR-TRANS
+           .
+      *
+      * 760-EVALUE-Y-SIGA
+      *
+       760-EVALUE-Y-SIGA.
+
+           MOVE 'SE EVALUA SI OPERACION  '  TO C4-OBSER1
+           MOVE 'FUE EXITOSA PARA OPER.  '  TO C4-OBSER2
+           MOVE IND-OPE                     TO C4-OBSER3
+           PERFORM 770-GRABAR-COLA-DIS
+
+           EVALUATE SQLCODE
+
+             WHEN 0
+
+               EVALUATE IND-OPE
+                 WHEN "C "
+                   MOVE 'CONSULTA ALUMNO EXITOSA  ' TO MSGO
+                   PERFORM 750-MOVER-SALIDA
+                 WHEN "P "
+                   MOVE 'CONSULTA PREVIA EXITOSA  ' TO MSGO
+                   PERFORM 750-MOVER-SALIDA
+                 WHEN "N "
+                   MOVE 'CONSULTA PROXIMA EXITOSA  ' TO MSGO
+                   PERFORM 750-MOVER-SALIDA
+                 WHEN "A "
+                   MOVE "NO" TO  IND-PROTEGER
+                   PERFORM 630-PROTEGER-Y-DESPROTEGER
+                   MOVE 'MODIFIQUE CAMPOS Y DE PF12' TO MSGO
+                   PERFORM 750-MOVER-SALIDA
+                 WHEN "AA"
+                   MOVE 'REGISTRO ACTUALIZADO OK   ' TO MSGO
+                   PERFORM 750-MOVER-SALIDA
+                 WHEN "II"
+                   MOVE 'REGISTRO INGRESADO OK     ' TO MSGO
+                   PERFORM 750-MOVER-SALIDA
+                 WHEN "B "
+                   MOVE 'CONFIRME BORRADO Y DE PF11' TO MSGO
+                   PERFORM 750-MOVER-SALIDA
+                 WHEN "BB"
+                   MOVE 'REGISTRO BORRADO OK       ' TO MSGO
+                   PERFORM 750-MOVER-SALIDA
+                 WHEN OTHER
+                   MOVE "VERIFICAR SQLCODE ...."    TO C4-OBSER1
+                   MOVE SQLCODE                     TO C4-OBSER2
+                   MOVE IND-OPE                     TO C4-OBSER3
+                   PERFORM 770-GRABAR-COLA-DIS
+               END-EVALUATE
+
+             WHEN +100
+
+               MOVE "AL" TO IND-CED
+               PERFORM 270-MOVER-SALIDA-USUARIO
+               MOVE DFHBLINK  TO  MSGH
+
+               EVALUATE IND-OPE
+                 WHEN "C "
+                   MOVE 'ALUMNO NO ENCONTRADO ... ' TO MSGO
+                   PERFORM 730-ENVIAR-MSG
+                 WHEN "A "
+                   MOVE 'NO EXISTE ALUMNO A MODIFICAR..' TO MSGO
+                   PERFORM 730-ENVIAR-MSG
+                 WHEN "P "
+                   MOVE 'ALUMNO ES EL PRIMERO DEL SISTEMA..' TO MSGO
+                   PERFORM 730-ENVIAR-MSG
+                 WHEN "N "
+                   MOVE 'ALUMNO ES EL ULTIMO DEL SISTEMA..' TO MSGO
+                   PERFORM 730-ENVIAR-MSG
+                 WHEN "B "
+                   MOVE 'ALUMNO A BORRAR NO ENCONTRADO' TO MSGO
+                   PERFORM 730-ENVIAR-MSG
+                 WHEN "I "
+                   MOVE 'COMPLETE DATOS Y CONFIRMA PF10 INGR.' TO MSGO
+                   MOVE SPACES    TO  NOMO, APEO, DIRO
+                   MOVE "NO" TO  IND-PROTEGER
+                   PERFORM 630-PROTEGER-Y-DESPROTEGER
+                   MOVE DFHDFHI   TO  MSGH
+                   PERFORM 750-MOVER-SALIDA
+                   PERFORM 730-ENVIAR-MSG
+               END-EVALUATE
+
+             WHEN OTHER
+               MOVE "OJO. ABEND  VER SQLCODE-"  TO C4-OBSER1
+               MOVE SQLCODE                     TO C4-OBSER2
+               MOVE IND-OPE                     TO C4-OBSER3
+               PERFORM 770-GRABAR-COLA-DIS
+               EXEC CICS
+                 ABEND
+               END-EXEC
+
+           END-EVALUATE
+           .
+      *
+      * 770-GRABAR-COLA-DIS
+      *
+       770-GRABAR-COLA-DIS.
+
+           EXEC CICS WRITEQ TS
+              QUEUE (WS-KOLA-DIS)
+              FROM  (COLA-DIS)
+           END-EXEC
+           .
+      *
+      * 775-GRABAR-COLA-COM
+      *
+       775-GRABAR-COLA-COM.
+      *
+           MOVE DFHCOMMAREA TO C1-OBSER2
+      *
+           EXEC CICS WRITEQ TS
+              QUEUE (WS-KOLA-COM)
+              FROM  (COLA-COM)
+           END-EXEC
+           .
+      *
+      * 780-GRABAR-COLA-LOG
+      *
+       780-GRABAR-COLA-LOG.
+      *
+           PERFORM 790-CONSEGUIR-FECHOR
+           MOVE  WS-LAFECHA                 TO C2-FECHA
+           MOVE  WS-LATIME                  TO C2-HORA
+           MOVE  IND-OPE                    TO C2-TRANSA
+           MOVE  DNIO                       TO C2-ID-ALUM
+           MOVE  NOMO                       TO C2-NOM-ALUM
+           MOVE  APEO                       TO C2-APE-ALUM
+           MOVE  DIRO                       TO C2-DIR-ALUM
+           MOVE  "ACCION"                   TO C2-RESULT
+           MOVE  MSGO                       TO C2-OBSER
+
+           EXEC CICS WRITEQ TS
+              QUEUE (WS-KOLA-LOG)
+              FROM  (COLA-LOG)
+           END-EXEC
+           .
+      *
+      * 785-GRABAR-COLA-ACC
+      *
+       785-GRABAR-COLA-ACC.
+
+           MOVE  ID-US        TO  C3-ID-USU
+           MOVE  NOM-US       TO  C3-NOM-USU
+           MOVE  APE-US       TO  C3-APE-USU
+           MOVE  PERFIL       TO  C3-PERFIL
+           MOVE  NOM-PERFIL   TO  C3-NOMPERF
+           PERFORM 790-CONSEGUIR-FECHOR
+           MOVE  WS-LAFECHA  TO  C3-FECHA
+           MOVE  WS-LATIME   TO  C3-HORA
+
+           EXEC CICS WRITEQ TS
+                QUEUE (WS-KOLA-ACC)
+                FROM  (COLA-ACC)
+           END-EXEC
+           .
+      *
+      * 790-CONSEGUIR-FECHOR.
+      *
+       790-CONSEGUIR-FECHOR.
+      *
+           MOVE FUNCTION CURRENT-DATE TO WS-CURRENT-DATE-DATA
+           MOVE 'OK'                  TO WS-COD-RET
+           MOVE WS-CURRENT-YEAR       TO WS-ELANO
+           MOVE WS-CURRENT-MES        TO WS-ELMES
+           MOVE WS-CURRENT-DIA        TO WS-ELDIA
+           MOVE WS-CURRENT-HRA        TO WS-LAHORA
+           MOVE WS-CURRENT-MIN        TO WS-ELMINUTO
+           MOVE WS-CURRENT-SEG        TO WS-ELSEGUNDO
+           .
+      *
+      * 810-VALIDAR-CEDULA.
+      *
+       810-VALIDAR-CEDULA.
+      *
+      *    IF IND-CED = "US" THEN
+      *       IF IDUSUI EQUAL LOW-VALUES OR '_________' OR SPACES THEN
+      *          MOVE "NO DIGITO NINGUNA       -" TO C4-OBSER1
+      *          MOVE "IDENTIFICACION DE USUARIO" TO C4-OBSER2
+      *          MOVE SPACES                      TO C4-OBSER3
+      *          PERFORM 770-GRABAR-COLA-DIS
+      *          MOVE "AUN NO DIGITA IDENTIFICACION DE USUARIO" TO MSGO
+      *          PERFORM 730-ENVIAR-MSG
+      *       END-IF
+      *    END-IF
+      *    IF IND-CED = "AL" THEN
+              IF DNII EQUAL LOW-VALUES OR '_________' OR SPACES THEN
+                 MOVE "--  NO DIGITO CEDULA  --" TO C4-OBSER1
+                 MOVE "--  DEL ALUMNO -        " TO C4-OBSER2
+                 MOVE IND-OPE                    TO C4-OBSER3
+                 PERFORM 770-GRABAR-COLA-DIS
+                 MOVE "INGRESAR UNA CEDULA DEL ALUMNO " TO MSGO
+                 PERFORM 730-ENVIAR-MSG
+              ELSE
+                 MOVE "LA CEDULA ALUMNO DIGITA-" TO C4-OBSER1
+                 MOVE "DIGITADA FUE Y SU ...   " TO C4-OBSER2
+                 MOVE IND-OPE                    TO C4-OBSER3
+                 PERFORM 770-GRABAR-COLA-DIS
+      *       END-IF
+              MOVE DNII TO ID-ALUMNO
+           END-IF
+           .
+      *
+      * 820-HACER-LECTURA
+      *
+       820-HACER-LECTURA.
+      *
+           MOVE ID-ALUMNO        TO ET-DNI
+      *
+           EXEC SQL
+             SELECT
+                DNI, NOMBRE, APELLIDOS, DIRECCION
+             INTO
+                :ET-DNI, :ET-NOMBRE, :ET-APELLIDOS, :ET-DIRECCION
+                FROM ESTUD
+                WHERE DNI = :ET-DNI
+           END-EXEC
+           .
+      *
+      * 900-TERMINAR
+      *
+       900-TERMINAR.
+      *
+           MOVE "SALE DEL SISTEMA"  TO C3-OBSER
+           PERFORM 785-GRABAR-COLA-ACC
+
+           EXEC CICS
+                SEND TEXT FROM (MSG-FIN-SESION)
+                ERASE
+                FREEKB
+           END-EXEC
+      *
+           EXEC CICS RETURN END-EXEC
+      *
+           GOBACK
+           .
+      ***************************************************
+
