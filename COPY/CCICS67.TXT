@@ -1,0 +1,42 @@
+      *
+      * TRATAMIENTO DE LAS LINEAS DE HOLS COMO OCCURS 4
+      *
+       01  HOLSMPR REDEFINES MSNES06O.
+           02  FILLER                      PIC X(221).
+           02  WT-LINEAS-MAPA.
+               03  WT-ITEM                 OCCURS 4 INDEXED BY L.
+      *
+                   05  SEL-LONG            PIC XX.
+                   05  SEL-ATTR            PIC X.
+                   05  SEL-COLOR           PIC X.
+                   05  SEL-FILL1           PIC X(4).
+                   05  SEL-VALOR           PIC X.
+      *
+                   05  DNI-LONG            PIC XX.
+                   05  DNI-ATTR            PIC X.
+                   05  DNI-COLOR           PIC X.
+                   05  DNI-FILL1           PIC X(4).
+                   05  DNI-VALOR           PIC X(9).
+      *
+                   05  NOM-LONG            PIC XX.
+                   05  NOM-ATTR            PIC X.
+                   05  NOM-COLOR           PIC X.
+                   05  NOM-FILL1           PIC X(4).
+                   05  NOM-VALOR           PIC X(25).
+      *
+                   05  APE-LONG            PIC XX.
+                   05  APE-ATTR            PIC X.
+                   05  APE-COLOR           PIC X.
+                   05  APE-FILL1           PIC X(4).
+                   05  APE-VALOR           PIC X(25).
+      *
+                   05  DIR-LONG            PIC XX.
+                   05  DIR-ATTR            PIC X.
+                   05  DIR-COLOR           PIC X.
+                   05  DIR-FILL1           PIC X(4).
+                   05  DIR-VALOR           PIC X(35).
+
+      *
+           02  FILLER                      PIC X(182).
+      * ---------------------------------------------------------------
+

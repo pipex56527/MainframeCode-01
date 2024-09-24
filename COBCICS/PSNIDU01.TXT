@@ -34,12 +34,6 @@
       *    DEFINICION AREA LINKED RUTINA
       ****************************************************************
       *
-      *  QUITE EL REDEFINE PARA EVITAR PROBLEMAS EN LOS
-      *  ENCAPSULADORES. LE QUITO TAMBIEN LOS ESPACIOS AL FINAL
-      *  A PERMISOS Y PERFILES.
-      *
-      *01  AREA-LINK                PIC X(132).
-      *01  AREA-LINK-RUS            REDEFINES AREA-LINK.
        01  AREA-LINK-RUS.
            05 LK-US-TIPO-OPE        PIC 9(01).
            05 LK-US-SUBTIPO-OPE     PIC 9(02).
@@ -65,7 +59,6 @@
            05 LK-PM-HORAUL          PIC X(08).
            05 LK-PM-COD-RET         PIC 9(02).
            05 LK-PM-SQLCODE         PIC S9(9).
-      *    05 LK-PM-ESPACIOS        PIC X(75).
       *
        01  AREA-LINK-RPF.
            05 LK-PF-TIPO-OPE        PIC 9(01).
@@ -79,11 +72,9 @@
            05 LK-PF-MODIF           PIC X(02).
            05 LK-PF-COD-RET         PIC 9(02).
            05 LK-PF-SQLCODE         PIC S9(9).
-      *    05 LK-PF-ESPACIOS        PIC X(83).
       *
       * VARIABLES
       *
-      * MAS INFO AL FINALIZAR
        01  MSG-FIN-SESION           PIC X(40)
            VALUE  'FIN SESION SISTEMA NOTAS PSNIDU01'.
        01  WS-RESPUESTA             PIC S9(08) COMP.
@@ -153,12 +144,6 @@
       *
        100-INICIAR.
       *
-      *    INITIALIZE WS-CURRENT-DATE-DATA
-      *               WS-COD-RET
-      *
-      *    PERFORM 790-CONSEGUIR-FECHOR
-      *    MOVE  WS-LAFECHA                 TO MFECHAO
-      *
            EVALUATE TRUE
              WHEN EIBCALEN = 0
                SET CICLO-0       TO TRUE
@@ -201,7 +186,6 @@
            .
       *
       * 210-CICLO-0.  PARA CAPTURAR ID-USUARIO Y CLAVE
-      *
       *
        210-CICLO-0.
            MOVE LOW-VALUES                  TO MSNID01I
@@ -247,24 +231,26 @@
            EVALUATE CA-US-TIPOUSUA
 
               WHEN "ESTUD"
-      *
-      *            EXEC CICS XCTL
-      *                 PROGRAM('PSNCES03')
-      *                 COMMAREA(MI-COMMAREA)
-      *                 LENGTH(LENGTH OF MI-COMMAREA)
-      *                 RESP(WS-RESPUESTA)
-      *            END-EXEC
+
+                   MOVE "00" TO CA-CICLO
+                   EXEC CICS XCTL
+                        PROGRAM('PSNNES03')
+                        COMMAREA(MI-COMMAREA)
+                        LENGTH(LENGTH OF MI-COMMAREA)
+                        RESP(WS-RESPUESTA)
+                   END-EXEC
       *
                    MOVE "01" TO CA-CICLO
 
               WHEN "PROFE"
-      *
-      *            EXEC CICS XCTL
-      *                 PROGRAM('PSNCPR04')
-      *                 COMMAREA(MI-COMMAREA)
-      *                 LENGTH(LENGTH OF MI-COMMAREA)
-      *                 RESP(WS-RESPUESTA)
-      *            END-EXEC
+
+                   MOVE "00" TO CA-CICLO
+                   EXEC CICS XCTL
+                        PROGRAM('PSNNPR04')
+                        COMMAREA(MI-COMMAREA)
+                        LENGTH(LENGTH OF MI-COMMAREA)
+                        RESP(WS-RESPUESTA)
+                   END-EXEC
 
                    MOVE "01" TO CA-CICLO
 
@@ -353,8 +339,8 @@
       * PERFORM SIGUIENTE. SI SE CAMBIARIA EL MENSAJE
 
                  PERFORM 270-MOVER-SALIDA-USUARIO
-      *          MOVE "99"       TO   CA-CICLO
-                 MOVE 'CONSULTA NOTAS ESTUD. SIN IMPLEMENTAR' TO MMSGO
+                 MOVE "99"       TO   CA-CICLO
+                 MOVE 'CONSULTA NOTAS EST.  DIGITE ENTER...' TO MMSGO
                  PERFORM 730-ENVIAR-MSG
 
               WHEN "PROFE"
@@ -363,8 +349,8 @@
       * PERFORM SIGUIENTE. SI SE CAMBIARIA EL MENSAJE
       *
                  PERFORM 270-MOVER-SALIDA-USUARIO
-      *          MOVE "99"       TO   CA-CICLO
-                 MOVE 'CONSULTA NOTAS PROFE. SIN IMPLEMENTAR' TO MMSGO
+                 MOVE "99"       TO   CA-CICLO
+                 MOVE 'CONSULTA NOTAS PROFE.  DIGITE ENTER' TO MMSGO
                  PERFORM 730-ENVIAR-MSG
 
               WHEN "ADMIN"
@@ -376,7 +362,7 @@
       *
                  PERFORM 270-MOVER-SALIDA-USUARIO
                  MOVE "99"       TO   CA-CICLO
-                 MOVE 'ESTOS SON LOS PERMISOS. DIGITE ENTER.' TO MMSGO
+                 MOVE 'USUARIO ADMIN, PERMISOS. DIGITE ENTER.' TO MMSGO
                  PERFORM 730-ENVIAR-MSG
 
               WHEN OTHER
@@ -461,9 +447,9 @@
       *
       * USUARIO YA ESTA HABILITADO SI SE ENCONTRO EL PERFIL
       *
-      *
       * 270-MOVER-SALIDA-USUARIO. SE EVALUA SI ESTA RUTINA SE
-      * QUITA DESPUES
+      *                           QUITA DESPUES
+      *
        270-MOVER-SALIDA-USUARIO.
       *
            MOVE CA-US-DNI                   TO MID-USUO
@@ -607,3 +593,4 @@
            GOBACK
            .
       ***************************************************
+
