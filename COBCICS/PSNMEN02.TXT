@@ -1,14 +1,19 @@
+      *------------------------*
+       IDENTIFICATION DIVISION.
+      *------------------------*
+         PROGRAM-ID. PSNMEN02.
+      *
       *-----------------------------------------------------------*
       *  PROGRAMA QUE MANEJA EL MENU DEL SISTEMA DE NOTAS
       *  RECIBE LOS DATOS DEL USUARIO EN LA COMMAREA
       *  Y LOS PASA A LOS PROGRAMAS QUE ENLAZA EN LAS
       *  OPCIONES. PF3: SALE DEL SISTEMA DE NOTAS.
       *-----------------------------------------------------------*
-      *
-      *------------------------*
-       IDENTIFICATION DIVISION.
-      *------------------------*
-         PROGRAM-ID. PSNMEN02.
+      * MODIFICACIONES:
+      *  SEP 24, 2024: MUEVE '88' AL CICLO ANTES DE LLAMAR PSNEST05
+      *                MUEVE LA TRANSACCION SN02 A LA COMMAREA ANTES
+      *                DE ENLAZAR LOS PROGRAMAS.
+      *  SEP 22, 2024: ENLAZA CON TODOS LOS PROGRAMAS
       *
       *---------------------*
        ENVIRONMENT DIVISION.
@@ -195,7 +200,7 @@
                      FROM(MSNME02O)
                      ERASE
            END-EXEC
-
+      *
            MOVE EIBTRNID    TO CA-TRANS
            MOVE EIBTRMID    TO CA-TERM
       *
@@ -227,7 +232,8 @@
       *
       *    LINEAS PARA ENLAZAR PROGRAMA -OJO- COMMAREA
       *
-           MOVE '00' TO CA-CICLO
+           MOVE WC-TRANSID TO CA-TRANS
+           MOVE '00'       TO CA-CICLO
       *
            EXEC CICS XCTL
                 PROGRAM  (WC-PROG-PROFE)
@@ -235,7 +241,6 @@
                 LENGTH   (LENGTH OF MI-COMMAREA)
                 RESP     (WS-RESPUESTA)
            END-EXEC
-      *
            .
       *
       * 790-LINK-CONSULTA-ESTUD: ENLAZA CON LA CONSULTA DE
@@ -255,7 +260,8 @@
       *
       *    LINEAS PARA ENLAZAR PROGRAMA -OJO- COMMAREA
       *
-           MOVE '00' TO CA-CICLO
+           MOVE WC-TRANSID TO CA-TRANS
+           MOVE '00'       TO CA-CICLO
       *
            EXEC CICS XCTL
                 PROGRAM  (WC-PROG-ESTUD)
@@ -263,7 +269,6 @@
                 LENGTH   (LENGTH OF MI-COMMAREA)
                 RESP     (WS-RESPUESTA)
            END-EXEC
-      *
            .
       *
       *  790-LINK-ADMIN-ESTUD: ENLAZA CON ADMIN ESTUDIANTES
@@ -281,16 +286,16 @@
            MOVE WS-MSG-LINK   TO MSGLOGO
       *
       *    LINEAS PARA ENLAZAR PROGRAMA -OJO- COMMAREA
+      *    SEP 23: SAUL PIDIO CICLO 88
+           MOVE '88'       TO CA-CICLO
+           MOVE WC-TRANSID TO CA-TRANS
       *
-           MOVE '99' TO CA-CICLO
-
            EXEC CICS XCTL
                 PROGRAM  (WC-PROG-ADMIN)
                 COMMAREA (MI-COMMAREA)
                 LENGTH   (LENGTH OF MI-COMMAREA)
                 RESP     (WS-RESPUESTA)
            END-EXEC
-      *
            .
       *
       * 900-TERMINAR-PROG: PARA FACILITAR LAS PRUEBAS ESTE
