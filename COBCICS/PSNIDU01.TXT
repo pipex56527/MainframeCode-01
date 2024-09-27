@@ -1,0 +1,596 @@
+       IDENTIFICATION DIVISION.
+         PROGRAM-ID. PSNIDU01.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      *
+      *  MODIFICACION SEP 5-2024
+      *  SISTEMA DE NOTAS
+      *  PROGRAMA INICIAL PARA IDENTIFICACION DE USUARIO Y
+      *  CONTRASEÑA Y PERMISOS PARA EJECUTAR ACCIONES DE CONSULTA,
+      *  MODIFICAR, BORRAR O INSERTAR DEL SISTEMA
+      *  UTILIZANDO RUTINAS ENCAPSULADORAS
+      *
+       COPY CSNID01.
+      *
+      * COMMAREA
+      *
+       01  MI-COMMAREA.
+           03 CA-TRANS                    PIC X(04).
+           03 CA-TERM                     PIC X(04).
+           03 CA-CICLO                    PIC X(02).
+           03 CA-US-DNI                   PIC X(09).
+           03 CA-US-TIPOUSUA              PIC X(05).
+           03 CA-US-NOMBRE                PIC X(20).
+           03 CA-US-APELLIDOS             PIC X(20).
+           03 CA-PF-IDPERFIL              PIC X(3).
+           03 CA-PF-NOMPERFIL             PIC X(20).
+           03 CA-PF-CONS                  PIC X(2).
+           03 CA-PF-BORR                  PIC X(2).
+           03 CA-PF-INGR                  PIC X(2).
+           03 CA-PF-MODI                  PIC X(2).
+      *
+      ****************************************************************
+      *    DEFINICION AREA LINKED RUTINA
+      ****************************************************************
+      *
+       01  AREA-LINK-RUS.
+           05 LK-US-TIPO-OPE        PIC 9(01).
+           05 LK-US-SUBTIPO-OPE     PIC 9(02).
+           05 LK-US-DNI             PIC X(09).
+           05 LK-US-TIPOUSUARIO     PIC X(05).
+           05 LK-US-CLAVE           PIC X(08).
+           05 LK-US-NOMBRE          PIC X(20).
+           05 LK-US-APELLIDOS       PIC X(20).
+           05 LK-US-DIRECCION       PIC X(35).
+           05 LK-US-CARGO           PIC X(20).
+           05 LK-US-ESTADO          PIC X(01).
+           05 LK-US-COD-RET         PIC 9(02).
+           05 LK-US-SQLCODE         PIC S9(9).
+      *
+       01  AREA-LINK-RPR.
+           05 LK-PM-TIPO-OPE        PIC 9(01).
+           05 LK-PM-SUBTIPO-OPE     PIC 9(02).
+           05 LK-PM-TRAN            PIC X(04).
+           05 LK-PM-DNI             PIC X(09).
+           05 LK-PM-IDPERFIL        PIC X(03).
+           05 LK-PM-NROACCESOS      PIC S9(9) USAGE COMP.
+           05 LK-PM-FECHAUL         PIC X(10).
+           05 LK-PM-HORAUL          PIC X(08).
+           05 LK-PM-COD-RET         PIC 9(02).
+           05 LK-PM-SQLCODE         PIC S9(9).
+      *
+       01  AREA-LINK-RPF.
+           05 LK-PF-TIPO-OPE        PIC 9(01).
+           05 LK-PF-SUBTIPO-OPE     PIC 9(02).
+           05 LK-PF-TRAN            PIC X(04).
+           05 LK-PF-IDPERFIL        PIC X(03).
+           05 LK-PF-NOMBRE          PIC X(20).
+           05 LK-PF-CONSUL          PIC X(02).
+           05 LK-PF-BORRAR          PIC X(02).
+           05 LK-PF-INGRESAR        PIC X(02).
+           05 LK-PF-MODIF           PIC X(02).
+           05 LK-PF-COD-RET         PIC 9(02).
+           05 LK-PF-SQLCODE         PIC S9(9).
+      *
+      * VARIABLES
+      *
+       01  MSG-FIN-SESION           PIC X(40)
+           VALUE  'FIN SESION SISTEMA NOTAS PSNIDU01'.
+       01  WS-RESPUESTA             PIC S9(08) COMP.
+       01  WS-TRANSA                PIC X(04) VALUE  'SN05'.
+      *
+      *   DEFINICION DE TRANSACCION Y TERMINAL CONSTANTES
+      *   POR PROBLEMAS CON EL REGRESO DEL MENU
+      *
+       01  WC-TRANID                PIC X(04) VALUE  'SN01'.
+       01  WC-TERMID                PIC X(04) VALUE  'L702'.
+       01  WS-PASO                  PIC X(02) VALUE  '  '.
+       01  SW-CICLO                 PIC X(2).
+           88 CICLO-0               VALUE '00'.
+           88 CICLO-1               VALUE '01'.
+           88 CICLO-99              VALUE '99'.
+       01  WS-AREA-FECHOR.
+           05  WS-CURRENT-DATE-DATA.
+               10  WS-CURRENT-DATE.
+                   15  WS-CURRENT-YEAR     PIC 9(04).
+                   15  WS-CURRENT-MES      PIC 9(02).
+                   15  WS-CURRENT-DIA      PIC 9(02).
+               10  WS-CURRENT-TIME.
+                   15  WS-CURRENT-HRA      PIC 9(02).
+                   15  WS-CURRENT-MIN      PIC 9(02).
+                   15  WS-CURRENT-SEG      PIC 9(02).
+                   15  WS-CURRENT-MSEG     PIC 9(02).
+           05 WS-COD-RET                   PIC X(02).
+       01  WS-FECHOR.
+           05  WS-LAFECHA.
+               10  WS-ELANO                PIC 9(04).
+               10  FILLER                  PIC X(01) VALUE "/".
+               10  WS-ELMES                PIC 9(02).
+               10  FILLER                  PIC X(01) VALUE "/".
+               10  WS-ELDIA                PIC 9(02).
+           05  WSEPARADOR                  PIC X(02) VALUE "--".
+           05  WS-LATIME.
+               10  WS-LAHORA               PIC 9(02).
+               10  FILLER                  PIC X(01) VALUE ":".
+               10  WS-ELMINUTO             PIC 9(02).
+               10  FILLER                  PIC X(01) VALUE ":".
+               10  WS-ELSEGUNDO            PIC 9(02).
+       01  WS-MSG-USUA.
+           05  FILLER              PIC X(14) VALUE "TIPO USUARIO  ".
+           05  WS-TIPO             PIC X(05).
+      *
+      * AYUDAS DE BMS
+      *
+       COPY DFHAID.
+       COPY DFHBMSCA.
+      *
+       LINKAGE SECTION.
+      *
+       01  DFHCOMMAREA    PIC X(95).
+      *
+       PROCEDURE DIVISION.
+      *
+      * PROGRAMA PRINCIPAL
+      * 000-PRINCIPAL
+      *
+       000-PRINCIPAL.
+           PERFORM 100-INICIAR
+           PERFORM 200-PROCESAR
+           PERFORM 900-TERMINAR
+           .
+      *
+      * 100-INICIAR
+      *
+       100-INICIAR.
+      *
+           EVALUATE TRUE
+             WHEN EIBCALEN = 0
+               SET CICLO-0       TO TRUE
+             WHEN OTHER
+               MOVE DFHCOMMAREA  TO MI-COMMAREA
+      *
+               EVALUATE CA-CICLO
+                 WHEN '00'
+                   SET CICLO-0   TO TRUE
+                 WHEN '01'
+                   SET CICLO-1   TO TRUE
+                 WHEN '99'
+                   SET CICLO-99  TO TRUE
+                 WHEN OTHER
+                   DISPLAY "CICLO NO PROGRAMADO --> " CA-CICLO
+                   MOVE "CICLO NO PROGRAMADO" TO MSG-FIN-SESION
+                   PERFORM 900-TERMINAR
+               END-EVALUATE
+           END-EVALUATE
+           .
+      *
+      * 200-PROCESAR
+      *
+       200-PROCESAR.
+
+           INITIALIZE WS-CURRENT-DATE-DATA
+                      WS-COD-RET
+
+           PERFORM 790-CONSEGUIR-FECHOR
+           MOVE  WS-LAFECHA  TO MFECHAO
+
+           EVALUATE TRUE
+             WHEN CICLO-0
+               PERFORM 210-CICLO-0
+             WHEN CICLO-1
+               PERFORM 220-CICLO-1
+             WHEN CICLO-99
+               PERFORM 230-CICLO-99
+           END-EVALUATE
+           .
+      *
+      * 210-CICLO-0.  PARA CAPTURAR ID-USUARIO Y CLAVE
+      *
+       210-CICLO-0.
+           MOVE LOW-VALUES                  TO MSNID01I
+           MOVE SPACES                      TO CA-US-DNI
+           MOVE  WS-LAFECHA                 TO MFECHAO
+           MOVE "01"                        TO CA-CICLO
+
+           EXEC CICS SEND MAP('MSNID01')
+                     FROM(MSNID01O)
+                     ERASE
+           END-EXEC
+
+           PERFORM 740-RETORNAR-TRANS
+           .
+      *
+      * 220-CICLO-1 CON ID-USUARIO Y CLAVE CAPTURADOS
+      *             VALIDA QUE EXISTA COMO USUARIO CON CLAVE CORRECTA
+      *             Y EVALUA SI TIENE PERMISO Y CON QUE PERFIL
+      *             USANDO ENCAPSULADORES. Y ENVIA FUNCION SIGUIENTE
+      *
+       220-CICLO-1.
+      *
+           PERFORM 720-RECIBIR-MAPA
+
+           EVALUATE EIBAID
+               WHEN DFHENTER
+                    PERFORM 250-CONSULTAR-USUARIO
+               WHEN DFHPF3
+                    PERFORM 900-TERMINAR
+               WHEN OTHER
+                    DISPLAY "TECLA INCORRECTA -1- " EIBAID
+                    MOVE 'TECLA INCORRECTA -1- '    TO MMSGO
+                    PERFORM 730-ENVIAR-MSG
+            END-EVALUATE
+           .
+      *
+      * 230-CICLO-99  CICLO QUE HAY QUE INTERVENIR MIENTRAS
+      * SE VAYAN INCLUYENDO TODAS LAS FUNCIONALIDADES
+      * SE QUITAN LOS COMENTACIOS DE LOS LLAMADOS A LOS PROGRAMAS
+      * Y SE QUITAN LOS MOVE 99 TO CA-CICLO, AUNQUE NO SE EJECUTAN
+      *
+       230-CICLO-99.
+           EVALUATE CA-US-TIPOUSUA
+
+              WHEN "ESTUD"
+
+                   MOVE "00" TO CA-CICLO
+                   EXEC CICS XCTL
+                        PROGRAM('PSNNES03')
+                        COMMAREA(MI-COMMAREA)
+                        LENGTH(LENGTH OF MI-COMMAREA)
+                        RESP(WS-RESPUESTA)
+                   END-EXEC
+      *
+                   MOVE "01" TO CA-CICLO
+
+              WHEN "PROFE"
+
+                   MOVE "00" TO CA-CICLO
+                   EXEC CICS XCTL
+                        PROGRAM('PSNNPR04')
+                        COMMAREA(MI-COMMAREA)
+                        LENGTH(LENGTH OF MI-COMMAREA)
+                        RESP(WS-RESPUESTA)
+                   END-EXEC
+
+                   MOVE "01" TO CA-CICLO
+
+              WHEN "ADMIN"
+      *
+                   EXEC CICS XCTL
+                        PROGRAM('PSNMEN02')
+                        COMMAREA(MI-COMMAREA)
+                        LENGTH(LENGTH OF MI-COMMAREA)
+                        RESP(WS-RESPUESTA)
+                   END-EXEC
+
+                   MOVE "01" TO CA-CICLO
+           END-EVALUATE
+      *
+      *    FORZAR UN ENVIO DEL MAPA PARA QUE SE QUEDE
+      *    EN UN LOOP MIENTRAS NO ESTAN ENLAZADOS LOS PROG
+      *
+           PERFORM 210-CICLO-0
+           .
+      *
+      * 250-CONSULTAR-USUARIO
+      *
+       250-CONSULTAR-USUARIO.
+
+           IF MID-USUI  EQUAL LOW-VALUES OR '_________' OR SPACES THEN
+              MOVE DFHBLINK  TO  MMSGH
+              MOVE "DEBE DIGITAR IDENTIFICACION DEL USUARIO" TO MMSGO
+              PERFORM 730-ENVIAR-MSG
+           END-IF
+
+           IF MCLAVEI EQUAL LOW-VALUES OR '________' OR SPACES THEN
+              MOVE DFHBLINK  TO  MMSGH
+              MOVE "DEBE DIGITAR CLAVE DEL USUARIO..." TO MMSGO
+              PERFORM 730-ENVIAR-MSG
+           END-IF
+
+      *   LIMPIAR EL AREA DE ENLACE PARA EVITAR MALOS ENTENDIDOS
+      *
+           MOVE LOW-VALUES TO AREA-LINK-RUS
+           MOVE 9        TO LK-US-COD-RET
+           MOVE 1        TO LK-US-TIPO-OPE
+           MOVE 1        TO LK-US-SUBTIPO-OPE
+           MOVE MID-USUI TO LK-US-DNI
+
+           EXEC CICS LINK
+                     PROGRAM('RSNUSUAR')
+                     COMMAREA(AREA-LINK-RUS)
+                     LENGTH(LENGTH OF AREA-LINK-RUS)
+                     RESP(WS-RESPUESTA)
+           END-EXEC
+
+           MOVE MID-USUI                   TO CA-US-DNI
+      *
+           EVALUATE LK-US-COD-RET
+              WHEN 0
+                 IF MCLAVEI        NOT   =  LK-US-CLAVE THEN
+                    MOVE DFHBLINK  TO  MMSGH
+                    MOVE 'CLAVE ERRONEA ......... ' TO MMSGO
+                    PERFORM 730-ENVIAR-MSG
+                 END-IF
+
+              WHEN 1
+                 MOVE DFHBLINK  TO  MMSGH
+                 MOVE 'USUARIO NO EXISTE ......' TO MMSGO
+                 PERFORM 730-ENVIAR-MSG
+
+              WHEN OTHER
+                 MOVE DFHBLINK  TO  MMSGH
+                 MOVE "OJO CON BASE DE DATOS US " TO MSG-FIN-SESION
+                 PERFORM 900-TERMINAR
+           END-EVALUATE
+      *
+      * SI EL USUARIO ES -ADMIN- SE MIRA SI TIENE PERMISOS Y SU PERFIL
+      * PARA VER A QUE OPCIONES PUEDE ACCEDER.  SI ES -ESTUD- O
+      * -PROFE- VA A SUS PANTALLAS DE CONSULTA. DE OTRA MANERA ERROR
+      *
+           MOVE "US"   TO WS-PASO
+           PERFORM 750-GUARDAR-COMMAREA
+
+           EVALUATE LK-US-TIPOUSUARIO
+
+              WHEN "ESTUD"
+
+      * DESPUES SE EVALUA SI SE QUITA MOSTRAR LOS PERMISOS QUITANDO EL
+      * PERFORM SIGUIENTE. SI SE CAMBIARIA EL MENSAJE
+
+                 PERFORM 270-MOVER-SALIDA-USUARIO
+                 MOVE "99"       TO   CA-CICLO
+                 MOVE 'CONSULTA NOTAS EST.  DIGITE ENTER...' TO MMSGO
+                 PERFORM 730-ENVIAR-MSG
+
+              WHEN "PROFE"
+
+      * DESPUES SE EVALUA SI SE QUITA MOSTRAR LOS PERMISOS QUITANDO EL
+      * PERFORM SIGUIENTE. SI SE CAMBIARIA EL MENSAJE
+      *
+                 PERFORM 270-MOVER-SALIDA-USUARIO
+                 MOVE "99"       TO   CA-CICLO
+                 MOVE 'CONSULTA NOTAS PROFE.  DIGITE ENTER' TO MMSGO
+                 PERFORM 730-ENVIAR-MSG
+
+              WHEN "ADMIN"
+
+                 PERFORM 260-VER-PERMISOS-Y-PERFIL
+      *
+      * DESPUES SE EVALUA SI SE QUITA MOSTRAR LOS PERMISOS QUITANDO EL
+      * PERFORM SIGUIENTE. SI SE CAMBIARIA EL MENSAJE
+      *
+                 PERFORM 270-MOVER-SALIDA-USUARIO
+                 MOVE "99"       TO   CA-CICLO
+                 MOVE 'USUARIO ADMIN, PERMISOS. DIGITE ENTER.' TO MMSGO
+                 PERFORM 730-ENVIAR-MSG
+
+              WHEN OTHER
+                 MOVE DFHBLINK  TO  MMSGH
+                 MOVE "OJO. USUARIO NO TIENE TIPO." TO MSG-FIN-SESION
+                 PERFORM 900-TERMINAR
+           END-EVALUATE
+           .
+      *
+      * 260-VER-PERMISOS-Y-PERFIL
+      *
+       260-VER-PERMISOS-Y-PERFIL.
+      *
+      *    LIMPIAR AREA DE ENLACE
+      *
+           MOVE LOW-VALUES TO AREA-LINK-RPR
+           MOVE 9         TO LK-PM-COD-RET
+           MOVE 1         TO LK-PM-TIPO-OPE
+           MOVE 1         TO LK-PM-SUBTIPO-OPE
+           MOVE MID-USUI  TO LK-PM-DNI
+           MOVE WS-TRANSA TO LK-PM-TRAN
+
+           EXEC CICS LINK
+                     PROGRAM('RSNPERMI')
+                     COMMAREA(AREA-LINK-RPR)
+                     LENGTH(LENGTH OF AREA-LINK-RPR)
+                     RESP(WS-RESPUESTA)
+           END-EXEC
+
+      *
+           EVALUATE LK-PM-COD-RET
+              WHEN 0
+                 MOVE "PM"      TO  WS-PASO
+                 PERFORM 750-GUARDAR-COMMAREA
+              WHEN 1
+                 MOVE DFHBLINK  TO  MMSGH
+                 MOVE 'USUARIO SIN PERMISO EN LA TRANSACCON.' TO MMSGO
+                 PERFORM 730-ENVIAR-MSG
+
+              WHEN OTHER
+                 MOVE DFHBLINK  TO  MMSGH
+                 MOVE "OJO CON BASE DE DATOS PERMI." TO MSG-FIN-SESION
+                 PERFORM 900-TERMINAR
+           END-EVALUATE
+      *
+      * USUARIO EXISTE YA CON PERMISO A LA TRANSACCION
+      * SE CONSULTA EL PERFIL PARA ESTABLECER A QUE OPCIONES
+      * TIENE ACCESO EL USUARIO -ADMIN- AL CRUD DE ESTUDIANTES
+      *
+      *  LIMPIAR EL AREA-LINK
+      *
+           MOVE LOW-VALUES      TO AREA-LINK-RPF
+           MOVE 9               TO LK-PF-COD-RET
+           MOVE 1               TO LK-PF-TIPO-OPE
+           MOVE 1               TO LK-PF-SUBTIPO-OPE
+           MOVE LK-PM-IDPERFIL  TO LK-PF-IDPERFIL
+           MOVE WS-TRANSA       TO LK-PF-TRAN
+
+           EXEC CICS LINK
+                     PROGRAM('RSNPERFI')
+                     COMMAREA(AREA-LINK-RPF)
+                     LENGTH(LENGTH OF AREA-LINK-RPF)
+                     RESP(WS-RESPUESTA)
+           END-EXEC
+
+      *
+           EVALUATE LK-PF-COD-RET
+              WHEN 0
+                 MOVE "PF"      TO  WS-PASO
+                 PERFORM 750-GUARDAR-COMMAREA
+              WHEN 1
+                 MOVE DFHBLINK  TO  MMSGH
+                 MOVE 'NO SE HA CREADO EL PERFIL AL USUARIO.' TO MMSGO
+                 PERFORM 730-ENVIAR-MSG
+
+              WHEN OTHER
+                 MOVE DFHBLINK  TO  MMSGH
+                 MOVE "OJO CON BASE DE DATOS PERFI." TO MSG-FIN-SESION
+                 PERFORM 900-TERMINAR
+           END-EVALUATE
+           .
+      *
+      * USUARIO YA ESTA HABILITADO SI SE ENCONTRO EL PERFIL
+      *
+      * 270-MOVER-SALIDA-USUARIO. SE EVALUA SI ESTA RUTINA SE
+      *                           QUITA DESPUES
+      *
+       270-MOVER-SALIDA-USUARIO.
+      *
+           MOVE CA-US-DNI                   TO MID-USUO
+           MOVE SPACES                      TO MCLAVEO
+      *
+           MOVE 'NOMBRE USUARIO -->     '   TO T07O
+           MOVE CA-US-NOMBRE                TO NOM07O
+           MOVE CA-US-APELLIDOS             TO APE07O
+           PERFORM 790-CONSEGUIR-FECHOR
+           MOVE  WS-LAFECHA                 TO FEC08O
+           MOVE  WS-LATIME                  TO HOR08O
+           MOVE 'FECHA / HORA INGRESO ->'   TO T08O
+           MOVE 'PERFIL DE SEGURIDAD -->'   TO T09O
+
+           IF CA-US-TIPOUSUA NOT = "ADMIN"  THEN
+              MOVE CA-US-TIPOUSUA           TO WS-TIPO
+              MOVE WS-MSG-USUA              TO NPE09O
+           ELSE
+              MOVE CA-PF-IDPERFIL           TO PER09O
+              MOVE CA-PF-NOMPERFIL          TO NPE09O
+              MOVE 'CON'                    TO T10AO
+              MOVE CA-PF-CONS               TO CON10O
+              MOVE 'BOR'                    TO T10BO
+              MOVE CA-PF-BORR               TO BOR10O
+              MOVE 'ING'                    TO T10CO
+              MOVE CA-PF-INGR               TO ING10O
+              MOVE 'MOD'                    TO T10DO
+              MOVE CA-PF-MODI               TO MOD10O
+           END-IF
+           .
+      *
+      * 720-RECIBIR-MAPA
+      *
+       720-RECIBIR-MAPA.
+      *
+           EXEC CICS RECEIVE MAP('MSNID01')
+                INTO(MSNID01I)
+                NOHANDLE
+           END-EXEC
+
+           EXEC CICS
+                IGNORE CONDITION MAPFAIL
+           END-EXEC
+           .
+      *
+      * 730-ENVIAR-MSG.
+      *
+       730-ENVIAR-MSG.
+      *
+           EXEC CICS SEND MAP('MSNID01')
+                FROM(MSNID01O)
+                CURSOR(425)
+                NOHANDLE
+           END-EXEC
+
+           PERFORM 740-RETORNAR-TRANS
+           .
+      *
+      * 740-RETORNAR-TRANS
+      *
+       740-RETORNAR-TRANS.
+
+           MOVE EIBTRMID      TO CA-TERM
+           MOVE EIBTRNID      TO CA-TRANS
+
+      *    USO DE UNA VARIABLE PARA QUE RETORNE A LA TRANSACCION
+      *    CUANDO REGRESA DEL MENU
+      *
+           EXEC CICS RETURN
+                TRANSID  (WC-TRANID)
+                COMMAREA (MI-COMMAREA)
+                LENGTH   (LENGTH OF MI-COMMAREA)
+           END-EXEC
+
+           GOBACK
+           .
+      *
+      * 750-GUARDAR-COMMAREA.
+      *
+        750-GUARDAR-COMMAREA.
+      *
+           EVALUATE WS-PASO
+
+              WHEN "US"
+                 MOVE    WS-TRANSA         TO  CA-TRANS
+                 MOVE    LK-US-DNI         TO  CA-US-DNI
+                 MOVE    LK-US-NOMBRE      TO  CA-US-NOMBRE
+                 MOVE    LK-US-APELLIDOS   TO  CA-US-APELLIDOS
+                 MOVE    LK-US-TIPOUSUARIO TO  CA-US-TIPOUSUA
+
+              WHEN "PM"
+                 IF CA-US-TIPOUSUA      = "ADMIN" THEN
+                    MOVE LK-PM-IDPERFIL    TO  CA-PF-IDPERFIL
+                 ELSE
+                    MOVE SPACES            TO  CA-PF-IDPERFIL
+                 END-IF
+
+              WHEN "PF"
+                 IF CA-US-TIPOUSUA      = "ADMIN" THEN
+                    MOVE LK-PF-NOMBRE      TO  CA-PF-NOMPERFIL
+                    MOVE LK-PF-CONSUL      TO  CA-PF-CONS
+                    MOVE LK-PF-BORRAR      TO  CA-PF-BORR
+                    MOVE LK-PF-INGRESAR    TO  CA-PF-INGR
+                    MOVE LK-PF-MODIF       TO  CA-PF-MODI
+                 ELSE
+                    MOVE SPACES            TO  CA-PF-NOMPERFIL
+                    MOVE SPACES            TO  CA-PF-CONS
+                    MOVE SPACES            TO  CA-PF-BORR
+                    MOVE SPACES            TO  CA-PF-INGR
+                    MOVE SPACES            TO  CA-PF-BORR
+                 END-IF
+              END-EVALUATE
+           .
+      *
+      * 790-CONSEGUIR-FECHOR.
+      *
+       790-CONSEGUIR-FECHOR.
+      *
+           MOVE FUNCTION CURRENT-DATE TO WS-CURRENT-DATE-DATA
+           MOVE 'OK'                  TO WS-COD-RET
+           MOVE WS-CURRENT-YEAR       TO WS-ELANO
+           MOVE WS-CURRENT-MES        TO WS-ELMES
+           MOVE WS-CURRENT-DIA        TO WS-ELDIA
+           MOVE WS-CURRENT-HRA        TO WS-LAHORA
+           MOVE WS-CURRENT-MIN        TO WS-ELMINUTO
+           MOVE WS-CURRENT-SEG        TO WS-ELSEGUNDO
+           .
+      *
+      * 900-TERMINAR
+      *
+       900-TERMINAR.
+      *
+           EXEC CICS
+                SEND TEXT FROM (MSG-FIN-SESION)
+                ERASE
+                FREEKB
+           END-EXEC
+      *
+           EXEC CICS RETURN END-EXEC
+      *
+           GOBACK
+           .
+      ***************************************************
+
