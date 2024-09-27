@@ -333,7 +333,6 @@
            MOVE NOMUSU       TO CA-US-NOMBRE
            MOVE APEUSU       TO CA-US-APELLIDOS
            MOVE PERFIL       TO WS-PERFIL
-      *    MOVE WS-TRAN      TO CA-TRAN
            MOVE WS-IDPERFIL  TO CA-PF-IDPERFIL
            MOVE WS-CONS      TO CA-PF-CONS
            MOVE WS-BORR      TO CA-PF-BORR
@@ -400,7 +399,7 @@
                  MOVE USU                TO LOG08O
                  MOVE NOMUSU             TO LNOM08O
                  MOVE APEUSU             TO LAPE08O
-                 PERFORM 0222-SEND-MAPMENU07
+                 PERFORM 0222-SEND-MAPMENU08
              WHEN OTHER
                    MOVE "            OJO  OPCION NO PERMITIDA "
                                              TO MSG-FIN-SESION
@@ -458,13 +457,13 @@
                    WS-INGR = 'SI' AND WS-MODI = 'NO'
                    PERFORM 0223-RECIBE-MAPMENU06
                    MOVE '0' TO WS-OPCION
-                   IF OPC05I = '1'
+                   IF OPC06I = '1'
                      MOVE '1' TO WS-OPCION
                    ELSE
-                     IF OPC05I = '2'
+                     IF OPC06I = '2'
                        MOVE 3 TO WS-OPCION
                      ELSE
-                       IF OPC05I = '3'
+                       IF OPC06I = '3'
                          MOVE 5 TO WS-OPCION
                        END-IF
                      END-IF
@@ -560,7 +559,7 @@
                    MOVE USU        TO LOG06O
                    MOVE NOMUSU     TO LNOM06O
                    MOVE APEUSU     TO LAPE06O
-                   PERFORM 0222-SEND-MAPMENU05
+                   PERFORM 0222-SEND-MAPMENU06
                WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
                     WS-INGR = 'NO' AND WS-MODI = 'NO'
                    MOVE " OPCION NO PERMITIDA" TO MSG07O
@@ -568,8 +567,8 @@
                    MOVE NOMUSU     TO LNOM07O
                    MOVE APEUSU     TO LAPE07O
                    PERFORM 0222-SEND-MAPMENU07
-               WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
-                    WS-INGR = 'SI' AND WS-MODI = 'SI'
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
+                    WS-INGR = 'SI' AND WS-MODI = 'NO'
                    MOVE " OPCION NO PERMITIDA" TO MSG08O
                    MOVE USU        TO LOG08O
                    MOVE NOMUSU     TO LNOM08O
@@ -1340,7 +1339,7 @@
                  PERFORM 0222-SEND-MAPMENU07
                  MOVE '01' TO CICLO
                  PERFORM 8200-RETORNO-TRANS
-               WHEN WS-CONS = 'SI' AND WS-BORR = 'NO' AND
+               WHEN WS-CONS = 'SI' AND WS-BORR = 'SI' AND
                   WS-INGR = 'SI' AND WS-MODI = 'NO'
                  MOVE LOW-VALUE          TO MSNOP08O
                  MOVE USU                TO LOG08O
@@ -1548,34 +1547,6 @@
               WHEN OTHER
                  MOVE 1 TO EXISTE
            END-EVALUATE
-      *     MOVE 'US04'         TO PM-TRAN
-      *     MOVE CED            TO PM-DNI
-      *     EXEC SQL
-      *       SELECT
-      *            TRAN,
-      *            DNI,
-      *            IDPERFIL,
-      *            NROACCESOS,
-      *            FECHAUL,
-      *            HORAUL
-      *            INTO
-      *                :PM-TRAN
-      *               ,:PM-DNI
-      *               ,:PM-IDPERFIL
-      *               ,:PM-NROACCESOS
-      *               ,:PM-FECHAUL
-      *               ,:PM-HORAUL
-      *            FROM
-      *                PERMISOS
-      *            WHERE
-      *                TRAN = :PM-TRAN AND
-      *                DNI = :PM-DNI
-      *     END-EXEC
-      *     IF SQLCODE = 0
-      *       MOVE 0 TO EXISTE
-      *     ELSE
-      *       MOVE 1 TO EXISTE
-      *     END-IF
             .
       ****************************************************
       * EN ESTA SECCION VAMOS A PONER TODO LO RELACIONADO*
@@ -1765,9 +1736,6 @@
            MOVE DFHBMUNP   TO NOMF
            MOVE DFHBMUNP   TO APEF
            MOVE DFHBMUNP   TO DIRF
-      *    MOVE DFHMFSET   TO NOMF
-      *    MOVE DFHMFSET   TO APEF
-      *    MOVE DFHMFSET   TO DIRF
             .
        PROTEJA-CEDI.
            MOVE DFHBMPRO   TO CEDF
@@ -1779,13 +1747,6 @@
             MOVE DIR                  TO DIRI DIRO
            .
        0240-ENVIAR-MSG.
-      *    MOVE DFHBLINK   TO MSGH
-           MOVE USU TO LOG5O
-           EXEC CICS SEND MAP('MSNES05')
-
-                     FROM(MSNES05O)
-                     NOHANDLE
-           END-EXEC
            PERFORM 8200-RETORNO-TRANS
            .
        0250-FALLO-FICHERO.
