@@ -1,0 +1,74 @@
+***********************************************************************
+*                  MAP MSNNE03 FOR PROGRAM PSNETS03                   *
+***********************************************************************
+MSNNE03 DFHMSD TYPE=DSECT,MODE=INOUT,TERM=ALL,STORAGE=AUTO,LANG=COBOL, X00010003
+               CTRL=FREEKB,TIOAPFX=YES,                                X
+               MAPATTS=(COLOR,HILIGHT,OUTLINE),                        X
+               DSATTS=(COLOR,HILIGHT,OUTLINE),                         X
+               EXTATT=YES,COLOR=TURQUOISE
+MSNNE03 DFHMDI SIZE=(24,80),LINE=1
+MTRANS  DFHMDF POS=(01,01),LENGTH=4,ATTRB=(PROT,BRT),                  X
+               INITIAL='SN03',COLOR=YELLOW
+MPROGR  DFHMDF POS=(01,7),LENGTH=8,ATTRB=(PROT,BRT),COLOR=BLUE,        X
+               INITIAL='PSNETS03'
+MFECHA  DFHMDF POS=(01,65),LENGTH=10,ATTRB=(PROT,BRT),COLOR=RED
+MFTEXT  DFHMDF POS=(03,25),LENGTH=32,ATTRB=(PROT,BRT),COLOR=GREEN,     X
+               INITIAL='CONSULTA DE NOTAS POR ESTUDIANTE'
+MFRAYA  DFHMDF POS=(04,01),LENGTH=79,ATTRB=(PROT),COLOR=RED,           X
+               INITIAL='-----------------------------------------------X
+               ---------------------------------'
+MTXTDN  DFHMDF POS=(06,01),LENGTH=32,ATTRB=(PROT,BRT),                 X
+               INITIAL='IDENTIFICACION DEL ESTUDIANTE:  ',             X
+               COLOR=BLUE
+MDNIES  DFHMDF POS=(06,58),LENGTH=09,                                  X
+               ATTRB=(UNPROT,BRT,IC),COLOR=YELLOW
+        DFHMDF POS=(06,68),LENGTH=0
+MTXTNO  DFHMDF POS=(07,01),LENGTH=8,ATTRB=(PROT,BRT),COLOR=GREEN,      X
+               INITIAL='NOMBRE: '
+MNOMES  DFHMDF POS=(07,10),LENGTH=25,ATTRB=(PROT,BRT),COLOR=GREEN
+MTXTAP  DFHMDF POS=(07,38),LENGTH=11,ATTRB=(PROT,BRT),COLOR=GREEN,     X
+               INITIAL='APELLIDOS: '
+MAPEES  DFHMDF POS=(07,51),LENGTH=25,ATTRB=(PROT,BRT),COLOR=GREEN
+MTXTNE  DFHMDF POS=(09,17),LENGTH=46,ATTRB=(PROT,NORM),COLOR=GREEN,    X
+               INITIAL='CURSO   NOMBRE CURSO               AÑO    NOTA'
+MCOD1   DFHMDF POS=(11,18),LENGTH=09,                                  X
+               ATTRB=(PROT,NORM,FSET),COLOR=GREEN
+MNCUR1  DFHMDF POS=(11,31),LENGTH=25,                                  X
+               ATTRB=(PROT,NORM),COLOR=GREEN
+MAA1    DFHMDF POS=(11,61),LENGTH=4,                                   X
+               ATTRB=(PROT,NORM),COLOR=GREEN
+MNOTA1  DFHMDF POS=(11,69),LENGTH=4,COLOR=GREEN
+MCOD2   DFHMDF POS=(13,18),LENGTH=09,                                  X
+               ATTRB=(PROT,NORM,FSET),COLOR=GREEN
+MNCUR2  DFHMDF POS=(13,31),LENGTH=25,                                  X
+               ATTRB=(PROT,NORM),COLOR=GREEN
+MAA2    DFHMDF POS=(13,61),LENGTH=4,                                   X
+               ATTRB=(PROT,NORM),COLOR=GREEN
+MNOTA2  DFHMDF POS=(13,69),LENGTH=4,COLOR=GREEN
+MCOD3   DFHMDF POS=(15,18),LENGTH=09,                                  X
+               ATTRB=(PROT,NORM,FSET),COLOR=GREEN
+MNCUR3  DFHMDF POS=(15,31),LENGTH=25,                                  X
+               ATTRB=(PROT,NORM),COLOR=GREEN
+MAA3    DFHMDF POS=(15,61),LENGTH=4,                                   X
+               ATTRB=(PROT,NORM),COLOR=GREEN
+MNOTA3  DFHMDF POS=(15,69),LENGTH=4,COLOR=GREEN
+MCOD4   DFHMDF POS=(17,18),LENGTH=09,                                  X
+               ATTRB=(PROT,NORM,FSET),COLOR=GREEN
+MNCUR4  DFHMDF POS=(17,31),LENGTH=25,                                  X
+               ATTRB=(PROT,NORM),COLOR=GREEN
+MAA4    DFHMDF POS=(17,61),LENGTH=4,                                   X
+               ATTRB=(PROT,NORM),COLOR=GREEN
+MNOTA4  DFHMDF POS=(17,69),LENGTH=4,COLOR=GREEN
+MCOD5   DFHMDF POS=(19,18),LENGTH=09,                                  X
+               ATTRB=(PROT,NORM,FSET),COLOR=GREEN
+MNCUR5  DFHMDF POS=(19,31),LENGTH=25,                                  X
+               ATTRB=(PROT,NORM),COLOR=GREEN
+MAA5    DFHMDF POS=(19,61),LENGTH=4,                                   X
+               ATTRB=(PROT,NORM),COLOR=GREEN
+MNOTA5  DFHMDF POS=(19,69),LENGTH=4,COLOR=GREEN
+MTXMSG  DFHMDF POS=(21,06),LENGTH=70,ATTRB=(PROT,NORM),COLOR=YELLOW
+MTXKEYS DFHMDF POS=(23,01),LENGTH=40,COLOR=GREEN,ATTRB=(PROT,NORM),    X
+               INITIAL='F3=SALIR F7=REG PREVIO F8=REG. SIGUIENTE'
+        DFHMSD TYPE=FINAL                                               00140000
+        END
+
