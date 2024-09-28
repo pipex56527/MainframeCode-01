@@ -1,455 +1,644 @@
-      *************************************************************     00010000
-      *   ENCAPSULADOR TABLA NOTAS                                      00020000
-      *   RUTINA QUE EJECUTA LAS SENTENCIAS DE LA BASE DE DATOS A       00030000
-      *   PARTIR DE UN TIPO Y SUBTIPO DE OPERACION QUE ENVIA            00040000
-      *   EL PROGRAMA QUE LA INVOCA.                                    00050000
-      *   TIPO    1: CONSULTA  - SELECT                                 00060000
-      *           2: ADICION   - INSERT                                 00070000
-      *           3: BORRAR    - DELETE                                 00080000
-      *           4: MODIFICAR - UPDATE                                 00090000
-      *   SUBTIPO 1: CONSULTA DE NOTAS POR CURSO Y ESTUDIANTE           00100000
-      *           2: CONSULTA DE NOTAS POR CURSO                        00110000
-      *           3: CONSULTA DE NOTAS POR ESTUDIANTE                   00120000
-      *           4: CONSULTA DE CONTADOR DE REGISTROS                  00130000
-      *           7: CONSULTA DE NOTAS POR CURSO-ESTUDIANTE DESC        00140000
-      *           8: CONSULTA DE NOTAS POR CURSO-ESTUDIANTE ASC         00150000
-      *************************************************************     00160000
-       IDENTIFICATION DIVISION.                                         00170000
-         PROGRAM-ID. RSNNOFIN.                                          00180000
-       ENVIRONMENT DIVISION.                                            00190000
-       DATA DIVISION.                                                   00200000
-       WORKING-STORAGE SECTION.                                         00210000
-      *===============================================================  00220000
-      * MODSQL - DEFINICION TABLA CURSOS SQL Y COBOL                    00230000
-           EXEC SQL                                                     00240000
-                INCLUDE NOTASFIN                                        00250000
-           END-EXEC.                                                    00260000
-      *===============================================================  00270000
-      * MODSQL - SE TIENE QUE UTILIZAR SQLCA                            00280000
-           EXEC SQL                                                     00290000
-                INCLUDE SQLCA                                           00300000
-           END-EXEC.                                                    00310000
-      *===============================================================  00320000
-      * MODSQL CAMPOS PARA ERROR DE DB2                                 00330000
-       01  DB2-ERR.                                                     00340000
-           03  DB2-SQLCODE                PIC S9(9).                    00350000
-           03  DB2-SQLCODE-Z              PIC -ZZZZZZZZ9.               00360000
-           03  DB2-ERROR.                                               00370000
-               05  DB2-ERR-MSG            PIC X(50).                    00380000
-               05  DB2-ERR-CODE           PIC X(20).                    00390000
-                                                                        00400000
-      *============================================================     00410000
-       01  DB2-COUNT1                     PIC S9(9) COMP-3.             00420000
-      *=============================================================    00430000
-       LINKAGE SECTION.                                                 00440000
-       01  DFHCOMMAREA            PIC X(100).                           00450000
-       01  AREA-LINK           REDEFINES DFHCOMMAREA.                   00460000
-           05 LK-NT-TIPO-OPE      PIC 9(01).                            00470000
-           05 LK-NT-SUBTIPO       PIC 9(02).                            00480000
-           05 LK-NT-CURSO         PIC X(05).                            00490000
-           05 LK-NT-DNIESTUD      PIC X(09).                            00500000
-           05 LK-NT-AAAA          PIC X(04).                            00510000
-           05 LK-NT-NOTA          PIC 99V99.                            00520000
-           05 LK-NT-CONTADOR      PIC 9(10).                            00530000
-           05 LK-NT-COD-RET       PIC 9(02).                            00540000
-           05 LK-NT-SQLCODE       PIC S9(9).                            00550000
-                                                                        00560000
-      *=================================================================00570000
-       PROCEDURE DIVISION USING DFHCOMMAREA.                            00580000
-      *=================================================================00590000
-      ******************************************************************00600000
-      * 0000-RAIZ                                                       00610000
-      ******************************************************************00620000
-       0000-RAIZ.                                                       00630000
-      *    MODSQL EXCEPCIONES SQL DB2                                   00640000
-           EXEC SQL                                                     00650000
-                WHENEVER  SQLERROR    CONTINUE                          00660000
-           END-EXEC                                                     00670000
-                                                                        00680000
-           EXEC SQL                                                     00690000
-                WHENEVER  SQLWARNING  CONTINUE                          00700000
-           END-EXEC                                                     00710000
-                                                                        00720000
-           EXEC SQL                                                     00730000
-                WHENEVER  NOT FOUND   CONTINUE                          00740000
-           END-EXEC                                                     00750000
-                                                                        00760000
-           PERFORM 0100-INICIO                                          00770000
-           PERFORM 0200-EJECUTAR-OPERACION                              00780000
-           PERFORM 0300-FIN                                             00790000
-           .                                                            00800000
-      ******************************************************************00810000
-      * 0100-INICIO                                                     00820000
-      ******************************************************************00830000
-       0100-INICIO.                                                     00840000
-           MOVE 1           TO LK-NT-COD-RET                            00841000
-      *   DISPLAY "AREA-LINK INP: " AREA-LINK                           00850000
-           .                                                            00860000
-      ******************************************************************00870000
-      * 0200-EJECUTAR-OPERACION                                         00880000
-      ******************************************************************00890000
-       0200-EJECUTAR-OPERACION.                                         00900000
-           EVALUATE LK-NT-TIPO-OPE                                      00910000
-              WHEN '1'                                                  00920000
-                 PERFORM 0210-CONSULTAR-NOTA                            00930000
-              WHEN '2'                                                  00940000
-                 PERFORM 0220-INSERTAR-NOTA                             00950000
-              WHEN '3'                                                  00960000
-                 PERFORM 0230-BORRAR-NOTA                               00970000
-              WHEN '4'                                                  00980000
-                 PERFORM 0240-MODIFICAR-NOTA                            00990000
-              WHEN OTHER                                                01000000
-                 MOVE 9             TO LK-NT-COD-RET                    01010000
-           END-EVALUATE                                                 01020000
-           .                                                            01030000
-      **************************************************************    01040000
-      * 0210-CONSULTAR-NOTA                                             01050000
-      **************************************************************    01060000
-       0210-CONSULTAR-NOTA.                                             01070000
-           EVALUATE LK-NT-SUBTIPO                                       01090000
-              WHEN '1'                                                  01100000
-                 PERFORM 0211-CONSULTA-NOTA-SUBTIPO-1                   01110000
-              WHEN '2'                                                  01120000
-                 PERFORM 0212-CONSULTA-NOTA-SUBTIPO-2                   01130000
-              WHEN '3'                                                  01140000
-                 PERFORM 0213-CONSULTA-NOTA-SUBTIPO-3                   01150000
-              WHEN '4'                                                  01160000
-                 PERFORM 0214-CONSULTA-NOTA-SUBTIPO-4                   01170000
-              WHEN '7'                                                  01180000
-                 PERFORM 0217-CONSULTA-NOTA-SUBTIPO-7                   01190000
-              WHEN '8'                                                  01200000
-                 PERFORM 0218-CONSULTA-NOTA-SUBTIPO-8                   01210000
-              WHEN OTHER                                                01220000
-                 MOVE 9             TO LK-NT-COD-RET                    01230000
-           END-EVALUATE                                                 01240000
-           .                                                            01250000
-                                                                        01260000
-      **************************************************************    01270000
-      * 0211-CONSULTAR-NOTA-POR CURSO Y ESTUDIANTE                      01280000
-      **************************************************************    01290000
-       0211-CONSULTA-NOTA-SUBTIPO-1.                                    01300000
-           MOVE LK-NT-CURSO    TO NT-CURSO                              01310000
-           MOVE LK-NT-DNIESTUD TO NT-DNIESTUDIANTE                      01320000
-      *                                                                 01330000
-           EXEC SQL                                                     01340000
-             SELECT                                                     01350000
-                CURSO, DNIESTUDIANTE, AAAA, NOTA                        01360000
-             INTO                                                       01370000
-                :NT-CURSO, :NT-DNIESTUDIANTE, :NT-AAAA, :NT-NOTA        01380000
-             FROM NOTASFIN                                              01390000
-             WHERE CURSO = :NT-CURSO                                    01400000
-                AND DNIESTUDIANTE = :NT-DNIESTUDIANTE                   01410000
-           END-EXEC                                                     01420000
-                                                                        01430000
-           IF SQLCODE = 0 THEN                                          01440000
-              MOVE 0               TO  LK-NT-COD-RET                    01450000
-              MOVE NT-AAAA         TO  LK-NT-AAAA                       01460000
-              MOVE NT-NOTA         TO  LK-NT-NOTA                       01470000
-           ELSE                                                         01480000
-              IF SQLCODE = +100 THEN                                    01490000
-                 MOVE 1 TO  LK-NT-COD-RET                               01500000
-              ELSE                                                      01510000
-                 MOVE 2 TO  LK-NT-COD-RET                               01520000
-                 PERFORM 0900-ERROR-DB2                                 01530000
-              END-IF                                                    01540000
-           END-IF                                                       01550000
-           .                                                            01560000
-      **************************************************************    01570000
-      * 0212-CONSULTAR-NOTA-POR CURSO                                   01580000
-      **************************************************************    01590000
-       0212-CONSULTA-NOTA-SUBTIPO-2.                                    01600000
-           MOVE LK-NT-CURSO         TO NT-CURSO                         01610000
-      *                                                                 01620000
-           EXEC SQL                                                     01630000
-             SELECT                                                     01640000
-                CURSO, DNIESTUDIANTE, AAAA, NOTA                        01650000
-             INTO                                                       01660000
-                :NT-CURSO, :NT-DNIESTUDIANTE, :NT-AAAA, :NT-NOTA        01670000
-             FROM NOTASFIN                                              01680000
-             WHERE CURSO = :NT-CURSO                                    01690000
-           END-EXEC                                                     01700000
-                                                                        01710000
-           IF SQLCODE = 0 THEN                                          01720000
-              MOVE 0                TO  LK-NT-COD-RET                   01730000
-              MOVE NT-DNIESTUDIANTE TO  LK-NT-DNIESTUD                  01740000
-              MOVE NT-AAAA          TO  LK-NT-AAAA                      01750000
-              MOVE NT-NOTA          TO  LK-NT-NOTA                      01760000
-           ELSE                                                         01770000
-              IF SQLCODE = +100 THEN                                    01780000
-                 MOVE 1 TO  LK-NT-COD-RET                               01790000
-              ELSE                                                      01800000
-                 MOVE 2 TO  LK-NT-COD-RET                               01810000
-                 PERFORM 0900-ERROR-DB2                                 01820000
-              END-IF                                                    01830000
-           END-IF                                                       01840000
-           .                                                            01850000
-      **************************************************************    01860000
-      * 0213-CONSULTA-NOTA-POR ESTUDIANTE                               01870000
-      **************************************************************    01880000
-       0213-CONSULTA-NOTA-SUBTIPO-3.                                    01890000
-           MOVE LK-NT-DNIESTUD TO NT-DNIESTUDIANTE                      01900000
-      *                                                                 01910000
-           EXEC SQL                                                     01920000
-             SELECT                                                     01930000
-                CURSO, DNIESTUDIANTE, AAAA, NOTA                        01940000
-             INTO                                                       01950000
-                :NT-CURSO, :NT-DNIESTUDIANTE, :NT-AAAA, :NT-NOTA        01960000
-             FROM NOTASFIN                                              01970000
-             WHERE DNIESTUDIANTE = :NT-DNIESTUDIANTE                    01980000
-                                                                        01990000
-           END-EXEC                                                     02000000
-                                                                        02010000
-           IF SQLCODE = 0 THEN                                          02020000
-              MOVE 0                TO  LK-NT-COD-RET                   02030000
-              MOVE NT-CURSO         TO  LK-NT-CURSO                     02040000
-      *       MOVE NT-DNIESTUDIANTE TO  LK-NT-DNIESTUD                  02050000
-              MOVE NT-AAAA          TO  LK-NT-AAAA                      02060000
-              MOVE NT-NOTA          TO  LK-NT-NOTA                      02070000
-           ELSE                                                         02080000
-              IF SQLCODE = +100 THEN                                    02090000
-                 MOVE 1 TO  LK-NT-COD-RET                               02100000
-              ELSE                                                      02110000
-                 MOVE 2 TO  LK-NT-COD-RET                               02120000
-                 PERFORM 0900-ERROR-DB2                                 02130000
-              END-IF                                                    02140000
-           END-IF                                                       02150000
-           .                                                            02160000
-      **************************************************************    02170000
-      * 0214-ENCONTRAR CONTADOR NOTASFIN                                02180000
-      **************************************************************    02190000
-       0214-CONSULTA-NOTA-SUBTIPO-4.                                    02200000
-           MOVE LK-NT-DNIESTUD TO NT-DNIESTUDIANTE                      02210000
-      *                                                                 02220000
-           EXEC SQL                                                     02230000
-             SELECT                                                     02240000
-                COUNT(*) INTO :DB2-COUNT1                               02250000
-             FROM NOTASFIN                                              02260000
-             WHERE DNIESTUDIANTE  = :NT-DNIESTUDIANTE                   02270000
-                                                                        02280000
-           END-EXEC                                                     02290000
-                                                                        02300000
-           IF SQLCODE = 0 THEN                                          02310000
-              MOVE 0               TO  LK-NT-COD-RET                    02320000
-              MOVE DB2-COUNT1      TO  LK-NT-CONTADOR                   02330000
-           ELSE                                                         02340000
-              IF SQLCODE = +100 THEN                                    02350000
-                 MOVE 1 TO  LK-NT-COD-RET                               02360000
-              ELSE                                                      02370000
-                 MOVE 2 TO  LK-NT-COD-RET                               02380000
-                 PERFORM 0900-ERROR-DB2                                 02390000
-              END-IF                                                    02400000
-           END-IF                                                       02410000
-           .                                                            02420000
-      ***************************************************               02430000
-      * 0217-CONSULTA-NOTA-SUBTIPO-7 POR ESTUDIANTE ANT *               02440000
-      ***************************************************               02450000
-       0217-CONSULTA-NOTA-SUBTIPO-7.                                    02460000
-           MOVE LK-NT-CURSO      TO NT-CURSO                            02470000
-           MOVE LK-NT-DNIESTUD   TO NT-DNIESTUDIANTE                    02480000
-                                                                        02490000
-           EXEC SQL                                                     02500000
-                DECLARE CURPREV CURSOR FOR                              02510000
-      *            SELECT                                               02520000
-      *               CURSO, DNIESTUDIANTE, AAAA, NOTA                  02530000
-      *            FROM NOTASFIN                                        02540000
-      *            WHERE CURSO = :NT-CURSO                              02550000
-      *              AND DNIESTUDIANTE  < :NT-DNIESTUDIANTE             02560000
-      *            ORDER BY CURSO, DNIESTUDIANTE DESC                   02570000
-                   SELECT                                               02580000
-                      CURSO, DNIESTUDIANTE, AAAA, NOTA                  02590000
-                   FROM NOTASFIN                                        02600000
-                   WHERE DNIESTUDIANTE  < :NT-DNIESTUDIANTE             02610000
-                   ORDER BY DNIESTUDIANTE DESC                          02620000
-           END-EXEC                                                     02630000
-      *                                                                 02640000
-           EXEC SQL                                                     02650000
-                OPEN CURPREV                                            02660000
-           END-EXEC                                                     02670000
-      *                                                                 02680000
-           EXEC SQL                                                     02690000
-                FETCH CURPREV                                           02700000
-                INTO                                                    02710000
-                     :NT-CURSO                                          02720000
-                   , :NT-DNIESTUDIANTE                                  02730000
-                   , :NT-AAAA                                           02740000
-                   , :NT-NOTA                                           02750000
-           END-EXEC                                                     02760000
-      *                                                                 02770000
-           IF SQLCODE = 0 THEN                                          02780000
-      *       REGISTRO ANTERIOR                                         02790000
-              MOVE 0                      TO LK-NT-COD-RET              02800000
-              MOVE NT-DNIESTUDIANTE       TO LK-NT-DNIESTUD             02810000
-              MOVE NT-AAAA                TO LK-NT-AAAA                 02820000
-              MOVE NT-NOTA                TO LK-NT-NOTA                 02830000
-           ELSE                                                         02840000
-              IF SQLCODE = +100 THEN                                    02850000
-                 MOVE 1             TO  LK-NT-COD-RET                   02860000
-              ELSE                                                      02870000
-                 MOVE 2             TO  LK-NT-COD-RET                   02880000
-                 PERFORM 0900-ERROR-DB2                                 02890000
-              END-IF                                                    02900000
-           END-IF                                                       02910000
-                                                                        02920000
-           EXEC SQL                                                     02930000
-                CLOSE CURPREV                                           02940000
-           END-EXEC                                                     02950000
-           .                                                            02960000
-      ***************************************************               02970000
-      * 0218-CONSULTA-NOTA-SUBTIPO-8 POR ESTUDIANTE SIG *               02980000
-      ***************************************************               02990000
-       0218-CONSULTA-NOTA-SUBTIPO-8.                                    03000000
-           MOVE LK-NT-CURSO      TO NT-CURSO                            03010000
-           MOVE LK-NT-DNIESTUD   TO NT-DNIESTUDIANTE                    03020000
-                                                                        03030000
-           EXEC SQL                                                     03040000
-                DECLARE CURNEXT CURSOR FOR                              03050000
-      *            SELECT                                               03060000
-      *               CURSO, DNIESTUDIANTE, AAAA, NOTA                  03070000
-      *            FROM NOTASFIN                                        03080000
-      *            WHERE CURSO = :NT-CURSO                              03090000
-      *              AND DNIESTUDIANTE  > :NT-DNIESTUDIANTE             03100000
-      *            ORDER BY CURSO, DNIESTUDIANTE ASC                    03110000
-                   SELECT                                               03120000
-                      CURSO, DNIESTUDIANTE, AAAA, NOTA                  03130000
-                   FROM NOTASFIN                                        03140000
-                   WHERE DNIESTUDIANTE  > :NT-DNIESTUDIANTE             03150000
-                   ORDER BY DNIESTUDIANTE ASC                           03160000
-           END-EXEC                                                     03170000
-      *                                                                 03180000
-           EXEC SQL                                                     03190000
-                OPEN CURNEXT                                            03200000
-           END-EXEC                                                     03210000
-      *                                                                 03220000
-           EXEC SQL                                                     03230000
-                FETCH CURNEXT                                           03240000
-                INTO                                                    03250000
-                     :NT-CURSO                                          03260000
-                   , :NT-DNIESTUDIANTE                                  03270000
-                   , :NT-AAAA                                           03280000
-                   , :NT-NOTA                                           03290000
-           END-EXEC                                                     03300000
-      *                                                                 03310000
-           IF SQLCODE = 0 THEN                                          03320000
-      *       REGISTRO SIGUIENTE                                        03330000
-              MOVE 0                      TO LK-NT-COD-RET              03340000
-              MOVE NT-DNIESTUDIANTE       TO LK-NT-DNIESTUD             03350000
-              MOVE NT-AAAA                TO LK-NT-AAAA                 03360000
-              MOVE NT-NOTA                TO LK-NT-NOTA                 03370000
-           ELSE                                                         03380000
-              IF SQLCODE = +100 THEN                                    03390000
-                 MOVE 1             TO  LK-NT-COD-RET                   03400000
-              ELSE                                                      03410000
-                 MOVE 2             TO  LK-NT-COD-RET                   03420000
-                 PERFORM 0900-ERROR-DB2                                 03430000
-              END-IF                                                    03440000
-           END-IF                                                       03450000
-                                                                        03460000
-           EXEC SQL                                                     03470000
-                CLOSE CURNEXT                                           03480000
-           END-EXEC                                                     03490000
-           .                                                            03500000
-      ***************************************************               03510000
-      * INSERTA LOS DATOS EN LA TABLA                   *               03520000
-      ***************************************************               03530000
-       0220-INSERTAR-NOTA.                                              03540000
-           MOVE LK-NT-CURSO          TO  NT-CURSO                       03550000
-           MOVE LK-NT-DNIESTUD       TO  NT-DNIESTUDIANTE               03560000
-           MOVE LK-NT-AAAA           TO  NT-AAAA                        03570000
-           MOVE LK-NT-NOTA           TO  NT-NOTA                        03580000
-                                                                        03590000
-           EXEC SQL                                                     03600000
-             INSERT INTO NOTASFIN                                       03610000
-                (                                                       03620000
-                 CURSO, DNIESTUDIANTE, AAAA, NOTA                       03630000
-                )                                                       03640000
-             VALUES                                                     03650000
-                (                                                       03660000
-                 :NT-CURSO,:NT-DNIESTUDIANTE, :NT-AAAA, :NT-NOTA        03670000
-                )                                                       03680000
-           END-EXEC                                                     03690000
-                                                                        03700000
-           IF SQLCODE = 0                                               03710000
-             MOVE 0         TO LK-NT-COD-RET                            03720000
-           ELSE                                                         03730000
-             IF SQLCODE = +100 THEN                                     03740000
-                MOVE 1      TO  LK-NT-COD-RET                           03750000
-             ELSE                                                       03760000
-                MOVE 2      TO  LK-NT-COD-RET                           03770000
-                PERFORM 0900-ERROR-DB2                                  03780000
-             END-IF                                                     03790000
-           END-IF                                                       03800000
-           .                                                            03810000
-      ***************************************************               03820000
-      * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *               03830000
-      ***************************************************               03840000
-       0230-BORRAR-NOTA.                                                03850000
-           MOVE LK-NT-CURSO          TO  NT-CURSO                       03860000
-           MOVE LK-NT-DNIESTUD       TO  NT-DNIESTUDIANTE               03870000
-                                                                        03880000
-           EXEC SQL                                                     03890000
-             DELETE FROM NOTASFIN                                       03900000
-               WHERE CURSO = :NT-CURSO                                  03910000
-                  AND DNIESTUDIANTE = :NT-DNIESTUDIANTE                 03920000
-           END-EXEC                                                     03930000
-                                                                        03940000
-           IF SQLCODE = 0                                               03950000
-             MOVE 0         TO LK-NT-COD-RET                            03960000
-           ELSE                                                         03970000
-             IF SQLCODE = +100 THEN                                     03980000
-                MOVE 1      TO  LK-NT-COD-RET                           03990000
-             ELSE                                                       04000000
-                MOVE 2      TO  LK-NT-COD-RET                           04010000
-                PERFORM 0900-ERROR-DB2                                  04020000
-             END-IF                                                     04030000
-           END-IF                                                       04040000
-           .                                                            04050000
-      ***************************************************               04060000
-      * ACTUALIZA LOS DATOS EN LA TABLA                 *               04070000
-      ***************************************************               04080000
-       0240-MODIFICAR-NOTA.                                             04090000
-           MOVE LK-NT-CURSO          TO  NT-CURSO                       04100000
-           MOVE LK-NT-DNIESTUD       TO  NT-DNIESTUDIANTE               04110000
-           MOVE LK-NT-AAAA           TO  NT-AAAA                        04120000
-           MOVE LK-NT-NOTA           TO  NT-NOTA                        04130000
-                                                                        04140000
-           EXEC SQL                                                     04150000
-              UPDATE NOTASFIN                                           04160000
-              SET CURSO          = :NT-CURSO,                           04170000
-                  DNIESTUDIANTE  = :NT-DNIESTUDIANTE,                   04180000
-                  AAAA           = :NT-AAAA,                            04190000
-                  NOTA           = :NT-NOTA                             04200000
-              WHERE CURSO = :NT-CURSO AND                               04210000
-                    DNIESTUDIANTE = :NT-DNIESTUDIANTE                   04220000
-           END-EXEC                                                     04230000
-                                                                        04240000
-           IF SQLCODE = 0                                               04250000
-             MOVE 0         TO LK-NT-COD-RET                            04260000
-           ELSE                                                         04270000
-             IF SQLCODE = +100 THEN                                     04280000
-                MOVE 1      TO  LK-NT-COD-RET                           04290000
-             ELSE                                                       04300000
-                MOVE 2      TO  LK-NT-COD-RET                           04310000
-                PERFORM 0900-ERROR-DB2                                  04320000
-             END-IF                                                     04330000
-           END-IF                                                       04340000
-           .                                                            04350000
-      ******************************************************************04360000
-      * 0900-ERROR-DB2                                                  04370000
-      ******************************************************************04380000
-       0900-ERROR-DB2.                                                  04390000
-           MOVE SQLCODE TO LK-NT-SQLCODE                                04400000
-           MOVE SQLCODE TO DB2-SQLCODE                                  04410000
-      *    DISPLAY "ERROR DB2 EN RUTINA: "                              04420000
-      *    DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE                    04430000
-      *    DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z                  04440000
-      *    DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG                    04450000
-      *    DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE                   04460000
-           .                                                            04470000
-      ******************************************************************04480000
-      * FIN SESION                                                      04490000
-      ******************************************************************04500000
-       0300-FIN.                                                        04510000
-           GOBACK                                                       04520000
-           .                                                            04530000
-      ******************************************************************04540000
+      *************************************************************
+      *   ENCAPSULADOR TABLA NOTAS
+      *   RUTINA QUE EJECUTA LAS SENTENCIAS DE LA BASE DE DATOS A
+      *   PARTIR DE UN TIPO Y SUBTIPO DE OPERACION QUE ENVIA
+      *   EL PROGRAMA QUE LA INVOCA.
+      *   TIPO    1: CONSULTA  - SELECT
+      *           2: ADICION   - INSERT
+      *           3: BORRAR    - DELETE
+      *           4: MODIFICAR - UPDATE
+      *   SUBTIPO 1: CONSULTA DE NOTAS POR CURSO Y ESTUDIANTE
+      *           2: CONSULTA DE NOTAS POR CURSO
+      *           3: CONSULTA DE NOTAS POR ESTUDIANTE
+      *           4: CONSULTA DE CONTADOR DE REGISTROS
+      *           5: CONSULTA DE NOTAS ESPECIFICAS DE UN ESTUDIANTE
+      *           7: CONSULTA DE NOTAS POR CURSO-ESTUDIANTE DESC
+      *           8: CONSULTA DE NOTAS POR CURSO-ESTUDIANTE ASC
+      *************************************************************
+       IDENTIFICATION DIVISION.
+         PROGRAM-ID. RSNNOFIN.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      *===============================================================
+      * MODSQL - DEFINICION TABLA CURSOS SQL Y COBOL
+           EXEC SQL
+                INCLUDE NOTASFIN
+           END-EXEC.
+      *===============================================================
+      * MODSQL - SE TIENE QUE UTILIZAR SQLCA
+           EXEC SQL
+                INCLUDE SQLCA
+           END-EXEC.
+      *===============================================================
+      * MODSQL CAMPOS PARA ERROR DE DB2
+       01  DB2-ERR.
+           03  DB2-SQLCODE        PIC S9(9).
+           03  DB2-SQLCODE-Z      PIC -ZZZZZZZZ9.
+           03  DB2-ERROR.
+               05  DB2-ERR-MSG    PIC X(50).
+               05  DB2-ERR-CODE   PIC X(20).
+
+      *============================================================
+       01  WS-NOMBRECOLA          PIC X(08) VALUE 'NOTAS_TS'.
+       01  WS-RESPUESTA           PIC S9(8) COMP.
+       01  WS-DB2-COUNT1          PIC S9(9) COMP-3.
+       01  WS-INDICE-TS           PIC S9(9) COMP-3.
+       01  WS-I                   PIC 9(10).
+       01  WS-AREA-COLA.
+           05 WS-COLA-TIPOOPE     PIC 9(01).
+           05 WS-COLA-SUBTIPO     PIC 9(02).
+           05 WS-COLA-CURSO       PIC X(05).
+           05 WS-COLA-DNIESTUD    PIC X(09).
+           05 WS-COLA-AAAA        PIC X(04).
+           05 WS-COLA-NOTA        PIC 99V99.
+           05 WS-COLA-CONTADOR    PIC 9(10).
+           05 WS-COLA-INDICE      PIC 9(10).
+      *
+       01  WS-TRAZA               PIC X(150).
+      *=============================================================
+       LINKAGE SECTION.
+       01  DFHCOMMAREA            PIC X(100).
+       01  AREA-LINK           REDEFINES DFHCOMMAREA.
+           05 LK-NT-TIPO-OPE      PIC 9(01).
+           05 LK-NT-SUBTIPO       PIC 9(02).
+           05 LK-NT-CURSO         PIC X(05).
+           05 LK-NT-DNIESTUD      PIC X(09).
+           05 LK-NT-AAAA          PIC X(04).
+           05 LK-NT-NOTA          PIC 99V99.
+           05 LK-NT-CONTADOR      PIC 9(10).
+           05 LK-NT-INDICE        PIC 9(10).
+           05 LK-NT-SQLCODE       PIC S9(9).
+           05 LK-NT-COD-RET       PIC 9(02).
+
+      *=================================================================
+       PROCEDURE DIVISION USING DFHCOMMAREA.
+      *=================================================================
+      ******************************************************************
+      * 0000-RAIZ
+      ******************************************************************
+       0000-RAIZ.
+      *    MODSQL EXCEPCIONES SQL DB2
+           EXEC SQL
+                WHENEVER  SQLERROR    CONTINUE
+           END-EXEC
+
+           EXEC SQL
+                WHENEVER  SQLWARNING  CONTINUE
+           END-EXEC
+
+           EXEC SQL
+                WHENEVER  NOT FOUND   CONTINUE
+           END-EXEC
+      ****
+           MOVE SPACES TO WS-TRAZA
+           STRING ' INICIO PROGRAMA AREA-L = '   DELIMITED BY SIZE
+                  AREA-LINK DELIMITED BY SIZE
+           INTO WS-TRAZA
+           PERFORM 0000-COLA-TS
+      ****
+           PERFORM 0000-LIMPIAR-COLA
+           PERFORM 0100-INICIO
+           PERFORM 0200-EJECUTAR-OPERACION
+           PERFORM 0300-FIN
+           .
+      ******************************************************************
+      * 0000-LIMPIAR-COLA.
+      ******************************************************************
+       0000-LIMPIAR-COLA.
+             EXEC CICS DELETEQ TS
+                  QUEUE (WS-NOMBRECOLA)
+                  RESP (WS-RESPUESTA)
+             END-EXEC
+
+             DISPLAY "CONTENIDO COLA:   " WS-AREA-COLA
+           .
+      ******************************************************************
+      * 0100-INICIO
+      ******************************************************************
+       0100-INICIO.
+           DISPLAY "AREA-LINK INP: " AREA-LINK
+           .
+      ******************************************************************
+      * 0200-EJECUTAR-OPERACION
+      ******************************************************************
+       0200-EJECUTAR-OPERACION.
+      ****
+           MOVE SPACES TO WS-TRAZA
+           STRING ' TIPO OPERAC INICIO =  ' DELIMITED BY SIZE
+                  AREA-LINK      DELIMITED BY SIZE
+           INTO WS-TRAZA
+           PERFORM 0000-COLA-TS
+      ****
+           EVALUATE LK-NT-TIPO-OPE
+              WHEN 1
+                 PERFORM 0210-CONSULTAR-NOTA
+              WHEN 2
+                 PERFORM 0220-INSERTAR-NOTA
+              WHEN 3
+                 PERFORM 0230-BORRAR-NOTA
+              WHEN 4
+                 PERFORM 0240-MODIFICAR-NOTA
+              WHEN OTHER
+                 MOVE 9             TO LK-NT-COD-RET
+           END-EVALUATE
+           .
+      **************************************************************
+      * 0210-CONSULTAR-NOTA
+      **************************************************************
+       0210-CONSULTAR-NOTA.
+      ****
+           MOVE SPACES TO WS-TRAZA
+           STRING ' SUBTIPO OPE = '   DELIMITED BY SIZE
+                  LK-NT-SUBTIPO       DELIMITED BY SIZE
+           INTO WS-TRAZA
+           PERFORM 0000-COLA-TS
+      ****
+           MOVE 1           TO LK-NT-COD-RET
+           EVALUATE LK-NT-SUBTIPO
+              WHEN 1
+                 PERFORM 0211-CONSULTA-NOTA-SUBTIPO-1
+              WHEN 2
+                 PERFORM 0212-CONSULTA-NOTA-SUBTIPO-2
+              WHEN 3
+                 PERFORM 0213-CONSULTA-NOTA-SUBTIPO-3
+              WHEN 4
+                 PERFORM 0214-CONSULTA-NOTA-SUBTIPO-4
+              WHEN 5
+                 PERFORM 0215-CONSULTA-NOTA-SUBTIPO-5
+              WHEN 7
+                 PERFORM 0217-CONSULTA-NOTA-SUBTIPO-7
+              WHEN 8
+                 PERFORM 0218-CONSULTA-NOTA-SUBTIPO-8
+              WHEN OTHER
+                 MOVE 9             TO LK-NT-COD-RET
+           END-EVALUATE
+
+
+      ****
+           MOVE SPACES TO WS-TRAZA
+           STRING ' CODIGO RETORNO  = '   DELIMITED BY SIZE
+                  LK-NT-COD-RET       DELIMITED BY SIZE
+           INTO WS-TRAZA
+           PERFORM 0000-COLA-TS
+      ****
+           .
+
+      **************************************************************
+      * 0211-CONSULTAR-NOTA-POR CURSO Y ESTUDIANTE
+      **************************************************************
+       0211-CONSULTA-NOTA-SUBTIPO-1.
+           MOVE LK-NT-CURSO    TO NT-CURSO
+           MOVE LK-NT-DNIESTUD TO NT-DNIESTUDIANTE
+      *
+           EXEC SQL
+             SELECT
+                CURSO, DNIESTUDIANTE, AAAA, NOTA
+             INTO
+                :NT-CURSO, :NT-DNIESTUDIANTE, :NT-AAAA, :NT-NOTA
+             FROM NOTASFIN
+             WHERE CURSO = :NT-CURSO
+                AND DNIESTUDIANTE = :NT-DNIESTUDIANTE
+           END-EXEC
+
+           IF SQLCODE = 0 THEN
+              MOVE 0               TO  LK-NT-COD-RET
+              MOVE NT-AAAA         TO  LK-NT-AAAA
+              MOVE NT-NOTA         TO  LK-NT-NOTA
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1 TO  LK-NT-COD-RET
+              ELSE
+                 MOVE 2 TO  LK-NT-COD-RET
+                 PERFORM 0900-ERROR-DB2
+              END-IF
+           END-IF
+           .
+      **************************************************************
+      * 0212-CONSULTAR-NOTA-POR CURSO
+      **************************************************************
+       0212-CONSULTA-NOTA-SUBTIPO-2.
+           MOVE LK-NT-CURSO         TO NT-CURSO
+      *
+           EXEC SQL
+             SELECT
+                CURSO, DNIESTUDIANTE, AAAA, NOTA
+             INTO
+                :NT-CURSO, :NT-DNIESTUDIANTE, :NT-AAAA, :NT-NOTA
+             FROM NOTASFIN
+             WHERE CURSO = :NT-CURSO
+           END-EXEC
+
+           IF SQLCODE = 0 THEN
+              MOVE 0                TO  LK-NT-COD-RET
+              MOVE NT-DNIESTUDIANTE TO  LK-NT-DNIESTUD
+              MOVE NT-AAAA          TO  LK-NT-AAAA
+              MOVE NT-NOTA          TO  LK-NT-NOTA
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1 TO  LK-NT-COD-RET
+              ELSE
+                 MOVE 2 TO  LK-NT-COD-RET
+                 PERFORM 0900-ERROR-DB2
+              END-IF
+           END-IF
+           .
+      **************************************************************
+      * 0213-CONSULTA-NOTA-POR ESTUDIANTE
+      **************************************************************
+       0213-CONSULTA-NOTA-SUBTIPO-3.
+           MOVE LK-NT-DNIESTUD TO NT-DNIESTUDIANTE
+      *
+           EXEC SQL
+             SELECT
+                CURSO, DNIESTUDIANTE, AAAA, NOTA
+             INTO
+                :NT-CURSO, :NT-DNIESTUDIANTE, :NT-AAAA, :NT-NOTA
+             FROM NOTASFIN
+             WHERE DNIESTUDIANTE = :NT-DNIESTUDIANTE
+
+           END-EXEC
+
+           IF SQLCODE = 0 THEN
+              MOVE 0                TO  LK-NT-COD-RET
+              MOVE NT-CURSO         TO  LK-NT-CURSO
+      *       MOVE NT-DNIESTUDIANTE TO  LK-NT-DNIESTUD
+              MOVE NT-AAAA          TO  LK-NT-AAAA
+              MOVE NT-NOTA          TO  LK-NT-NOTA
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1 TO  LK-NT-COD-RET
+              ELSE
+                 MOVE 2 TO  LK-NT-COD-RET
+                 PERFORM 0900-ERROR-DB2
+              END-IF
+           END-IF
+           .
+      **************************************************************
+      * 0214-ENCONTRAR CONTADOR NOTASFIN
+      **************************************************************
+       0214-CONSULTA-NOTA-SUBTIPO-4.
+           MOVE LK-NT-DNIESTUD TO NT-DNIESTUDIANTE
+      *
+           EXEC SQL
+             SELECT
+                COUNT(*) INTO :WS-DB2-COUNT1
+             FROM NOTASFIN
+             WHERE DNIESTUDIANTE  = :NT-DNIESTUDIANTE
+
+           END-EXEC
+
+           IF SQLCODE = 0 THEN
+              MOVE 0               TO  LK-NT-COD-RET
+              MOVE WS-DB2-COUNT1   TO  LK-NT-CONTADOR
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1 TO  LK-NT-COD-RET
+                 MOVE 0 TO  LK-NT-CONTADOR
+              ELSE
+                 MOVE 2 TO  LK-NT-COD-RET
+                 MOVE 0 TO  LK-NT-CONTADOR
+                 PERFORM 0900-ERROR-DB2
+              END-IF
+           END-IF
+           .
+      **************************************************************
+      * 0215-ENTREGA UN REGISTRO ESPECÍFICO DE UN CURSO Y ESTUDIANTE
+      **************************************************************
+       0215-CONSULTA-NOTA-SUBTIPO-5.
+      ****
+           MOVE SPACES TO WS-TRAZA
+           STRING ' ENTRE A 215 = '   DELIMITED BY SIZE
+                  AREA-LINK           DELIMITED BY SIZE
+           INTO WS-TRAZA
+           PERFORM 0000-COLA-TS
+      ****
+
+           MOVE LK-NT-TIPO-OPE   TO WS-COLA-TIPOOPE
+           MOVE LK-NT-SUBTIPO    TO WS-COLA-SUBTIPO
+           MOVE LK-NT-DNIESTUD   TO WS-COLA-DNIESTUD
+
+           MOVE 0 TO WS-I
+      ****
+           MOVE SPACES TO WS-TRAZA
+           STRING ' AREA-LINK 215  = '   DELIMITED BY SIZE
+                  AREA-LINK           DELIMITED BY SIZE
+           INTO WS-TRAZA
+           PERFORM 0000-COLA-TS
+      ****
+
+           EXEC SQL
+                DECLARE CURPROX CURSOR FOR
+                   SELECT
+                      CURSO, DNIESTUDIANTE, AAAA, NOTA
+                   FROM NOTASFIN
+                   WHERE
+                      DNIESTUDIANTE  = :LK-NT-DNIESTUD
+                   ORDER BY  AAAA    ASC
+           END-EXEC
+      *
+           EXEC SQL
+                OPEN CURPROX
+           END-EXEC
+      *
+      ****
+           MOVE SPACES TO WS-TRAZA
+           STRING ' INDICES ANTES FETCH WS-I = '  DELIMITED BY SIZE
+                    WS-I          DELIMITED BY SIZE
+           ' INDICE ANTES FETCH LK-NT-INDICE = ' DELIMITED BY SIZE
+                    LK-NT-INDICE  DELIMITED BY SIZE
+           INTO WS-TRAZA
+           PERFORM 0000-COLA-TS
+
+           PERFORM 0215-1-FETCH-NOTA  UNTIL WS-I = LK-NT-INDICE
+                                     OR LK-NT-COD-RET EQUAL 1
+
+           IF SQLCODE = 0 THEN
+              MOVE 0                      TO LK-NT-COD-RET
+              MOVE NT-CURSO               TO LK-NT-CURSO
+              MOVE NT-DNIESTUDIANTE       TO LK-NT-DNIESTUD
+              MOVE NT-AAAA                TO LK-NT-AAAA
+              MOVE NT-NOTA                TO LK-NT-NOTA
+
+      ****
+           MOVE SPACES TO WS-TRAZA
+           STRING ' AREA LINK-FETCH SALIDA = '   DELIMITED BY SIZE
+                  AREA-LINK            DELIMITED BY SIZE
+           INTO WS-TRAZA
+           PERFORM 0000-COLA-TS
+      ****
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1             TO  LK-NT-COD-RET
+              ELSE
+                 MOVE 2             TO  LK-NT-COD-RET
+                 PERFORM 0900-ERROR-DB2
+              END-IF
+           END-IF
+           EXEC SQL
+                CLOSE CURPROX
+           END-EXEC
+           .
+      **************************************************************
+      * 0215-1-FETCH-ESTUDIANTE
+      **************************************************************
+       0215-1-FETCH-NOTA.
+           EXEC SQL
+                FETCH CURPROX
+                INTO
+                     :NT-CURSO
+                   , :NT-DNIESTUDIANTE
+                   , :NT-AAAA
+                   , :NT-NOTA
+           END-EXEC
+
+
+      ****
+           MOVE SPACES TO WS-TRAZA
+           STRING ' AREA-LINK LK-NT 215-1 FETCH = '  DELIMITED BY SIZE
+                    AREA-LINK      DELIMITED BY SIZE
+           INTO WS-TRAZA
+           PERFORM 0000-COLA-TS
+      ****
+
+           IF SQLCODE = 0 THEN
+              ADD  1                  TO WS-I
+              MOVE 0                  TO LK-NT-COD-RET
+              MOVE NT-CURSO           TO LK-NT-CURSO
+                                         WS-COLA-CURSO
+              MOVE NT-DNIESTUDIANTE   TO WS-COLA-DNIESTUD
+              MOVE NT-AAAA            TO LK-NT-AAAA
+                                         WS-COLA-AAAA
+              MOVE NT-NOTA            TO LK-NT-NOTA
+                                         WS-COLA-NOTA
+              EXEC CICS  WRITEQ TS
+                   QUEUE (WS-NOMBRECOLA)
+                   FROM  (WS-AREA-COLA)
+                   RESP  (WS-RESPUESTA)
+              END-EXEC
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1             TO  LK-NT-COD-RET
+              ELSE
+                 MOVE 2             TO  LK-NT-COD-RET
+                 PERFORM 0900-ERROR-DB2
+              END-IF
+           END-IF
+           .
+      ***************************************************
+      * 0217-CONSULTA-NOTA-SUBTIPO-7              *
+      ***************************************************
+       0217-CONSULTA-NOTA-SUBTIPO-7.
+      *    MOVE LK-NT-CURSO      TO NT-CURSO
+           MOVE LK-NT-DNIESTUD   TO NT-DNIESTUDIANTE
+
+           EXEC SQL
+                DECLARE CURPREV CURSOR FOR
+                   SELECT
+                      CURSO, DNIESTUDIANTE, AAAA, NOTA
+                   FROM NOTASFIN
+                   WHERE
+                      DNIESTUDIANTE  < :NT-DNIESTUDIANTE
+                   ORDER BY DNIESTUDIANTE DESC
+           END-EXEC
+      *
+           EXEC SQL
+                OPEN CURPREV
+           END-EXEC
+      *****               FETCH PREV                *****
+           EXEC SQL
+                FETCH CURPREV
+                INTO
+                     :NT-CURSO
+                   , :NT-DNIESTUDIANTE
+                   , :NT-AAAA
+                   , :NT-NOTA
+           END-EXEC
+      *
+           IF SQLCODE = 0 THEN
+      *       REGISTRO ANTERIOR
+              MOVE 0                      TO LK-NT-COD-RET
+              MOVE NT-CURSO               TO LK-NT-CURSO
+              MOVE NT-DNIESTUDIANTE       TO LK-NT-DNIESTUD
+              MOVE NT-AAAA                TO LK-NT-AAAA
+              MOVE NT-NOTA                TO LK-NT-NOTA
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1             TO  LK-NT-COD-RET
+              ELSE
+                 MOVE 2             TO  LK-NT-COD-RET
+                 PERFORM 0900-ERROR-DB2
+              END-IF
+           END-IF
+
+           EXEC SQL
+                CLOSE CURPREV
+           END-EXEC
+           .
+      ***************************************************
+      * 0218-CONSULTA-NOTA-SUBTIPO-8                   *
+      ***************************************************
+       0218-CONSULTA-NOTA-SUBTIPO-8.
+      *     MOVE LK-NT-CURSO      TO NT-CURSO
+            MOVE LK-NT-DNIESTUD   TO NT-DNIESTUDIANTE
+
+           EXEC SQL
+                DECLARE CURNEXT CURSOR FOR
+                   SELECT
+                      CURSO, DNIESTUDIANTE, AAAA, NOTA
+                   FROM NOTASFIN
+                   WHERE
+                      DNIESTUDIANTE  > :NT-DNIESTUDIANTE
+                   ORDER BY  DNIESTUDIANTE ASC
+           END-EXEC
+      *
+           EXEC SQL
+                OPEN CURNEXT
+           END-EXEC
+
+      *****               FETCH NEXT                *****
+           EXEC SQL
+                FETCH CURNEXT
+                INTO
+                     :NT-CURSO
+                   , :NT-DNIESTUDIANTE
+                   , :NT-AAAA
+                   , :NT-NOTA
+           END-EXEC
+      *
+           IF SQLCODE = 0 THEN
+      *       REGISTRO SIGUIENTE
+              MOVE 0                      TO LK-NT-COD-RET
+              MOVE NT-CURSO               TO LK-NT-CURSO
+              MOVE NT-DNIESTUDIANTE       TO LK-NT-DNIESTUD
+              MOVE NT-AAAA                TO LK-NT-AAAA
+              MOVE NT-NOTA                TO LK-NT-NOTA
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1             TO  LK-NT-COD-RET
+              ELSE
+                 MOVE 2             TO  LK-NT-COD-RET
+                 PERFORM 0900-ERROR-DB2
+              END-IF
+           END-IF
+
+           EXEC SQL
+                CLOSE CURNEXT
+           END-EXEC
+           .
+      ***************************************************
+      * INSERTA LOS DATOS EN LA TABLA                   *
+      ***************************************************
+       0220-INSERTAR-NOTA.
+           MOVE LK-NT-CURSO          TO  NT-CURSO
+           MOVE LK-NT-DNIESTUD       TO  NT-DNIESTUDIANTE
+           MOVE LK-NT-AAAA           TO  NT-AAAA
+           MOVE LK-NT-NOTA           TO  NT-NOTA
+
+           EXEC SQL
+             INSERT INTO NOTASFIN
+                (
+                 CURSO, DNIESTUDIANTE, AAAA, NOTA
+                )
+             VALUES
+                (
+                 :NT-CURSO,:NT-DNIESTUDIANTE, :NT-AAAA, :NT-NOTA
+                )
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO LK-NT-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  LK-NT-COD-RET
+             ELSE
+                MOVE 2      TO  LK-NT-COD-RET
+                PERFORM 0900-ERROR-DB2
+             END-IF
+           END-IF
+           .
+      ***************************************************
+      * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *
+      ***************************************************
+       0230-BORRAR-NOTA.
+           MOVE LK-NT-CURSO          TO  NT-CURSO
+           MOVE LK-NT-DNIESTUD       TO  NT-DNIESTUDIANTE
+
+           EXEC SQL
+             DELETE FROM NOTASFIN
+               WHERE CURSO = :NT-CURSO
+                  AND DNIESTUDIANTE = :NT-DNIESTUDIANTE
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO LK-NT-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  LK-NT-COD-RET
+             ELSE
+                MOVE 2      TO  LK-NT-COD-RET
+                PERFORM 0900-ERROR-DB2
+             END-IF
+           END-IF
+           .
+      ***************************************************
+      * ACTUALIZA LOS DATOS EN LA TABLA                 *
+      ***************************************************
+       0240-MODIFICAR-NOTA.
+           MOVE LK-NT-CURSO          TO  NT-CURSO
+           MOVE LK-NT-DNIESTUD       TO  NT-DNIESTUDIANTE
+           MOVE LK-NT-AAAA           TO  NT-AAAA
+           MOVE LK-NT-NOTA           TO  NT-NOTA
+
+           EXEC SQL
+              UPDATE NOTASFIN
+              SET CURSO          = :NT-CURSO,
+                  DNIESTUDIANTE  = :NT-DNIESTUDIANTE,
+                  AAAA           = :NT-AAAA,
+                  NOTA           = :NT-NOTA
+              WHERE CURSO = :NT-CURSO AND
+                    DNIESTUDIANTE = :NT-DNIESTUDIANTE
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO LK-NT-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  LK-NT-COD-RET
+             ELSE
+                MOVE 2      TO  LK-NT-COD-RET
+                PERFORM 0900-ERROR-DB2
+             END-IF
+           END-IF
+           .
+      ******************************************************************
+      * 0900-ERROR-DB2
+      ******************************************************************
+       0900-ERROR-DB2.
+           MOVE SQLCODE TO LK-NT-SQLCODE
+           MOVE SQLCODE TO DB2-SQLCODE
+           DISPLAY "ERROR DB2 EN RUTINA: "
+           DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
+           DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
+           DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG
+           DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE
+           .
+      ******************************************************************
+      * FIN SESION
+      ******************************************************************
+       0300-FIN.
+           GOBACK
+           .
+      ******************************************************************
+      * 0000-COLA-TS.
+      ******************************************************************
+       0000-COLA-TS.
+
+              EXEC CICS  WRITEQ TS
+                   QUEUE ('COLA_TS')
+                   FROM  (WS-TRAZA)
+                   RESP  (WS-RESPUESTA)
+              END-EXEC
+           EXIT
+           .
 
