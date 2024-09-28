@@ -1,0 +1,855 @@
+      ******************************************************************
+      * PROYECTO .: SNIU-SISTEMA DE NOTAS DE IDENTIFICACIÛN DE USUARIOS*
+      * PROGRAMA .: PSNNPR0Z FUNCIONA BIEN CON NOTA ANTES ENCAPSULA    *
+      * VERSION ..: NOMBRES Y APELLIDOS JUNTOS - OK                    *
+      * TITULO: ..:PROGRAMA SISTEMA NOTAS CONSULTA NOTAS PROFESOR 04   *
+      *                                                                *
+      * SEP 28: AJUSTE MANEJO ERROR DB2                                *
+      *         NOMBRE PROFESOR COMPLETO                               *
+      *                                                                *
+      * TIPO .......:                                                  *
+      *   - LENGUAJE ..................: COBOL II                      *
+      *   - ENTORNO ...................: CICS                          *
+      *   - BASE DE DATOS .............: DB2                           *
+      *                                                                *
+      * DESCRIPCION.....:                                              *
+      *   - PSNNPR04         TIENE LA COMMAREA Y LINK ENCAPS USUARIOS  *
+      *   -                                                            *
+      *   - USA CURSORES PARA F7-ANTERIOR Y F8-SIGUIENTE               *
+      *   - SE MUESTRA EN LA PANTALLA LA IDENTIFICACIÛN DEL PROFESOR   *
+      *     A CONSULTAR Y EN LAS PRÛXIMAS LÌNEAS SE MUESTRAN , EL DNI, *
+      *     APELLIDOS Y NOMBRE, CURSO, AÒO DEL CURSO Y LA NOTA FINAL   *
+      *     DE CADA ESTUDIANTE DEL CURSO DICTADO POR EL PROFESOR.      *
+      *     PARA UN PROFERSOR (PRIMERA LÌNEA) SE MUESTRAN LAS NOTAS DE *
+      *     TODOS LOS ESTUDIANTES, DEL CURSO QUE EL PROFESOR DICTA.    *
+      *     PARA EL USUARIO ADMIN SE DEBE MOSTRAR LA INFORMACIÛN DE LOS*
+      *     ESTUDIANTES DE TODOS LOS PROFESORES, PERO EL PROFESOR SÛLO *
+      *     PUEDE VER LA INFORMACIÛN DE LOS ESTUDIANTES DE SU CURSO.   *
+      ******************************************************************
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PSNNPR04.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      *===============================================================
+      *-- ZONA DB2 INICIO--------LABEL-7000----------------
+      * MODSQL - DEFINICION TABLA USUARIOS SQL Y COBOL
+              EXEC SQL
+                   INCLUDE USUARIOS
+              END-EXEC
+      * MODSQL - DEFINICION TABLA USUARIOS SQL Y COBOL
+              EXEC SQL
+                   INCLUDE CURSOS
+              END-EXEC
+      * MODSQL - DEFINICION TABLA USUARIOS SQL Y COBOL
+              EXEC SQL
+                   INCLUDE NOTASFIN
+              END-EXEC
+      * MODSQL - SE TIENE QUE UTILIZAR SQLCA
+              EXEC SQL
+                   INCLUDE SQLCA
+              END-EXEC
+      * MODSQL - CAMPOS PARA ERROR DE DB2
+       01 DB2-ERR.
+          03 DB2-SQLCODE-Z      PIC -ZZZZZZZZ9.
+          03 DB2-ERROR.
+             05 DB2-SQLCODE     PIC S9(9).
+             05 DB2-ERR-MSG     PIC X(50).
+             05 DB2-ERR-CODE    PIC X(20).
+      *-- ZONA DB2 FINAL --------LABEL-7000----------------
+      *------------------------------------------------
+      *-- ZONA COMMAREA -------------------------------
+       01 WP-COMMAREA        PIC X(153).
+       01 WP-COMMAREA-R REDEFINES WP-COMMAREA.
+          03 CA-TRANS        PIC X(04).
+          03 CA-TERM         PIC X(04).
+          03 CA-CICLO        PIC X(02).
+          03 CA-UDNI         PIC X(9).
+          03 CA-US-TIPOUSUA  PIC X(05).
+          03 CA-UNOMBRE      PIC X(20).
+          03 CA-UAPELLIDOS   PIC X(20).
+          03 CA-PF-IDPERFIL  PIC X(3).
+          03 CA-PF-NOMPERFIL PIC X(20).
+          03 CA-PF-CONS      PIC X(2).
+          03 CA-PF-BORR      PIC X(2).
+          03 CA-PF-INGR      PIC X(2).
+          03 CA-PF-MODI      PIC X(2).
+          03 CA-PSNNPR04.
+             05 CA-EDNI      PIC X(09).
+             05 CA-PDNI      PIC X(09).
+             05 CA-PNOMAPE   PIC X(40).
+      *------------------------------------------------
+       01 AREA-LU-RUS.
+          05 LU-TIPO-OPE           PIC 9(01).
+          05 LU-SUBTIPO-OPE        PIC 9(02).
+          05 LU-DNI                PIC X(09).
+          05 LU-TIPOUSUARIO        PIC X(05).
+          05 LU-CLAVE              PIC X(08).
+          05 LU-NOMBRE             PIC X(20).
+          05 LU-APELLIDOS          PIC X(20).
+          05 LU-DIRECCION          PIC X(35).
+          05 LU-CARGO              PIC X(20).
+          05 LU-ESTADO             PIC X(01).
+          05 LU-COD-RET            PIC 9(02).
+          05 LU-SQLCODE            PIC S9(9).
+      *
+      *-- VARIABLES -----------------------------------
+       01 WS-PROFE-ESTUD-NOTA.
+          03 WS-UTIPOUSUA     PIC X(05).
+          03 WS-UDNI          PIC X(09).
+          03 WS-UNOMBRE       PIC X(20).
+          03 WS-UAPELLIDOS    PIC X(20).
+          03 WS-CCURSO        PIC X(05).
+          03 WS-CESTADO       PIC X(1).
+          03 WS-EDNI          PIC X(09).
+          03 WS-NAAAA         PIC X(04).
+          03 WS-ENOTA         PIC -Z9.99.
+          03 WS-ENOTA-RED     PIC 99V99.
+          03 WS-ENOTAU        PIC S99V99 USAGE COMP-3.
+          03 WS-UENOMBRE      PIC X(20) VALUE 'DUMMY - N'.
+          03 WS-UEAPELLIDOS   PIC X(20) VALUE 'DUMMY - A'.
+          03 WS-CDNIPROFESOR  PIC X(09).
+       01 WA-PROFE-ESTUD-NOTA.
+          03 WA-UDNI          PIC X(09).
+          03 WA-CCURSO        PIC X(05).
+          03 WA-CESTADO       PIC X(1).
+          03 WA-EDNI          PIC X(09).
+          03 WA-NAAAA         PIC X(04).
+          03 WA-ENOTA-RED     PIC 99V99.
+          03 WA-ENOTA         PIC S99V99 USAGE COMP-3.
+      *------------------------------------------------
+       01 WM-DATOS-FETCH.
+          03 WM-PTIPOUSUA     PIC X(05).
+          03 WM-PDNI          PIC X(09).
+          03 WM-PNOMBRE       PIC X(20).
+          03 WM-PAPELLIDOS    PIC X(20).
+          03 WM-CCURSO        PIC X(05).
+          03 WM-CESTADO       PIC X(1).
+          03 WM-EDNI          PIC X(09).
+          03 WM-ENOMBRE       PIC X(20).
+          03 WM-EAPELLIDOS    PIC X(20).
+          03 WM-EAAAA         PIC X(04).
+          03 WM-ENOTA         PIC S99V99 USAGE COMP-3.
+      *
+       01 WS-MSNNP04.
+          03 WS-EDNI-INICIAL  PIC X(9) VALUE '000000000'.
+          03 WS-EDNI-FINAL    PIC X(9) VALUE '000000000'.
+      *------------------------------------------------
+       01 WS-EDI-NOTA         PIC X(5).
+       01 WS-EDI-NOTA-R REDEFINES WS-EDI-NOTA PIC 99V99.
+       01 WS-EDI-NOTA-N       PIC ZZ.99.
+      *------------------------------------------------
+       01 WS-LLAMADO         PIC X(80)
+                VALUE 'ESTA TRANSACCION DEBE SER LLAMADA DESDE EL MENU'.
+       01 WS-MSG-TEXT        PIC X(80)
+                VALUE '*** FIN DEL SISTEMA DE NOTAS ***'.
+       01 WS-RESPUESTA       PIC S9(8) COMP.
+       01 WS-RESPUESTA2      PIC S9(8) COMP.
+       01 WS-PARRAFO         PIC X(10)      VALUE SPACES.
+       01 WS-TRAZA           PIC X(160)     VALUE SPACES.
+       01 WS-RESP            PIC 9(4)  COMP VALUE 0.
+       01 WS-COLATS          PIC X(8)       VALUE 'NOTAS_TS'.
+      *-- CONSTANTES ----------------------------------
+       01  WC-CONSTANTES.
+           03 WC-CUR-EDNI-INICIAL    PIC S9(4) COMP VALUE +994.
+           03 WC-CUR-EDNI-FINAL      PIC S9(4) COMP VALUE +1074.
+      * MM TRANSACCION CONSTANTE
+       01  WC-CURSOR-PROF    PIC S9(4) COMP VALUE +427.
+       01  WC-TRANSACCION    PIC X(04) VALUE 'SN04'.
+       01  WC-PROG-MENU      PIC X(08) VALUE 'PSNMEN02'.
+       01  WC-PROG-IDUSUARIO PIC X(08) VALUE 'PSNIDU01'.
+      *
+      *    VARIABLES DE FECHA
+      *
+       01 WS-CURRENT-DATE-DATA.
+          03 WS-CURRENT-DATE.
+              05 WS-YEAR          PIC 9(4).
+              05 WS-MONTH         PIC 9(2).
+              05 WS-DAY           PIC 9(2).
+           03 WS-CURRENT-TIME     PIC 9(8).
+       01 WS-FECHA-SALIDA.
+           03 WS-AAAA          PIC 9(4).
+           03 FILLER           PIC X(1) VALUE '/'.
+           03 WS-MES           PIC 9(2).
+           03 FILLER           PIC X(1) VALUE '/'.
+           03 WS-DIA           PIC 9(2).
+      * MM
+      *------------------------------------------------
+      *-- SWITCHES ------------------------------------
+       01  SW-SWITCHES.
+           03 SW-CICLO             PIC X(02).
+              88 CICLO-0                  VALUE '00'.
+              88 CICLO-1                  VALUE '01'.
+           03 SW-ENVIO-MAPA        PIC X  VALUE '1'.
+              88 ENVIO-ERASE              VALUE '1'.
+              88 ENVIO-DATAONLY           VALUE '2'.
+           03 SW-ERROR-VALIDACION  PIC X  VALUE '0'.
+              88 ERROR-VALIDACION         VALUE '1'.
+
+      *
+      *------------------------------------------------
+      *   COPY DEL MAPA GENERADO Y OTROS
+       COPY DFHAID.
+       COPY DFHBMSCA.
+       COPY CSNNP04.
+      *------------------------------------------------
+      *------------------------------------------------
+       LINKAGE SECTION.
+       01 DFHCOMMAREA     PIC X(153).
+      *
+       PROCEDURE DIVISION.
+      ***************************************************************
+      *0000-RAIZ
+      ***************************************************************
+       0000-RAIZ.
+           PERFORM 1000-INICIO
+           PERFORM 2000-PROCESO
+           PERFORM 7200-ENVIAR-MSG-MAPA-O-RT
+           .
+       COLA.
+            EXEC CICS ENTER TRACENUM (1) FROM (WS-PARRAFO) END-EXEC
+            EXEC CICS WRITEQ TS
+                 QUEUE (WS-COLATS)
+                 FROM  (WS-TRAZA)
+                 RESP  (WS-RESP)
+            END-EXEC
+           .
+      ***************************************************************
+      *1000-INICIO
+      ***************************************************************
+       1000-INICIO.
+      *    MOVE DFHDFT TO MSGH
+           PERFORM 8900-EXCEPCIONES-DB2
+      *
+           IF EIBCALEN = 0
+              MOVE WS-LLAMADO  TO WS-MSG-TEXT
+              PERFORM 7810-RETORNO-CICS-FIN
+           END-IF
+      *
+           MOVE DFHCOMMAREA TO WP-COMMAREA
+      *
+           MOVE SPACES TO WS-EDNI
+           EVALUATE CA-CICLO
+               WHEN '00'
+                    SET CICLO-0  TO TRUE
+               WHEN '01'
+                    SET CICLO-1  TO TRUE
+               WHEN OTHER
+                    MOVE "CICLO NO PROGRAMADO" TO WS-MSG-TEXT
+                    PERFORM 7810-RETORNO-CICS-FIN
+           END-EVALUATE
+           .
+
+      ***************************************************************
+      *2000-PROCESO
+      ***************************************************************
+       2000-PROCESO.
+              EVALUATE TRUE
+                 WHEN CICLO-0
+                    PERFORM 2210-CICLO-0
+                 WHEN CICLO-1
+                    PERFORM 2215-CICLO-1
+              END-EVALUATE
+              .
+      *************************** ***********************************
+      *2210-CICLO-0
+      ***************************************************************
+       2210-CICLO-0.
+            MOVE LOW-VALUES    TO MSNNP04O
+            MOVE LOW-VALUES    TO CA-PSNNPR04
+      *
+            IF CA-US-TIPOUSUA = 'ADMIN' THEN
+               MOVE DFHBMUNP   TO UDNIA
+               MOVE DFHTURQ    TO UDNIC
+               MOVE '01'       TO CA-CICLO
+               MOVE 'POR FAVOR DIGITE ID PROFESOR ' TO MSGO
+             ELSE
+               MOVE DFHYELLO   TO UDNIC
+               MOVE DFHBMPRO   TO UDNIA
+               MOVE '01'       TO CA-CICLO
+               MOVE CA-UDNI    TO UDNIO CA-PDNI
+                                  WM-PDNI
+
+               STRING CA-UNOMBRE    DELIMITED BY SIZE
+                      ' ' DELIMITED BY SIZE
+                      CA-UAPELLIDOS DELIMITED BY SIZE
+               INTO CA-PNOMAPE
+
+               MOVE CA-PNOMAPE  TO UNOMBO
+               MOVE SPACES      TO WS-CCURSO WS-EDNI
+               MOVE '000000000' TO CA-EDNI
+                                   WM-EDNI
+               PERFORM 3248-CONSULTAR-PROXIMO
+             END-IF
+             .
+      ***************************************************************
+      *2215-CICLO-1
+      ***************************************************************
+       2215-CICLO-1.
+              EXEC CICS RECEIVE MAP('MSNNP04')
+                   INTO(MSNNP04I)
+                   NOHANDLE
+              END-EXEC
+
+              EXEC CICS
+                   IGNORE CONDITION MAPFAIL
+              END-EXEC
+      *
+              EVALUATE  EIBAID
+               WHEN DFHENTER
+                    IF CA-US-TIPOUSUA = 'ADMIN' THEN
+                       MOVE UDNII TO CA-PDNI
+                       PERFORM 4100-CONSULTAR-PROFESOR
+                       PERFORM 3248-CONSULTAR-PROXIMO
+                    ELSE
+                       MOVE DFHYELLO   TO UDNIC
+                       MOVE DFHBMPRO   TO UDNIA
+                       MOVE 'PRESIONE F7=ANTERIOR  F8=SIGUIENTE' TO MSGO
+                    END-IF
+               WHEN DFHPF3
+                    IF CA-US-TIPOUSUA = 'ADMIN' THEN
+                       PERFORM 7820-RETORNO-MENU
+                    ELSE
+                       PERFORM 7830-RETORNO-IDUSUARIO
+                    END-IF
+               WHEN DFHPF7
+                    PERFORM 3247-CONSULTAR-ANTERIOR
+               WHEN DFHPF8
+                    PERFORM 3248-CONSULTAR-PROXIMO
+               WHEN OTHER
+                    MOVE 'TECLA INCORRECTA' TO MSGO
+                    PERFORM 3280-LIMPIA-CAMPOS-O
+              END-EVALUATE
+              .
+
+      ***************************************************************
+      *3240-CONSULTAR-REGISTRO. <ENTER>
+      ***************************************************************
+       3240-CONSULTAR-REGISTRO.
+           MOVE UDNII TO WS-EDNI-INICIAL
+
+           IF SQLCODE = 0
+             PERFORM 3282-MUEVE-DATOS-DB2-O
+             MOVE 'REGISTRO ENCONTRADO' TO MSGO
+           ELSE
+             PERFORM 3295-FALLO-FICHERO
+           END-IF
+           PERFORM 7200-ENVIAR-MSG-MAPA-O-RT
+           .
+      ***************************************************************
+      *3247-CONSULTAR-ANTERIOR. <F7>                                *
+      ***************************************************************
+       3247-CONSULTAR-ANTERIOR.
+      *    MOVE EDNIO TO WS-EDNI-INICIAL WS-EDNI-FINAL WS-EDNI
+            MOVE CA-EDNI TO WS-EDNI-INICIAL WS-EDNI-FINAL WS-EDNI
+           PERFORM 8700-CURSORANT-DECLARAR-ABRIR
+      *
+           PERFORM 8770-FETCH-CURSORANT
+           IF SQLCODE = 0
+              PERFORM 3282-MUEVE-DATOS-DB2-O
+              MOVE 'REGISTRO ANTERIOR' TO MSGO
+           ELSE
+            IF SQLCODE = 100
+              MOVE 'PRIMER REGISTRO DEL ARCHIVO'  TO MSGO
+      *       MOVE DFHBLINK  TO MSGH
+            ELSE
+             PERFORM 3295-FALLO-FICHERO
+            END-IF
+           END-IF
+      *
+           PERFORM 8777-CURSORANT-CERRAR
+           PERFORM 7200-ENVIAR-MSG-MAPA-O-RT
+           .
+      ***************************************************************
+      *3248-CONSULTAR-PROXIMO  <F8>
+      ***************************************************************
+       3248-CONSULTAR-PROXIMO.
+      *
+      *    MOVE EDNIO TO WS-EDNI-FINAL  WS-EDNI-INICIAL WS-EDNI
+           MOVE CA-EDNI TO WS-EDNI-INICIAL WS-EDNI-FINAL WS-EDNI
+           PERFORM 8800-CURSORPROX-DECLARAR-ABRIR
+      *
+           PERFORM 8850-FETCH-CURSORPROX
+           EVALUATE SQLCODE
+           WHEN 0
+              PERFORM 3282-MUEVE-DATOS-DB2-O
+              MOVE 'REGISTRO PROXIMO' TO MSGO
+           WHEN 100
+              PERFORM 3282-MUEVE-DATOS-DB2-O
+              MOVE 'ULTIMO REGISTRO DEL ARCHIVO'  TO MSGO
+      *       MOVE DFHBLINK  TO MSGH
+           WHEN OTHER
+              PERFORM 3295-FALLO-FICHERO
+           END-EVALUATE
+      *
+           PERFORM 8880-CURSORPROX-CERRAR
+           .
+      ***************************************************************
+      *3280-LIMPIA-CAMPOS-O
+      ***************************************************************
+       3280-LIMPIA-CAMPOS-O.
+               MOVE SPACES TO UDNIO
+               MOVE SPACES TO UNOMBO
+               MOVE SPACES TO EDNIO
+               MOVE SPACES TO UENOMBO
+               MOVE SPACES TO CCURSOO
+               MOVE SPACES TO NAAAAO
+               MOVE SPACES TO ENOTAO
+               .
+      ***************************************************************
+      *3282-MUEVE-DATOS-DB2-O        TODOS
+      ***************************************************************
+       3282-MUEVE-DATOS-DB2-O.
+               MOVE   WM-PDNI       TO UDNIO CA-UDNI
+               MOVE   SPACES        TO UNOMBO
+               STRING WM-PNOMBRE    DELIMITED BY SIZE
+                      ' ' DELIMITED BY SIZE
+                      WM-PAPELLIDOS DELIMITED BY SIZE
+               INTO UNOMBO
+
+               MOVE   WS-EDNI       TO EDNIO CA-EDNI
+               MOVE   SPACES        TO UENOMBO
+               STRING WM-ENOMBRE    DELIMITED BY SPACE
+                      ' ' DELIMITED BY SIZE
+                      WM-EAPELLIDOS DELIMITED BY SPACE
+               INTO UENOMBO
+
+               MOVE   WM-CCURSO      TO CCURSOO
+               MOVE   WM-EAAAA       TO NAAAAO
+               MOVE   WS-ENOTA       TO ENOTAO
+               .
+      ***************************************************************
+      *3283-MUEVE-DATOS-I-DB2.
+      ***************************************************************
+       3283-MUEVE-DATOS-I-DB2.
+              MOVE EDNIO TO WS-EDNI-INICIAL
+              MOVE EDNIO TO WS-EDNI-FINAL
+           .
+      ***************************************************************
+      *3295-FALLO-FICHERO
+      ***************************************************************
+       3295-FALLO-FICHERO.
+              IF SQLCODE   = 100
+                 MOVE 'DNI PROFE NO EXISTE' TO MSGO
+                 PERFORM 3280-LIMPIA-CAMPOS-O
+              ELSE
+                 IF SQLCODE   = -803
+                    MOVE "REGISTRO YA EXISTE" TO MSGO
+                 ELSE
+                    PERFORM 9000-ERROR-DB2
+                 END-IF
+              END-IF
+              .
+      ***************************************************************
+      *4100-CONSULTAR-PROFESOR
+      ***************************************************************
+       4100-CONSULTAR-PROFESOR.
+      * LIMPIAR EL AREA DE ENLACE PARA EVITAR MALOS ENTENDIDOS
+      *
+            MOVE LOW-VALUES TO AREA-LU-RUS
+            MOVE 9         TO LU-COD-RET
+            MOVE 1         TO LU-TIPO-OPE
+            MOVE 1         TO LU-SUBTIPO-OPE
+            MOVE UDNII     TO LU-DNI CA-PDNI
+
+            EXEC CICS LINK
+                           PROGRAM ('RSNUSUAR')
+                           COMMAREA(AREA-LU-RUS)
+                           LENGTH  (LENGTH OF AREA-LU-RUS)
+                           RESP    (WS-RESPUESTA)
+            END-EXEC
+      *
+            MOVE '4110'   TO WS-PARRAFO
+      *     PERFORM COLA
+
+            EVALUATE LU-COD-RET
+                WHEN 0
+                     PERFORM 4110-VALIDA-TIPO-PROFE
+                WHEN 1
+                     MOVE '01'      TO  CA-CICLO
+                     MOVE 'PROFESOR NO EXISTE! ' TO MSGO
+                WHEN OTHER
+                     MOVE DFHBLINK  TO  MSGH
+                     MOVE "OJO CON BASE DE DATOS US " TO
+                           WS-MSG-TEXT
+                     PERFORM 7810-RETORNO-CICS-FIN
+            END-EVALUATE
+            .
+       4110-VALIDA-TIPO-PROFE.
+            IF LU-TIPOUSUARIO = 'PROFE' THEN
+               MOVE '01'           TO CA-CICLO
+               STRING LU-NOMBRE    DELIMITED BY SPACE
+                      ' ' DELIMITED BY SIZE
+                      LU-APELLIDOS DELIMITED BY SPACE
+                 INTO UNOMBO
+               MOVE UNOMBO TO CA-PNOMAPE
+               MOVE SPACES TO WS-CCURSO
+               MOVE '000000000' TO CA-EDNI
+               MOVE LU-DNI      TO CA-PDNI
+            ELSE
+               MOVE ' EL DNI NO CORRESPONDE A UN PROFESOR' TO MSGO
+               MOVE '01' TO CA-CICLO
+            END-IF
+            .
+      *
+      * MA: 4200-MOVER-FECHA MUEVE LA FECHA Y EL NOMBRE DEL USUARIO
+      *     AL TITULO DE LA PANTALLA
+      *
+       4200-MOVER-FECHA.
+            MOVE CA-UNOMBRE            TO MNOMBREO
+            MOVE FUNCTION CURRENT-DATE TO WS-CURRENT-DATE-DATA
+            MOVE WS-YEAR               TO WS-AAAA
+            MOVE WS-MONTH              TO WS-MES
+            MOVE WS-DAY                TO WS-DIA
+            MOVE WS-FECHA-SALIDA       TO MFECHASO
+            .
+      ***************************************************************
+      *7200-ENVIAR-MSG-MAPA-O-RT
+      ***************************************************************
+       7200-ENVIAR-MSG-MAPA-O-RT.
+            PERFORM 4200-MOVER-FECHA
+            EXEC CICS SEND MAP('MSNNP04')
+                 FROM(MSNNP04O)
+                 ERASE
+                 NOHANDLE
+            END-EXEC
+
+            PERFORM 7800-RETORNO-TRANS-CICS
+            .
+      *
+      ***************************************************************
+      * MA: 7200-SENDMAP-CURSOR: ENVIA EL MAPA CON EL CURSOR EN EL
+      *         DNI DEL PROFESOR PARA Q LO INGRESE. ES UN ADMIN.
+      ***************************************************************
+       7200-SENDMAP-CURSOR.
+
+            EXEC CICS SEND MAP('MSNNP04')
+                 FROM   (MSNNP04O)
+                 CURSOR (WC-CURSOR-PROF)
+                 ERASE
+                 NOHANDLE
+            END-EXEC
+      *
+            PERFORM 7800-RETORNO-TRANS-CICS
+            .
+      *
+      ***************************************************************
+      *7210-ENVIAR-MSG-TEXT.
+      ***************************************************************
+       7210-ENVIAR-MSG-TEXT.
+            EXEC CICS
+              SEND TEXT FROM (WS-MSG-TEXT)
+              ERASE
+              LENGTH (LENGTH OF WS-MSG-TEXT)
+            END-EXEC
+            EXIT
+            .
+      ***************************************************************
+      *7800-RETORNO-TRANS-CICS.
+      ***************************************************************
+       7800-RETORNO-TRANS-CICS.
+            MOVE EIBTRMID        TO CA-TERM
+            MOVE UDNIO           TO CA-UDNI
+            MOVE WS-EDNI         TO CA-EDNI
+      * MB ASIGNA TRANSACCION PARA LA COMMAREA Y PARA RETORNAR A CICS
+            MOVE WC-TRANSACCION  TO CA-TRANS
+            EXEC CICS RETURN
+                 TRANSID(WC-TRANSACCION)
+                 COMMAREA(WP-COMMAREA)
+                 LENGTH(LENGTH OF WP-COMMAREA)
+            END-EXEC
+      * MB
+            GOBACK
+            .
+      ***************************************************************
+      *7810-RETORNO-CICS-FIN. - FIN-SESION -
+      ***************************************************************
+       7810-RETORNO-CICS-FIN.
+            EXEC CICS
+            SEND TEXT FROM (WS-MSG-TEXT)
+            ERASE
+            FREEKB
+            END-EXEC
+      *
+            EXEC CICS RETURN
+            END-EXEC
+            GOBACK
+            .
+       7820-RETORNO-MENU.
+            MOVE '99'   TO CA-CICLO
+            EXEC CICS XCTL
+                 PROGRAM (WC-PROG-MENU)
+                 COMMAREA(WP-COMMAREA)
+                 LENGTH  (LENGTH OF WP-COMMAREA)
+                 RESP    (WS-RESPUESTA)
+            END-EXEC
+            GOBACK
+            .
+       7830-RETORNO-IDUSUARIO.
+            MOVE LOW-VALUES  TO WP-COMMAREA
+            MOVE '00'   TO CA-CICLO
+            EXEC CICS XCTL
+                 PROGRAM (WC-PROG-IDUSUARIO)
+                 COMMAREA(WP-COMMAREA)
+                 LENGTH  (LENGTH OF WP-COMMAREA)
+                 RESP    (WS-RESPUESTA)
+            END-EXEC
+            GOBACK
+            .
+       8700-CURSORANT-DECLARAR-ABRIR.
+      *
+            EXEC SQL
+                 DECLARE CURSORANT  CURSOR FOR
+                  SELECT
+                        USUARIOS.TIPOUSUA
+                       ,USUARIOS.DNI
+                       ,USUARIOS.NOMBRE
+                       ,USUARIOS.APELLIDOS
+                       ,CURSOS.CURSO
+                       ,CURSOS.ESTADO
+                       ,NOTASFIN.DNIESTUDIANTE
+                       ,NOTASFIN.AAAA
+                       ,NOTASFIN.NOTA
+                  FROM
+                       ((USUARIOS INNER JOIN CURSOS ON
+                       USUARIOS.DNI = CURSOS.DNIPROFESOR)
+                       INNER JOIN NOTASFIN ON
+                       CURSOS.CURSO = NOTASFIN.CURSO)
+                  WHERE
+                        USUARIOS.DNI = :CA-PDNI AND
+                        NOTASFIN.DNIESTUDIANTE < :CA-EDNI
+                  ORDER BY NOTASFIN.DNIESTUDIANTE DESC
+            END-EXEC
+      *
+           EXEC SQL
+                OPEN CURSORANT
+           END-EXEC
+      *
+           IF SQLCODE NOT EQUAL 0 AND SQLCODE NOT EQUAL 100 THEN
+              PERFORM 9000-ERROR-DB2
+           END-IF
+           .
+      ***************************************************************
+      *8770-FETCH-CURSORANT
+      ***************************************************************
+       8770-FETCH-CURSORANT.
+      *
+           INITIALIZE  WM-DATOS-FETCH
+           EXEC SQL
+                FETCH CURSORANT
+                    INTO
+                         :WM-PTIPOUSUA
+                        ,:WM-PDNI
+                        ,:WM-PNOMBRE
+                        ,:WM-PAPELLIDOS
+                        ,:WM-CCURSO
+                        ,:WM-CESTADO
+                        ,:WM-EDNI
+                        ,:WM-EAAAA
+                        ,:WM-ENOTA
+           END-EXEC
+      *
+           MOVE WM-ENOTA  TO WS-ENOTA
+           MOVE WM-EDNI   TO WS-EDNI
+           MOVE SQLCODE TO DB2-SQLCODE-Z
+           MOVE SPACES TO WS-TRAZA
+
+           IF SQLCODE  = 0 THEN
+              PERFORM 8888-BUSCAR-ESTUDIANTE
+              MOVE LU-NOMBRE     TO WM-ENOMBRE
+              MOVE LU-APELLIDOS  TO WM-EAPELLIDOS
+              MOVE WS-PROFE-ESTUD-NOTA TO WS-TRAZA
+              MOVE '8770-A' TO WS-PARRAFO
+      *       PERFORM COLA
+           ELSE
+              IF SQLCODE NOT EQUAL 100 THEN
+                 PERFORM 9000-ERROR-DB2
+              END-IF
+           END-IF
+           .
+      ***************************************************************
+      *8777-CURSORANT-CERRAR
+      ***************************************************************
+       8777-CURSORANT-CERRAR.
+      *
+           EXEC SQL
+                CLOSE CURSORANT
+           END-EXEC
+      *
+           IF SQLCODE NOT = 0
+              PERFORM 9000-ERROR-DB2
+           END-IF
+           .
+      ***************************************************************
+      *8800-CURSORPROX-DECLARAR-ABRIR
+      ***************************************************************
+       8800-CURSORPROX-DECLARAR-ABRIR.
+            EXEC SQL
+                 DECLARE CURSORPROX CURSOR FOR
+                  SELECT
+                        USUARIOS.TIPOUSUA
+                       ,USUARIOS.DNI
+                       ,USUARIOS.NOMBRE
+                       ,USUARIOS.APELLIDOS
+                       ,CURSOS.CURSO
+                       ,CURSOS.ESTADO
+                       ,NOTASFIN.DNIESTUDIANTE
+                       ,NOTASFIN.AAAA
+                       ,NOTASFIN.NOTA
+                  FROM
+                        ((USUARIOS INNER JOIN CURSOS ON
+                        USUARIOS.DNI = CURSOS.DNIPROFESOR)
+                        INNER JOIN NOTASFIN ON
+                        CURSOS.CURSO = NOTASFIN.CURSO)
+                  WHERE
+                        USUARIOS.DNI = :CA-PDNI AND
+                        CURSOS.CURSO >= :WS-CCURSO AND
+                        NOTASFIN.DNIESTUDIANTE >  :CA-EDNI
+                  ORDER BY NOTASFIN.DNIESTUDIANTE ASC
+            END-EXEC
+      *
+           EXEC SQL
+                OPEN CURSORPROX
+           END-EXEC
+           IF SQLCODE NOT EQUAL 0 AND SQLCODE NOT EQUAL 100 THEN
+              PERFORM 9000-ERROR-DB2
+           END-IF
+      *
+      *    PERFORM COLA
+           .
+      ***************************************************************
+      *8850-FETCH-CURSORPROX
+      ***************************************************************
+       8850-FETCH-CURSORPROX.
+           INITIALIZE  WM-EDNI WM-EAAAA WM-ENOTA
+           EXEC SQL
+                FETCH CURSORPROX
+                    INTO
+                         :WM-PTIPOUSUA
+                        ,:WM-PDNI
+                        ,:WM-PNOMBRE
+                        ,:WM-PAPELLIDOS
+                        ,:WM-CCURSO
+                        ,:WM-CESTADO
+                        ,:WM-EDNI
+                        ,:WM-EAAAA
+                        ,:WM-ENOTA
+           END-EXEC
+      *
+      *    PERFORM COLA
+           EVALUATE SQLCODE
+           WHEN 0
+              MOVE WM-ENOTA  TO WS-ENOTA
+              MOVE WM-EDNI   TO WS-EDNI
+              PERFORM 8888-BUSCAR-ESTUDIANTE
+              MOVE LU-NOMBRE     TO WM-ENOMBRE
+              MOVE LU-APELLIDOS  TO WM-EAPELLIDOS
+              MOVE WS-PROFE-ESTUD-NOTA TO WS-TRAZA
+              PERFORM COLA
+           WHEN 100
+              MOVE CA-PDNI       TO WM-PDNI
+              MOVE CA-PNOMAPE    TO WM-PNOMBRE
+           WHEN OTHER
+      *
+              PERFORM 9000-ERROR-DB2
+           END-EVALUATE
+           .
+      *
+      ***************************************************************
+      *8880-CURSORPROX-CERRAR
+      ***************************************************************
+       8880-CURSORPROX-CERRAR.
+      *
+           EXEC SQL
+                CLOSE CURSORPROX
+           END-EXEC
+      *
+           IF SQLCODE NOT = 0
+              PERFORM 9000-ERROR-DB2
+           END-IF
+           .
+      *
+      *
+      ***************************************************************
+      *8900-EXCEPCIONES-DB2
+      ***************************************************************
+       8900-EXCEPCIONES-DB2.
+      *
+              EXEC SQL
+                   WHENEVER SQLERROR   CONTINUE
+              END-EXEC
+      *
+              EXEC SQL
+                   WHENEVER SQLWARNING CONTINUE
+              END-EXEC
+      *
+              EXEC SQL
+                   WHENEVER NOT FOUND  CONTINUE
+              END-EXEC
+              EXIT
+              .
+      ***************************************************************
+      *8600-TRAZA       - WS-COLATS VER CON CEBR EN CICS -
+      ***************************************************************
+      *8600-TRAZA.
+      *     MOVE MSGO TO WS-TRAZA
+      *     EXEC CICS WRITEQ TS
+      *          QUEUE (WS-COLATS)
+      *          FROM  (WS-TRAZA)
+      *          RESP  (WS-RESP)
+      *     END-EXEC
+      *     EXIT
+      *     .
+      ***************************************************************
+      *8650-ELIMINA-TRAZA        - WS-COLATS -
+      ***************************************************************
+      *8650-ELIMINA-TRAZA.
+      *     EXEC CICS DELETEQ TS
+      *          QUEUE (WS-COLATS)
+      *          RESP  (WS-RESP)
+      *     END-EXEC
+      *     EXIT
+      *     .
+      ***************************************************************
+      * 8888-BUSCAR-NOMBRE-ESTUDIANTE  == ENCAPSULADOR USUARIOS ==
+      *****************************************************************
+        8888-BUSCAR-ESTUDIANTE.
+      *
+             MOVE LOW-VALUES TO AREA-LU-RUS
+             MOVE 9         TO LU-COD-RET
+             MOVE 1         TO LU-TIPO-OPE
+             MOVE 1         TO LU-SUBTIPO-OPE
+             MOVE WS-EDNI   TO LU-DNI
+             MOVE SPACES TO LU-NOMBRE LU-APELLIDOS
+             EXEC CICS LINK
+                           PROGRAM ('RSNUSUAR')
+                           COMMAREA(AREA-LU-RUS)
+                           LENGTH  (LENGTH OF AREA-LU-RUS)
+                           RESP    (WS-RESPUESTA)
+             END-EXEC
+      *      PERFORM COLA
+             EVALUATE LU-COD-RET
+                 WHEN 0
+                      EXIT
+                 WHEN 1
+                      MOVE 'ESTUDIANTE '    TO LU-NOMBRE
+                      MOVE 'INEXISTENTE   ' TO LU-APELLIDOS
+                 WHEN OTHER
+                      PERFORM 9000-ERROR-DB2
+             END-EVALUATE
+             .
+      ******************************************************************
+      *9000-ERROR-DB2
+      ******************************************************************
+       9000-ERROR-DB2.
+             MOVE SQLCODE       TO DB2-SQLCODE
+             MOVE DB2-SQLCODE   TO DB2-SQLCODE-Z
+             MOVE DB2-SQLCODE-Z TO DB2-ERR-CODE
+             MOVE SQLERRMC      TO DB2-ERR-MSG
+             MOVE DB2-ERROR     TO MSGO
+             MOVE DFHBLINK      TO MSGH
+             STRING "ERROR BASE DE DATOS CODIGO:  "  DELIMITED BY SIZE
+                    DB2-SQLCODE-Z DELIMITED BY SIZE INTO WS-MSG-TEXT
+             PERFORM 7810-RETORNO-CICS-FIN
+             .
+
