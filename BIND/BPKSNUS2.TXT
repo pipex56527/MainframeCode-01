@@ -1,0 +1,11 @@
+DSN    SYSTEM     (DSN1)                                                00010005
+BIND   PACKAGE    (PKNOTAS)  -                                          00020011
+       MEMBER     (RENUSUA2) -                                          00030010
+       ACTION     (REPLACE)  -                                          00040011
+       ISOLATION  (CS)       -                                          00050011
+       VALIDATE   (BIND)     -                                          00060011
+       RELEASE    (COMMIT)   -                                          00070011
+       OWNER      (P390)     -                                          00080011
+       QUALIFIER  (P390)                                                00090008
+END                                                                     00100005
+
