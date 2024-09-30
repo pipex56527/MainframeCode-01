@@ -1,0 +1,34 @@
+      ******************************************************************
+      * DCLGEN TABLE(NOTASFIN)                                         *
+      *        LIBRARY(P390.DB2.DCLGEN(NOTASFIN))                      *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(NT-)                                              *
+      *        STRUCTURE(NT-NOTASFIN)                                  *
+      *        QUOTE                                                   *
+      *        DBCSDELIM(NO)                                           *
+      *        COLSUFFIX(YES)                                          *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE NOTASFIN TABLE
+           ( CURSO                          CHAR(5) NOT NULL,
+             DNIESTUDIANTE                  CHAR(9) NOT NULL,
+             AAAA                           CHAR(4) NOT NULL,
+             NOTA                           DECIMAL(5, 2) NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE NOTASFIN                           *
+      ******************************************************************
+       01  NT-NOTASFIN.
+      *                       CURSO
+           10 NT-CURSO             PIC X(5).
+      *                       DNIESTUDIANTE
+           10 NT-DNIESTUDIANTE     PIC X(9).
+      *                       AAAA
+           10 NT-AAAA              PIC X(4).
+      *                       NOTA
+           10 NT-NOTA              PIC S9(3)V9(2) USAGE COMP-3.
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 4       *
+      ******************************************************************
+

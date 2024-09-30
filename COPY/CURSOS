@@ -1,0 +1,34 @@
+      ******************************************************************
+      * DCLGEN TABLE(CURSOS)                                           *
+      *        LIBRARY(P390.DB2.DCLGEN(CURSOS))                        *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(CR-)                                              *
+      *        STRUCTURE(CR-CURSOS)                                    *
+      *        QUOTE                                                   *
+      *        DBCSDELIM(NO)                                           *
+      *        COLSUFFIX(YES)                                          *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE CURSOS TABLE
+           ( CURSO                          CHAR(5) NOT NULL,
+             DESCRIPCION                    CHAR(20) NOT NULL,
+             DNI_PROFESOR                   CHAR(9) NOT NULL,
+             ESTADO                         CHAR(1) NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE CURSOS                             *
+      ******************************************************************
+       01  CR-CURSOS.
+      *                       CURSO
+           10 CR-CURSO             PIC X(5).
+      *                       DESCRIPCION
+           10 CR-DESCRIPCION       PIC X(20).
+      *                       DNI_PROFESOR
+           10 CR-DNI-PROFESOR      PIC X(9).
+      *                       ESTADO
+           10 CR-ESTADO            PIC X(1).
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 4       *
+      ******************************************************************
+

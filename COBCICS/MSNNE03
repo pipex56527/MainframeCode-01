@@ -29,43 +29,43 @@ MNOMES  DFHMDF POS=(07,10),LENGTH=25,ATTRB=(PROT,BRT),COLOR=GREEN
 MTXTAP  DFHMDF POS=(07,38),LENGTH=11,ATTRB=(PROT,BRT),COLOR=GREEN,     X
                INITIAL='APELLIDOS: '
 MAPEES  DFHMDF POS=(07,51),LENGTH=25,ATTRB=(PROT,BRT),COLOR=GREEN
-MTXTNE  DFHMDF POS=(09,17),LENGTH=46,ATTRB=(PROT,NORM),COLOR=GREEN,    X
-               INITIAL='CURSO   NOMBRE CURSO               AÑO    NOTA'
-MCOD1   DFHMDF POS=(11,18),LENGTH=09,                                  X
+MTXTNE  DFHMDF POS=(09,17),LENGTH=44,ATTRB=(PROT,NORM),COLOR=GREEN,    X
+               INITIAL='CURSO   NOMBRE DEL CURSO    AÑO   NOTA'
+MCOD1   DFHMDF POS=(11,17),LENGTH=05,                                  X
                ATTRB=(PROT,NORM,FSET),COLOR=GREEN
-MNCUR1  DFHMDF POS=(11,31),LENGTH=25,                                  X
+MNCUR1  DFHMDF POS=(11,25),LENGTH=20,                                  X
                ATTRB=(PROT,NORM),COLOR=GREEN
-MAA1    DFHMDF POS=(11,61),LENGTH=4,                                   X
+MAA1    DFHMDF POS=(11,49),LENGTH=4,                                   X
                ATTRB=(PROT,NORM),COLOR=GREEN
-MNOTA1  DFHMDF POS=(11,69),LENGTH=4,COLOR=GREEN
-MCOD2   DFHMDF POS=(13,18),LENGTH=09,                                  X
+MNOTA1  DFHMDF POS=(11,58),LENGTH=4,COLOR=GREEN
+MCOD2   DFHMDF POS=(13,17),LENGTH=05,                                  X
                ATTRB=(PROT,NORM,FSET),COLOR=GREEN
-MNCUR2  DFHMDF POS=(13,31),LENGTH=25,                                  X
+MNCUR2  DFHMDF POS=(13,25),LENGTH=20,                                  X
                ATTRB=(PROT,NORM),COLOR=GREEN
-MAA2    DFHMDF POS=(13,61),LENGTH=4,                                   X
+MAA2    DFHMDF POS=(13,49),LENGTH=4,                                   X
                ATTRB=(PROT,NORM),COLOR=GREEN
-MNOTA2  DFHMDF POS=(13,69),LENGTH=4,COLOR=GREEN
-MCOD3   DFHMDF POS=(15,18),LENGTH=09,                                  X
+MNOTA2  DFHMDF POS=(13,58),LENGTH=4,COLOR=GREEN
+MCOD3   DFHMDF POS=(15,17),LENGTH=05,                                  X
                ATTRB=(PROT,NORM,FSET),COLOR=GREEN
-MNCUR3  DFHMDF POS=(15,31),LENGTH=25,                                  X
+MNCUR3  DFHMDF POS=(15,25),LENGTH=20,                                  X
                ATTRB=(PROT,NORM),COLOR=GREEN
-MAA3    DFHMDF POS=(15,61),LENGTH=4,                                   X
+MAA3    DFHMDF POS=(15,49),LENGTH=4,                                   X
                ATTRB=(PROT,NORM),COLOR=GREEN
-MNOTA3  DFHMDF POS=(15,69),LENGTH=4,COLOR=GREEN
-MCOD4   DFHMDF POS=(17,18),LENGTH=09,                                  X
+MNOTA3  DFHMDF POS=(15,58),LENGTH=4,COLOR=GREEN
+MCOD4   DFHMDF POS=(17,17),LENGTH=05,                                  X
                ATTRB=(PROT,NORM,FSET),COLOR=GREEN
-MNCUR4  DFHMDF POS=(17,31),LENGTH=25,                                  X
+MNCUR4  DFHMDF POS=(17,25),LENGTH=20,                                  X
                ATTRB=(PROT,NORM),COLOR=GREEN
-MAA4    DFHMDF POS=(17,61),LENGTH=4,                                   X
+MAA4    DFHMDF POS=(17,49),LENGTH=4,                                   X
                ATTRB=(PROT,NORM),COLOR=GREEN
-MNOTA4  DFHMDF POS=(17,69),LENGTH=4,COLOR=GREEN
-MCOD5   DFHMDF POS=(19,18),LENGTH=09,                                  X
+MNOTA4  DFHMDF POS=(17,58),LENGTH=4,COLOR=GREEN
+MCOD5   DFHMDF POS=(19,17),LENGTH=05,                                  X
                ATTRB=(PROT,NORM,FSET),COLOR=GREEN
-MNCUR5  DFHMDF POS=(19,31),LENGTH=25,                                  X
+MNCUR5  DFHMDF POS=(19,25),LENGTH=20,                                  X
                ATTRB=(PROT,NORM),COLOR=GREEN
-MAA5    DFHMDF POS=(19,61),LENGTH=4,                                   X
+MAA5    DFHMDF POS=(19,49),LENGTH=4,                                   X
                ATTRB=(PROT,NORM),COLOR=GREEN
-MNOTA5  DFHMDF POS=(19,69),LENGTH=4,COLOR=GREEN
+MNOTA5  DFHMDF POS=(19,58),LENGTH=4,COLOR=GREEN
 MTXMSG  DFHMDF POS=(21,06),LENGTH=70,ATTRB=(PROT,NORM),COLOR=YELLOW
 MTXKEYS DFHMDF POS=(23,01),LENGTH=40,COLOR=GREEN,ATTRB=(PROT,NORM),    X
                INITIAL='F3=SALIR F7=REG PREVIO F8=REG. SIGUIENTE'

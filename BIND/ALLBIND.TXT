@@ -1,0 +1,66 @@
+BPKSNCUR
+DSN    SYSTEM     (DSN1)                                                00010003
+BIND   PACKAGE    (PKNOTAS) -                                           00020006
+       MEMBER     (RSNCURSO)-                                           00030008
+       ACTION     (REPLACE) -                                           00040003
+       ISOLATION  (CS)      -                                           00050003
+       VALIDATE   (BIND)    -                                           00060003
+       RELEASE    (COMMIT)  -                                           00070003
+       OWNER      (P390)    -                                           00080003
+       QUALIFIER  (P390)                                                00090003
+END  
+BPKSNPRF
+DSN    SYSTEM     (DSN1)                                                00010003
+BIND   PACKAGE    (PKNOTAS) -                                           00020006
+       MEMBER     (RSNPERFI)-                                           00030007
+       ACTION     (REPLACE) -                                           00040003
+       ISOLATION  (CS)      -                                           00050003
+       VALIDATE   (BIND)    -                                           00060003
+       RELEASE    (COMMIT)  -                                           00070003
+       OWNER      (P390)    -                                           00080003
+       QUALIFIER  (P390)                                                00090003
+END  
+BPKSNPRM
+DSN    SYSTEM     (DSN1)                                                00010003
+BIND   PACKAGE    (PKNOTAS) -                                           00020006
+       MEMBER     (RSNPERMI)-                                           00030005
+       ACTION     (REPLACE) -                                           00040003
+       ISOLATION  (CS)      -                                           00050003
+       VALIDATE   (BIND)    -                                           00060003
+       RELEASE    (COMMIT)  -                                           00070003
+       OWNER      (P390)    -                                           00080003
+       QUALIFIER  (P390)                                                00090003
+END  
+BPKSNUSU
+DSN    SYSTEM     (DSN1)                                                00010003
+BIND   PACKAGE    (PKNOTAS) -                                           00020006
+       MEMBER     (RSNUSUAR)-                                           00030009
+       ACTION     (REPLACE) -                                           00040003
+       ISOLATION  (CS)      -                                           00050003
+       VALIDATE   (BIND)    -                                           00060003
+       RELEASE    (COMMIT)  -                                           00070003
+       OWNER      (P390)    -                                           00080003
+       QUALIFIER  (P390)                                                00090003
+END
+BPKSNNOT
+DSN    SYSTEM     (DSN1)                                                00010003
+BIND   PACKAGE    (PKNOTAS) -                                           00020006
+       MEMBER     (RSNNOTASFIN)-                                           00030008
+       ACTION     (REPLACE) -                                           00040003
+       ISOLATION  (CS)      -                                           00050003
+       VALIDATE   (BIND)    -                                           00060003
+       RELEASE    (COMMIT)  -                                           00070003
+       OWNER      (P390)    -                                           00080003
+       QUALIFIER  (P390)                                                00090003
+END        
+BPLNOTAS
+DSN    SYSTEM     (DSN1)                                                00010003
+BIND   PLAN       (PLNOTAS) -                                           00020010
+       PKLIST     (PKNOTAS.*) -                                         00030010
+       ACTION     (REPLACE) -                                           00040003
+       ISOLATION  (CS)      -                                           00050003
+       VALIDATE   (BIND)    -                                           00060003
+       RELEASE    (COMMIT)  -                                           00070003
+       OWNER      (P390)    -                                           00080003
+       QUALIFIER  (P390)                                                00090003
+END                         

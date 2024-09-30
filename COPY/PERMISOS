@@ -1,0 +1,40 @@
+      ******************************************************************
+      * DCLGEN TABLE(PERMISOS)                                         *
+      *        LIBRARY(P390.DB2.DCLGEN(PERMISOS))                      *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(CR-)                                              *
+      *        STRUCTURE(PM-PERMISOS)                                  *
+      *        QUOTE                                                   *
+      *        DBCSDELIM(NO)                                           *
+      *        COLSUFFIX(YES)                                          *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE PERMISOS TABLE
+           ( TRAN                           CHAR(4) NOT NULL,
+             DNI                            CHAR(9) NOT NULL,
+             IDPERFIL                       CHAR(3) NOT NULL,
+             NROACCESOS                     INTEGER NOT NULL,
+             FECHAUL                        CHAR(10) NOT NULL,
+             HORAUL                         CHAR(8) NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE PERMISOS                           *
+      ******************************************************************
+       01  PM-PERMISOS.
+      *                       TRAN
+           10 CR-TRAN              PIC X(4).
+      *                       DNI
+           10 CR-DNI               PIC X(9).
+      *                       IDPERFIL
+           10 CR-IDPERFIL          PIC X(3).
+      *                       NROACCESOS
+           10 CR-NROACCESOS        PIC S9(9) USAGE COMP.
+      *                       FECHAUL
+           10 CR-FECHAUL           PIC X(10).
+      *                       HORAUL
+           10 CR-HORAUL            PIC X(8).
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 6       *
+      ******************************************************************
+

@@ -69,7 +69,7 @@
 006900*  COPY MSNNE03R.                                                 00690026
 007000*  MSNNE03R REDEFINE MSNNE03 ADECUA LINEAS DE SCROLL A OCCURS     00700026
 007100 01  MSNNE03OR REDEFINES MSNNE03O.                                00710026
-007200     05  FILLER PIC X(397).                                       00720026
+007200     05  FILLER PIC X(395).                                       00720053
 007300     05  MLINEA OCCURS 5 TIMES INDEXED BY IX-LINEA.               00730026
 007400         07 MCODCUR.                                              00740026
 007500            10 MCODESP    PICTURE X(3).                           00750026
@@ -78,7 +78,7 @@
 007800            10 MCODHIG    PICTURE X.                              00780026
 007900            10 MVODVVV    PICTURE X.                              00790026
 008000            10 MCODUND    PICTURE X.                              00800026
-008100            10 MCODIGO    PIC X(9).                               00810026
+008100            10 MCODIGO    PIC X(5).                               00810053
 008200         07 MDESCRI.                                              00820026
 008300            10 MDESESP    PICTURE X(3).                           00830026
 008400            10 MDESCOL    PICTURE X.                              00840026
@@ -86,7 +86,7 @@
 008600            10 MDESHIG    PICTURE X.                              00860026
 008700            10 MDESVVV    PICTURE X.                              00870026
 008800            10 MDESUND    PICTURE X.                              00880026
-008900            10 MDESCUR    PICTURE X(25).                          00890026
+008900            10 MDESCUR    PICTURE X(20).                          00890053
 009000         07 MAAACRS.                                              00900026
 009100            10 MAAAESP    PICTURE X(3).                           00910026
 009200            10 MAAACOL    PICTURE X.                              00920026
@@ -169,7 +169,7 @@
 017700 COPY DFHBMSCA.                                                   01770026
 017800 01 MI-COMMAREA PIC X(100).                                       01780026
 017900 01 MI-COMMAREA-RED REDEFINES MI-COMMAREA.                        01790026
-           03 CA-CICLO  PIC XX.                                         01791044
+017910     03 CA-CICLO  PIC XX.                                         01791051
 018000     03 CA-TRANS  PIC XXXX.                                       01800026
 018100     03 CA-TERM   PIC XXXX.                                       01810026
 018200     03 CA-DNI    PIC X(9).                                       01820026
@@ -190,7 +190,7 @@
 019800     05 LK-NT-INDICE        PIC 9(2).                             01980026
 019900     05 LK-NT-SQLCODE       PIC S9(9).                            01990026
 020000     05 LK-NT-COD-RET       PIC 9(02).                            02000026
-020050     05 FILLER              PIC X(92).                            02001038
+020010     05 FILLER              PIC X(92).                            02001052
 020100*********************************************************         02010026
 020200*    AREA LINK PARA EL ENCAPSULADOR DE CURSOS           *         02020026
 020300*********************************************************         02030026
@@ -234,8 +234,8 @@
 024100     PERFORM 9999-FIN-DE-PROGRAMA                                 02410026
 024200     .                                                            02420026
 024300 1000-INICIO-DE-PROGRAMA.                                         02430026
-           MOVE LOW-VALUES TO MSNNE03O                                  02431034
-024400     MOVE "P" TO W-SW-MODO                                        02440031
+024310     MOVE LOW-VALUES TO MSNNE03O                                  02431052
+024400     MOVE "P" TO W-SW-MODO                                        02440055
 024410     IF MODO-DESARROLLO THEN                                      02441031
 024420        MOVE WS-MINI-NOTAS TO WS-LLAMAR-NOTAS                     02442031
 024430        MOVE WS-MINI-CURSOS TO WS-LLAMAR-CURSOS                   02443031
@@ -249,11 +249,11 @@
 024492     END-IF                                                       02449231
 024500     .                                                            02450026
 024600 2000-MANEJO-DE-CICLOS-DE-CICS.                                   02460026
-024750     MOVE DFHCOMMAREA TO MI-COMMAREA                              02461044
+024610     MOVE DFHCOMMAREA TO MI-COMMAREA                              02461052
 024700     IF EIBCALEN = 0 OR CA-CICLO NOT = "33" THEN                  02470048
 024800        PERFORM 3100-CARGA-DATOS-PARA-MAPA                        02480026
 024900        PERFORM 7000-ENVIO-MAPA                                   02490026
-              MOVE "33" TO CA-CICLO                                     02491045
+024910        MOVE "33" TO CA-CICLO                                     02491052
 025000        PERFORM 7800-RETORNO-TRANSACCION                          02500026
 025100     ELSE                                                         02510026
 025200        MOVE DFHCOMMAREA TO MI-COMMAREA                           02520026
@@ -264,7 +264,7 @@
 025700     CONTINUE                                                     02570026
 025800     .                                                            02580026
 025900 3100-CARGA-DATOS-PARA-MAPA.                                      02590026
-           PERFORM 3100-GET-DATES                                       02600043
+026000     PERFORM 3100-GET-DATES                                       02600052
 026100     MOVE WS-FECHA-AAAA-MM-DD    TO MFECHAO                       02610026
 026600     .                                                            02660026
 026700* COPY RUTINA FORMATO DE FECHAS                                   02670026
@@ -285,31 +285,31 @@
 028200     .                                                            02820026
 028300                                                                  02830026
 028400 3200-CONSULTA-NOTAS.                                             02840026
-047200                                                                  02851046
-047300     MOVE EIBTRMID TO CA-TERM                                     02852046
-047400     MOVE EIBTRNID TO CA-TRANS                                    02853046
-052600     MOVE "-> 3200-CONSULTA-NOTAS--" TO W-PARRAFO                 02854046
-052700     MOVE "DNI " TO W-CAMPO                                       02855046
-052800     MOVE MDNIESI TO W-VALOR                                      02856046
-052900     MOVE "EIBCALEN" TO W-CAMPO1                                  02857046
-053000     MOVE EIBCALEN TO W-VALOR1                                    02858046
-053100     PERFORM 9100-DEB-DIS                                         02859046
+028500                                                                  02850052
+028510     MOVE EIBTRMID TO CA-TERM                                     02851052
+028520     MOVE EIBTRNID TO CA-TRANS                                    02852052
+028530     MOVE "-> 3200-CONSULTA-NOTAS--" TO W-PARRAFO                 02853052
+028540     MOVE "DNI " TO W-CAMPO                                       02854052
+028550     MOVE MDNIESI TO W-VALOR                                      02855052
+028560     MOVE "EIBCALEN" TO W-CAMPO1                                  02856052
+028570     MOVE EIBCALEN TO W-VALOR1                                    02857052
+028580     PERFORM 9100-DEB-DIS                                         02858052
 028600     PERFORM 3100-GET-DATES                                       02860026
 028700     MOVE WS-FECHA-AAAA-MM-DD    TO MFECHAO                       02870026
 028800**************************************************************    02880026
 028900*    CONSULTA EL ESTUDIANTE Y RECUPERA EL NOMBRE Y APELLIDOS *    02890026
 029000**************************************************************    02900026
-           MOVE LOW-VALUES TO AREA-LINK-USUARIO                         02901034
-           MOVE 1 TO LK-TIPO-OPE                                        02902035
-           MOVE 1 TO LK-SUBTIPO-OPE                                     02903035
+029010     MOVE LOW-VALUES TO AREA-LINK-USUARIO                         02901052
+029020     MOVE 1 TO LK-TIPO-OPE                                        02902052
+029030     MOVE 1 TO LK-SUBTIPO-OPE                                     02903052
 029300     MOVE 1 TO LK-US-COD-RET                                      02930034
-029300     MOVE 100 TO LK-US-SQLCODE                                    02931034
+029310     MOVE 100 TO LK-US-SQLCODE                                    02931052
 029400     MOVE "ESTUD" TO LK-US-TIPOUSUA                               02940026
-029200     MOVE MDNIESI TO LK-US-DNI                                    02940134
-029100     MOVE "**NO REGISTRADO **" TO MNOMESO MAPEESO                 02941034
+029401     MOVE MDNIESI TO LK-US-DNI                                    02940152
+029410     MOVE "**NO REGISTRADO **" TO MNOMESO MAPEESO                 02941034
 029500     PERFORM 4200-BUSCAR-USUARIO                                  02950026
-           DISPLAY "03 REC " LK-US-DNI "/" LK-US-COD-RET "/"            02951034
-                   LK-US-NOMBRE                                         02952034
+029510     DISPLAY "03 REC " LK-US-DNI "/" LK-US-COD-RET "/"            02951034
+029520             LK-US-NOMBRE                                         02952034
 029600     IF LK-US-COD-RET = 0 THEN                                    02960026
 029700          MOVE LK-US-NOMBRE TO MNOMESO                            02970026
 029800          MOVE LK-US-APELLIDOS TO MAPEESO                         02980026
@@ -369,16 +369,16 @@
 035200        MOVE "ESTUDIANTE SIN NOTAS REGISTRADAS" TO MTXMSGO        03520026
 035300        PERFORM 7000-ENVIO-MAPA                                   03530026
 035400        PERFORM 7800-RETORNO-TRANSACCION                          03540026
-           ELSE                                                         03541049
-              MOVE SPACES TO MTXMSG0                                    03542049
+035410     ELSE                                                         03541049
+035420        MOVE SPACES TO MTXMSGO                                    03542051
 035500     END-IF                                                       03550026
 035600     MOVE LK-NT-CONTADOR TO WS-NUNOTAS                            03560026
 035700     PERFORM 3700-PEDIR-NOTAS TEST BEFORE                         03570049
 035800        VARYING IX-NOTA FROM 1 BY 1                               03580026
 035900        UNTIL IX-NOTA > WS-NUNOTAS                                03590049
 036100     MOVE 1 TO W-IND-FROM                                         03610037
-           SET W-IND-TO TO IX-NOTA                                      03611037
-           SUBTRACT 1 FROM W-IND-TO                                     03612037
+036110     SET W-IND-TO TO IX-NOTA                                      03611037
+036120     SUBTRACT 1 FROM W-IND-TO                                     03612037
 036200     MOVE WS-NUNOTAS TO W-IND-TO                                  03620026
 036300     IF W-IND-TO NOT > W-IND-FROM + W-M - 1                       03630037
 036400        AND W-DNI-HALLADO = "S" THEN                              03640026
@@ -401,6 +401,7 @@
 042500     END-IF                                                       04250026
 042600     MOVE AAAA  (W-IND-LISTA) TO MAAACUR (W-IND-VISOR)            04260026
 042700     MOVE NOTA  (W-IND-LISTA) TO W-EDI-NOTA                       04270028
+042750     MOVE W-EDI-NOTA TO W-EDI-NOTA-N                              04271054
 042800     MOVE W-EDI-NOTA-R TO MNOTCUR (W-IND-VISOR)                   04280028
 042900     ADD 1 TO W-IND-VISOR  W-IND-LISTA                            04290026
 043000     .                                                            04300026
@@ -412,37 +413,38 @@
 043600     ADD 1 TO W-IND-VISOR                                         04360026
 043700     .                                                            04370026
 043800 3700-PEDIR-NOTAS.                                                04380026
-           MOVE LOW-VALUES TO AREA-LINK-NOTAS                           04390036
+043900     MOVE LOW-VALUES TO AREA-LINK-NOTAS                           04390036
 044000     MOVE 1 TO LK-NT-TIPO-OPE                                     04400026
 044100     MOVE 1 TO LK-NT-SUBTIPO                                      04410039
-043900     MOVE MDNIESI TO LK-NT-DNIESTUD                               04411036
-           SET LK-NT-INDICE TO IX-NOTA                                  04411139
-           MOVE 1 TO LK-NT-COD-RET                                      04412036
-           MOVE 100 TO LK-NT-SQLCODE                                    04413036
+044110     MOVE MDNIESI TO LK-NT-DNIESTUD                               04411036
+044111     SET LK-NT-INDICE TO IX-NOTA                                  04411139
+044120     MOVE 1 TO LK-NT-COD-RET                                      04412036
+044130     MOVE 100 TO LK-NT-SQLCODE                                    04413036
 044200     PERFORM 4000-BUSCAR-NRO-NOTAS-DNI                            04420026
-           DISPLAY "03 RECIBE " LK-NT-DNIESTUD " RES " LK-NT-COD-RET    04421036
-                   "NOTAS /" LK-NT-CONTADOR                             04422036
+044210     DISPLAY "03 RECIBE " LK-NT-DNIESTUD " RES " LK-NT-COD-RET    04421036
+044220             "NOTAS /" LK-NT-CONTADOR "/NOTA=" LK-NT-NOTA         04422050
 044300     IF LK-NT-SQLCODE = 0 THEN                                    04430026
 044500        MOVE LK-NT-CURSO   TO CURSO(IX-NOTA)                      04450040
 044600        MOVE LK-NT-AAAA    TO AAAA(IX-NOTA)                       04460027
 044700        MOVE LK-NT-NOTA    TO W-EDI-NOTA                          04470027
-044800        MOVE W-EDI-NOTA-N  TO NOTA(IX-NOTA)                       04480026
+              MOVE LK-NT-NOTA    TO W-EDI-NOTA-N                        04471054
+044800        MOVE W-EDI-NOTA-R  TO NOTA(IX-NOTA)                       04480054
 044900     END-IF                                                       04490026
 045000     .                                                            04500026
-037300 3900-HACIA-ADELANTE.                                             04501037
-037400                                                                  04502037
-037500     MOVE "--3300-HACIA-ADELANTE--" TO W-PARRAFO                  04503037
-037600     MOVE "EIBCALEN" TO W-CAMPO                                   04504037
-037700     MOVE EIBCALEN TO W-VALOR                                     04505037
-037800     PERFORM 9100-DEB-DIS                                         04506037
-037900     .                                                            04507037
-038000 3950-HACIA-ATRAS.                                                04508037
-038100                                                                  04509037
-038200     MOVE "--3400-HACIA-ATRAS--" TO W-PARRAFO                     04509137
-038300     MOVE "EIBCALEN" TO W-CAMPO                                   04509237
-038400     MOVE EIBCALEN TO W-VALOR                                     04509337
-038500     PERFORM 9100-DEB-DIS                                         04509437
-038600     .                                                            04509537
+045010 3900-HACIA-ADELANTE.                                             04501037
+045020                                                                  04502037
+045030     MOVE "--3300-HACIA-ADELANTE--" TO W-PARRAFO                  04503037
+045040     MOVE "EIBCALEN" TO W-CAMPO                                   04504037
+045050     MOVE EIBCALEN TO W-VALOR                                     04505037
+045060     PERFORM 9100-DEB-DIS                                         04506037
+045070     .                                                            04507037
+045080 3950-HACIA-ATRAS.                                                04508037
+045090                                                                  04509037
+045091     MOVE "--3400-HACIA-ATRAS--" TO W-PARRAFO                     04509137
+045092     MOVE "EIBCALEN" TO W-CAMPO                                   04509237
+045093     MOVE EIBCALEN TO W-VALOR                                     04509337
+045094     PERFORM 9100-DEB-DIS                                         04509437
+045095     .                                                            04509537
 045100 4000-BUSCAR-NRO-NOTAS-DNI.                                       04510026
 045200                                                                  04520026
 045300      EXEC CICS LINK PROGRAM(WS-LLAMAR-NOTAS)                     04530031
@@ -458,14 +460,14 @@
 046300      END-EXEC                                                    04630026
 046400      .                                                           04640026
 046500 4200-BUSCAR-USUARIO.                                             04650026
-047300     MOVE EIBTRMID TO CA-TERM                                     04651047
-047400     MOVE EIBTRNID TO CA-TRANS                                    04652047
-052600     MOVE "-> 4200-BUSCAR--" TO W-PARRAFO                         04653047
-052700     MOVE "PUSUARIO" TO W-CAMPO                                   04654047
-052800     MOVE WS-LLAMAR-USUARIOS TO W-VALOR                           04655048
-052900     MOVE "DNI " TO W-CAMPO1                                      04656047
-053000     MOVE LK-US-DNI TO W-VALOR1                                   04657047
-053100     PERFORM 9100-DEB-DIS                                         04658047
+046510     MOVE EIBTRMID TO CA-TERM                                     04651047
+046520     MOVE EIBTRNID TO CA-TRANS                                    04652047
+046530     MOVE "-> 4200-BUSCAR--" TO W-PARRAFO                         04653047
+046540     MOVE "PUSUARIO" TO W-CAMPO                                   04654047
+046550     MOVE WS-LLAMAR-USUARIOS TO W-VALOR                           04655048
+046560     MOVE "DNI " TO W-CAMPO1                                      04656047
+046570     MOVE LK-US-DNI TO W-VALOR1                                   04657047
+046580     PERFORM 9100-DEB-DIS                                         04658047
 046600                                                                  04660026
 046700      EXEC CICS LINK PROGRAM(WS-LLAMAR-USUARIOS)                  04670031
 046800           COMMAREA(AREA-LINK-USUARIO)                            04680026
@@ -475,12 +477,12 @@
 047200 7000-ENVIO-MAPA.                                                 04720026
 047300     MOVE EIBTRMID TO CA-TERM                                     04730026
 047400     MOVE EIBTRNID TO CA-TRANS                                    04740026
-052600     MOVE "-> 7000-ENVIO-MAPA--" TO W-PARRAFO                     04741046
-052700     MOVE "EIBTRNID" TO W-CAMPO                                   04742046
-052800     MOVE EIBTRNID TO W-VALOR                                     04743046
-052900     MOVE "EIBCALEN" TO W-CAMPO1                                  04744046
-053000     MOVE EIBCALEN TO W-VALOR1                                    04745046
-053100     PERFORM 9100-DEB-DIS                                         04746046
+047410     MOVE "-> 7000-ENVIO-MAPA--" TO W-PARRAFO                     04741046
+047420     MOVE "EIBTRNID" TO W-CAMPO                                   04742046
+047430     MOVE EIBTRNID TO W-VALOR                                     04743046
+047440     MOVE "EIBCALEN" TO W-CAMPO1                                  04744046
+047450     MOVE EIBCALEN TO W-VALOR1                                    04745046
+047460     PERFORM 9100-DEB-DIS                                         04746046
 047500     EXEC CICS SEND                                               04750026
 047600             MAP('MSNNE03')                                       04760026
 047700          MAPSET('MSNNE03')                                       04770026
@@ -489,14 +491,14 @@
 048000     END-EXEC                                                     04800026
 048500     .                                                            04850026
 048600 7100-RECIBO-DE-MAPA.                                             04860026
-047300     MOVE EIBTRMID TO CA-TERM                                     04861046
-047400     MOVE EIBTRNID TO CA-TRANS                                    04862046
-052600     MOVE "-> 7000-ENVIO-MAPA--" TO W-PARRAFO                     04863046
-052700     MOVE "EIBTRNID" TO W-CAMPO                                   04864046
-052800     MOVE EIBTRNID TO W-VALOR                                     04865046
-052900     MOVE "EIBCALEN" TO W-CAMPO1                                  04866046
-053000     MOVE EIBCALEN TO W-VALOR1                                    04867046
-053100     PERFORM 9100-DEB-DIS                                         04868046
+048610     MOVE EIBTRMID TO CA-TERM                                     04861046
+048620     MOVE EIBTRNID TO CA-TRANS                                    04862046
+048630     MOVE "-> 7000-ENVIO-MAPA--" TO W-PARRAFO                     04863046
+048640     MOVE "EIBTRNID" TO W-CAMPO                                   04864046
+048650     MOVE EIBTRNID TO W-VALOR                                     04865046
+048660     MOVE "EIBCALEN" TO W-CAMPO1                                  04866046
+048670     MOVE EIBCALEN TO W-VALOR1                                    04867046
+048680     PERFORM 9100-DEB-DIS                                         04868046
 048700     EXEC CICS RECEIVE                                            04870026
 048800          MAP('MSNNE03')                                          04880026
 048900          MAPSET('MSNNE03')                                       04890026

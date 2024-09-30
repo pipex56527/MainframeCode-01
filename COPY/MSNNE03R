@@ -1,0 +1,36 @@
+       01  MSNNE03OR REDEFINES MSNNE03O.
+           05  FILLER PIC X(395).
+           05  MLINEA OCCURS 5 TIMES INDEXED BY IX-LINEA.
+               07 MCODCUR.
+                  10 MCODESP    PICTURE X(3).
+                  10 MCODCOL    PICTURE X.
+                  10 MCODPRO    PICTURE X.
+                  10 MCODHIG    PICTURE X.
+                  10 MVODVVV    PICTURE X.
+                  10 MCODUND    PICTURE X.
+                  10 MCODIGO    PIC X(5).
+               07 MDESCRI.
+                  10 MDESESP    PICTURE X(3).
+                  10 MDESCOL    PICTURE X.
+                  10 MDESPRO    PICTURE X.
+                  10 MDESHIG    PICTURE X.
+                  10 MDESVVV    PICTURE X.
+                  10 MDESUND    PICTURE X.
+                  10 MDESCUR    PICTURE X(20).
+               07 MAAACRS.
+                  10 MAAAESP    PICTURE X(3).
+                  10 MAAACOL    PICTURE X.
+                  10 MAAAPRO    PICTURE X.
+                  10 MAAAHIG    PICTURE X.
+                  10 MAAAVVV    PICTURE X.
+                  10 MAAAUND    PICTURE X.
+                  10 MAAACUR    PICTURE X(4).
+               07 MNOTCRS.
+                  10 MNOTESP    PICTURE X(3).
+                  10 MNOTCOL    PICTURE X.
+                  10 MNOTPRO    PICTURE X.
+                  10 MNOTHIG    PICTURE X.
+                  10 MNOTVVV    PICTURE X.
+                  10 MNOTUND    PICTURE X.
+                  10 MNOTCUR    PICTURE X(4).
+
