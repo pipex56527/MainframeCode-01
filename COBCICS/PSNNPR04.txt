@@ -1,30 +1,31 @@
       ******************************************************************
-      * PROYECTO .: SNIU-SISTEMA DE NOTAS DE IDENTIFICACIÛN DE USUARIOS*
-      * PROGRAMA .: PSNNPR0Z FUNCIONA BIEN CON NOTA ANTES ENCAPSULA    *
-      * VERSION ..: NOMBRES Y APELLIDOS JUNTOS - OK                    *
-      * TITULO: ..:PROGRAMA SISTEMA NOTAS CONSULTA NOTAS PROFESOR 04   *
+      * PROYECTO .: SN-SISTEMA DE NOTAS                                *
+      * PROGRAMA .: PSNNPR04                                           *
+      * VERSION ..: 3.0 FUNCIONA CON UN USUARIO ADMIN Y CON UN         *
+      *                 USUARIO PROFESOR                               *
+      * TITULO: ..:PROGRAMA CONSULTA DE NOTAS POR PROFESOR 04          *
       *                                                                *
-      * SEP 28: AJUSTE MANEJO ERROR DB2                                *
-      *         NOMBRE PROFESOR COMPLETO                               *
-      *                                                                *
+      * SEP 29: CONTROLA PROFESOR VALIDO
+      *         CORRIGE AAAA PARA EL ULTIMO REGISTRO
+      *
       * TIPO .......:                                                  *
       *   - LENGUAJE ..................: COBOL II                      *
       *   - ENTORNO ...................: CICS                          *
       *   - BASE DE DATOS .............: DB2                           *
       *                                                                *
       * DESCRIPCION.....:                                              *
-      *   - PSNNPR04         TIENE LA COMMAREA Y LINK ENCAPS USUARIOS  *
+      *   - PSNNPR04  TIENE LA COMMAREA Y LINK ENCAPS USUARIOS         *
       *   -                                                            *
       *   - USA CURSORES PARA F7-ANTERIOR Y F8-SIGUIENTE               *
       *   - SE MUESTRA EN LA PANTALLA LA IDENTIFICACIÛN DEL PROFESOR   *
-      *     A CONSULTAR Y EN LAS PRÛXIMAS LÌNEAS SE MUESTRAN , EL DNI, *
-      *     APELLIDOS Y NOMBRE, CURSO, AÒO DEL CURSO Y LA NOTA FINAL   *
+      *     A CONSULTAR Y EN LAS PROXIMAS LÌNEAS SE MUESTRAN: EL DNI,  *
+      *     NOMBRE Y APELLIDOS, CURSO, AÒO DEL CURSO Y LA NOTA FINAL   *
       *     DE CADA ESTUDIANTE DEL CURSO DICTADO POR EL PROFESOR.      *
-      *     PARA UN PROFERSOR (PRIMERA LÌNEA) SE MUESTRAN LAS NOTAS DE *
-      *     TODOS LOS ESTUDIANTES, DEL CURSO QUE EL PROFESOR DICTA.    *
-      *     PARA EL USUARIO ADMIN SE DEBE MOSTRAR LA INFORMACIÛN DE LOS*
-      *     ESTUDIANTES DE TODOS LOS PROFESORES, PERO EL PROFESOR SÛLO *
-      *     PUEDE VER LA INFORMACIÛN DE LOS ESTUDIANTES DE SU CURSO.   *
+      *     PARA UN USUARIO PROFESOR SE MUESTRAN LAS NOTAS DE TODOS    *
+      *     SUS ESTUDIANTES.                                           *
+      *     PARA UN USUARIO ADMIN SE MUESTRA LA INFORMACIÛN DE LOS     *
+      *     ESTUDIANTES DE TODOS LOS PROFESORES.                       *
+      *                                                                *
       ******************************************************************
        IDENTIFICATION DIVISION.
        PROGRAM-ID. PSNNPR04.
@@ -183,8 +184,10 @@
            03 SW-ENVIO-MAPA        PIC X  VALUE '1'.
               88 ENVIO-ERASE              VALUE '1'.
               88 ENVIO-DATAONLY           VALUE '2'.
-           03 SW-ERROR-VALIDACION  PIC X  VALUE '0'.
-              88 ERROR-VALIDACION         VALUE '1'.
+      * MB -MANEJO SW VALIDACION PROFESOR
+           03 SW-VALIDA-PROFESOR   PIC X.
+              88 PROFESOR-VALIDO          VALUE '0'.
+              88 PROFESOR-ERRADO          VALUE '1'.
 
       *
       *------------------------------------------------
@@ -205,14 +208,6 @@
            PERFORM 1000-INICIO
            PERFORM 2000-PROCESO
            PERFORM 7200-ENVIAR-MSG-MAPA-O-RT
-           .
-       COLA.
-            EXEC CICS ENTER TRACENUM (1) FROM (WS-PARRAFO) END-EXEC
-            EXEC CICS WRITEQ TS
-                 QUEUE (WS-COLATS)
-                 FROM  (WS-TRAZA)
-                 RESP  (WS-RESP)
-            END-EXEC
            .
       ***************************************************************
       *1000-INICIO
@@ -297,10 +292,14 @@
       *
               EVALUATE  EIBAID
                WHEN DFHENTER
+
                     IF CA-US-TIPOUSUA = 'ADMIN' THEN
-                       MOVE UDNII TO CA-PDNI
+                       MOVE UDNII      TO CA-PDNI
+      * MB- CONTROLA PROFESOR VALIDO
                        PERFORM 4100-CONSULTAR-PROFESOR
-                       PERFORM 3248-CONSULTAR-PROXIMO
+                       IF PROFESOR-VALIDO
+                          PERFORM 3248-CONSULTAR-PROXIMO
+                       END-IF
                     ELSE
                        MOVE DFHYELLO   TO UDNIC
                        MOVE DFHBMPRO   TO UDNIA
@@ -415,7 +414,7 @@
                INTO UENOMBO
 
                MOVE   WM-CCURSO      TO CCURSOO
-               MOVE   WM-EAAAA       TO NAAAAO
+               MOVE   WS-NAAAA       TO NAAAAO
                MOVE   WS-ENOTA       TO ENOTAO
                .
       ***************************************************************
@@ -446,7 +445,8 @@
        4100-CONSULTAR-PROFESOR.
       * LIMPIAR EL AREA DE ENLACE PARA EVITAR MALOS ENTENDIDOS
       *
-            MOVE LOW-VALUES TO AREA-LU-RUS
+            SET PROFESOR-VALIDO    TO TRUE
+            MOVE LOW-VALUES        TO AREA-LU-RUS
             MOVE 9         TO LU-COD-RET
             MOVE 1         TO LU-TIPO-OPE
             MOVE 1         TO LU-SUBTIPO-OPE
@@ -466,10 +466,11 @@
                 WHEN 0
                      PERFORM 4110-VALIDA-TIPO-PROFE
                 WHEN 1
-                     MOVE '01'      TO  CA-CICLO
+                     SET PROFESOR-ERRADO TO TRUE
+                     MOVE '01'           TO  CA-CICLO
                      MOVE 'PROFESOR NO EXISTE! ' TO MSGO
                 WHEN OTHER
-                     MOVE DFHBLINK  TO  MSGH
+                     MOVE DFHBLINK       TO  MSGH
                      MOVE "OJO CON BASE DE DATOS US " TO
                            WS-MSG-TEXT
                      PERFORM 7810-RETORNO-CICS-FIN
@@ -487,14 +488,11 @@
                MOVE '000000000' TO CA-EDNI
                MOVE LU-DNI      TO CA-PDNI
             ELSE
+               SET PROFESOR-ERRADO   TO TRUE
                MOVE ' EL DNI NO CORRESPONDE A UN PROFESOR' TO MSGO
                MOVE '01' TO CA-CICLO
             END-IF
             .
-      *
-      * MA: 4200-MOVER-FECHA MUEVE LA FECHA Y EL NOMBRE DEL USUARIO
-      *     AL TITULO DE LA PANTALLA
-      *
        4200-MOVER-FECHA.
             MOVE CA-UNOMBRE            TO MNOMBREO
             MOVE FUNCTION CURRENT-DATE TO WS-CURRENT-DATE-DATA
@@ -508,6 +506,14 @@
       ***************************************************************
        7200-ENVIAR-MSG-MAPA-O-RT.
             PERFORM 4200-MOVER-FECHA
+            IF CA-US-TIPOUSUA = 'ADMIN' THEN
+               MOVE DFHBMUNP   TO UDNIA
+               MOVE DFHTURQ    TO UDNIC
+            ELSE
+               MOVE DFHYELLO   TO UDNIC
+               MOVE DFHBMPRO   TO UDNIA
+            END-IF
+
             EXEC CICS SEND MAP('MSNNP04')
                  FROM(MSNNP04O)
                  ERASE
@@ -651,6 +657,7 @@
       *
            MOVE WM-ENOTA  TO WS-ENOTA
            MOVE WM-EDNI   TO WS-EDNI
+           MOVE WM-EAAAA  TO WS-NAAAA
            MOVE SQLCODE TO DB2-SQLCODE-Z
            MOVE SPACES TO WS-TRAZA
 
@@ -741,6 +748,7 @@
            WHEN 0
               MOVE WM-ENOTA  TO WS-ENOTA
               MOVE WM-EDNI   TO WS-EDNI
+              MOVE WM-EAAAA  TO WS-NAAAA
               PERFORM 8888-BUSCAR-ESTUDIANTE
               MOVE LU-NOMBRE     TO WM-ENOMBRE
               MOVE LU-APELLIDOS  TO WM-EAPELLIDOS
@@ -852,4 +860,11 @@
                     DB2-SQLCODE-Z DELIMITED BY SIZE INTO WS-MSG-TEXT
              PERFORM 7810-RETORNO-CICS-FIN
              .
-
+       COLA.
+            EXEC CICS ENTER TRACENUM (1) FROM (WS-PARRAFO) END-EXEC
+            EXEC CICS WRITEQ TS
+                 QUEUE (WS-COLATS)
+                 FROM  (WS-TRAZA)
+                 RESP  (WS-RESP)
+            END-EXEC
+           .
