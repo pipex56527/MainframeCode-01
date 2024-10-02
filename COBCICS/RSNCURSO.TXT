@@ -1,228 +1,302 @@
-      *************************************************************     00010099
-      *   ENCAPSULADOR TABLA CURSOS                                     00020099
-      *   RUTINA QUE EJECUTA LAS SENTENCIAS DE LA BASE DE DATOS A       00022099
-      *   PARTIR DE UN TIPO Y SUBTIPO DE OPERACION QUE ENVIA            00023099
-      *   EL PROGRAMA QUE LA INVOCA.                                    00024099
-      *   TIPO 1: CONSULTA - SELECT                                     00025099
-      *      (SUBTIPO: CONSULTA POR CURSO- AUN NO SE REQUIERE)          00026099
-      *        2: ADICION - INSERT                                      00027099
-      *        3: BORRAR - DELETE                                       00028099
-      *        4: MODIFICAR - UPDATE                                    00029099
-      *************************************************************     00030099
-       IDENTIFICATION DIVISION.                                         00040099
-         PROGRAM-ID. RSNCURSO.                                          00050099
-       ENVIRONMENT DIVISION.                                            00060099
-       DATA DIVISION.                                                   00070099
-       WORKING-STORAGE SECTION.                                         00080099
-      *===============================================================  00090099
-      * MODSQL - DEFINICION TABLA CURSOS SQL Y COBOL                    00100099
-           EXEC SQL                                                     00110099
-                INCLUDE CURSOS                                          00120099
-           END-EXEC.                                                    00130099
-      *===============================================================  00140099
-      * MODSQL - SE TIENE QUE UTILIZAR SQLCA                            00150099
-           EXEC SQL                                                     00160099
-                INCLUDE SQLCA                                           00170099
-           END-EXEC.                                                    00180099
-      *===============================================================  00190099
-      * MODSQL CAMPOS PARA ERROR DE DB2                                 00200099
-       01  DB2-ERR.                                                     00210099
-           03  DB2-SQLCODE                PIC S9(9).                    00220099
-           03  DB2-SQLCODE-Z              PIC -ZZZZZZZZ9.               00230099
-           03  DB2-ERROR.                                               00240099
-               05  DB2-ERR-MSG            PIC X(50).                    00250099
-               05  DB2-ERR-CODE           PIC X(20).                    00260099
-                                                                        00270099
-      *============================================================     00280099
-       LINKAGE SECTION.                                                 00290099
-       01  DFHCOMMAREA        PIC X(49).                                00300099
-       01  AREA-LINK          REDEFINES DFHCOMMAREA.                    00310099
-           05 LK-CR-TIPO-OPE     PIC 9(01).                             00330099
-           05 LK-CR-SUBTIPO-OPE  PIC 9(02).                             00331099
-           05 LK-CR-CURSO        PIC X(05).                             00340099
-           05 LK-CR-DESCRIPCION  PIC X(20).                             00350099
-           05 LK-CR-DNIPROFESOR  PIC X(09).                             00360099
-           05 LK-CR-ESTADO       PIC X(01).                             00370099
-           05 LK-CR-COD-RET      PIC 9(02).                             00380099
-           05 LK-CR-SQLCODE      PIC S9(9).                             00390099
-                                                                        00400099
-      *=================================================================00410099
-       PROCEDURE DIVISION USING DFHCOMMAREA.                            00420099
-      *=================================================================00430099
-      ******************************************************************00440099
-      * 0000-RAIZ                                                       00450099
-      ******************************************************************00460099
-       0000-RAIZ.                                                       00470099
-      *    MODSQL EXCEPCIONES SQL DB2                                   00480099
-           EXEC SQL                                                     00490099
-                WHENEVER  SQLERROR    CONTINUE                          00500099
-           END-EXEC                                                     00510099
-                                                                        00520099
-           EXEC SQL                                                     00530099
-                WHENEVER  SQLWARNING  CONTINUE                          00540099
-           END-EXEC                                                     00550099
-                                                                        00560099
-           EXEC SQL                                                     00570099
-                WHENEVER  NOT FOUND   CONTINUE                          00580099
-           END-EXEC                                                     00590099
-                                                                        00600099
-           PERFORM 0100-INICIO                                          00610099
-           PERFORM 0200-EJECUTAR-OPERACION                              00620099
-           PERFORM 0300-FIN                                             00630099
-           .                                                            00640099
-      ******************************************************************00650099
-      * 0100-INICIO                                                     00660099
-      ******************************************************************00670099
-       0100-INICIO.                                                     00680099
-      *    DISPLAY "RUTINA RSNCURSO"                                    00700099
-      *    DISPLAY "AREA-LINK INP: " AREA-LINK                          00701099
-           MOVE 1           TO LK-CR-COD-RET                            00702099
-           .                                                            00710099
-      ******************************************************************00720099
-      * 0200-EJECUTAR-OPERACION                                         00730099
-      ******************************************************************00740099
-       0200-EJECUTAR-OPERACION.                                         00750099
-           EVALUATE LK-CR-TIPO-OPE                                      00770099
-              WHEN '1'                                                  00780099
-                 PERFORM 0210-CONSULTAR-CURSO                           00800099
-              WHEN '2'                                                  00810099
-                 PERFORM 0220-INSERTAR-CURSO                            00830099
-              WHEN '3'                                                  00840099
-                 PERFORM 0230-BORRAR-CURSO                              00860099
-              WHEN '4'                                                  00870099
-                 PERFORM 0240-MODIFICAR-CURSO                           00890099
-              WHEN OTHER                                                00900099
-                 MOVE 9             TO LK-CR-COD-RET                    00920099
-           END-EVALUATE                                                 00930099
-           .                                                            00940099
-      **************************************************************    00950099
-      * 0210-CONSULTAR-CURSO                                            00960099
-      **************************************************************    00970099
-       0210-CONSULTAR-CURSO.                                            00980099
-           MOVE LK-CR-CURSO TO CR-CURSO                                 01000099
-      *                                                                 01020099
-           EXEC SQL                                                     01030099
-             SELECT                                                     01040099
-                DESCRIPCION, DNIPROFESOR, ESTADO                        01050099
-             INTO                                                       01060099
-                :CR-DESCRIPCION, :CR-DNIPROFESOR, :CR-ESTADO            01070099
-             FROM CURSOS                                                01080099
-             WHERE CURSO =:CR-CURSO                                     01090099
-           END-EXEC                                                     01100099
-                                                                        01110099
-           IF SQLCODE = 0 THEN                                          01120099
-              MOVE 0               TO  LK-CR-COD-RET                    01130099
-              MOVE CR-DESCRIPCION  TO  LK-CR-DESCRIPCION                01140099
-              MOVE CR-DNIPROFESOR TO   LK-CR-DNIPROFESOR                01150099
-              MOVE CR-ESTADO       TO  LK-CR-ESTADO                     01160099
-           ELSE                                                         01180099
-              IF SQLCODE = +100 THEN                                    01190099
-                 MOVE 1 TO  LK-CR-COD-RET                               01200099
-              ELSE                                                      01210099
-                 MOVE 2 TO  LK-CR-COD-RET                               01220099
-                 PERFORM 0900-ERROR-DB2                                 01230099
-              END-IF                                                    01240099
-           END-IF                                                       01250099
-           .                                                            01260099
-      ***************************************************               01270099
-      * INSERTA LOS DATOS EN LA TABLA                   *               01280099
-      ***************************************************               01290099
-       0220-INSERTAR-CURSO.                                             01300099
-           MOVE LK-CR-CURSO        TO  CR-CURSO                         01310099
-           MOVE LK-CR-DESCRIPCION  TO  CR-DESCRIPCION                   01320099
-           MOVE LK-CR-DNIPROFESOR TO   CR-DNIPROFESOR                   01330099
-           MOVE LK-CR-ESTADO       TO  CR-ESTADO                        01340099
-                                                                        01370099
-           EXEC SQL                                                     01380099
-             INSERT INTO CURSOS                                         01390099
-                (                                                       01400099
-                 CURSO, DESCRIPCION, DNIPROFESOR, ESTADO                01410099
-                )                                                       01420099
-             VALUES                                                     01430099
-                (                                                       01440099
-                 :CR-CURSO,:CR-DESCRIPCION, :CR-DNIPROFESOR,  :CR-ESTADO01450099
-                )                                                       01470099
-           END-EXEC                                                     01480099
-                                                                        01490099
-           IF SQLCODE = 0                                               01500099
-             MOVE 0         TO LK-CR-COD-RET                            01510099
-           ELSE                                                         01520099
-             IF SQLCODE = +100 THEN                                     01530099
-                MOVE 1      TO  LK-CR-COD-RET                           01540099
-             ELSE                                                       01550099
-                MOVE 2      TO  LK-CR-COD-RET                           01560099
-                PERFORM 0900-ERROR-DB2                                  01570099
-             END-IF                                                     01580099
-           END-IF                                                       01590099
-           .                                                            01600099
-      ***************************************************               01610099
-      * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *               01620099
-      ***************************************************               01630099
-       0230-BORRAR-CURSO.                                               01640099
-           MOVE LK-CR-CURSO      TO  CR-CURSO                           01650099
-                                                                        01670099
-           EXEC SQL                                                     01680099
-             DELETE FROM CURSOS                                         01690099
-               WHERE CURSO =:CR-CURSO                                   01700099
-           END-EXEC                                                     01710099
-                                                                        01720099
-           IF SQLCODE = 0                                               01730099
-             MOVE 0         TO LK-CR-COD-RET                            01740099
-           ELSE                                                         01750099
-             IF SQLCODE = +100 THEN                                     01760099
-                MOVE 1      TO  LK-CR-COD-RET                           01770099
-             ELSE                                                       01780099
-                MOVE 2      TO  LK-CR-COD-RET                           01790099
-                PERFORM 0900-ERROR-DB2                                  01800099
-             END-IF                                                     01810099
-           END-IF                                                       01820099
-           .                                                            01830099
-      ***************************************************               01840099
-      * ACTUALIZA LOS DATOS EN LA TABLA                 *               01850099
-      ***************************************************               01860099
-       0240-MODIFICAR-CURSO.                                            01870099
-           MOVE LK-CR-CURSO        TO  CR-CURSO                         01880099
-           MOVE LK-CR-DESCRIPCION  TO  CR-DESCRIPCION                   01890099
-           MOVE LK-CR-DNIPROFESOR TO   CR-DNIPROFESOR                   01900099
-           MOVE LK-CR-ESTADO       TO  CR-ESTADO                        01910099
-                                                                        01940099
-           EXEC SQL                                                     01950099
-              UPDATE CURSOS                                             01960099
-              SET CURSO        = :CR-CURSO,                             01970099
-                  DESCRIPCION  = :CR-DESCRIPCION,                       01980099
-                  DNIPROFESOR = :CR-DNIPROFESOR,                        01990099
-                  ESTADO       = :CR-ESTADO                             02000099
-              WHERE CURSO      = :CR-CURSO                              02010099
-           END-EXEC                                                     02020099
-                                                                        02030099
-           IF SQLCODE = 0                                               02040099
-             MOVE 0         TO LK-CR-COD-RET                            02050099
-           ELSE                                                         02060099
-             IF SQLCODE = +100 THEN                                     02070099
-                MOVE 1      TO  LK-CR-COD-RET                           02080099
-             ELSE                                                       02090099
-                MOVE 2      TO  LK-CR-COD-RET                           02100099
-                PERFORM 0900-ERROR-DB2                                  02110099
-             END-IF                                                     02120099
-           END-IF                                                       02130099
-           .                                                            02140099
-      ******************************************************************02150099
-      * 0900-ERROR-DB2                                                  02160099
-      ******************************************************************02170099
-       0900-ERROR-DB2.                                                  02180099
-           MOVE SQLCODE TO LK-CR-SQLCODE                                02181099
-           MOVE SQLCODE TO DB2-SQLCODE                                  02182099
-      *    DISPLAY "ERROR DB2 EN RUTINA: "                              02190099
-      *    DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE                    02200099
-      *    DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z                  02210099
-      *    DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG                    02220099
-      *    DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE                   02230099
-           .                                                            02240099
-      ******************************************************************02250099
-      * FIN SESION                                                      02260099
-      ******************************************************************02270099
-       0300-FIN.                                                        02280099
-           GOBACK                                                       02310099
-           .                                                            02320099
-      ******************************************************************02330099
+      *************************************************************
+      *   ENCAPSULADOR TABLA CURSOS
+      *   RUTINA QUE EJECUTA LAS SENTENCIAS DE LA BASE DE DATOS A
+      *   PARTIR DE UN TIPO Y SUBTIPO DE OPERACION QUE ENVIA
+      *   EL PROGRAMA QUE LA INVOCA.
+      *   TIPO 1: CONSULTA - SELECT
+      *      SUBTIPO 1: CONSULTA POR CURSO
+      *        2: ADICION - INSERT
+      *        3: BORRAR - DELETE
+      *        4: MODIFICAR - UPDATE
+      *************************************************************
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. RSNCURSO.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      *===============================================================
+       01  AREA-LINK.
+           05 LK-CR-TIPO-OPE     PIC 9(01).
+           05 LK-CR-SUBTIPO-OPE  PIC 9(02).
+           05 LK-CR-CURSO        PIC X(05).
+           05 LK-CR-DESCRIPCION  PIC X(20).
+           05 LK-CR-DNIPROFESOR  PIC X(09).
+           05 LK-CR-ESTADO       PIC X(01).
+           05 LK-CR-COD-RET      PIC 9(02).
+           05 LK-CR-SQLCODE      PIC S9(9).
+       01 COLA-CURSOS.
+          05 C-CURSO       PIC X(05).
+          05 C-DESCRIPCION PIC X(20).
+          05 C-DNIPROFESOR PIC X(09).
+       01 WS-NOMBRECOLA  PIC X(08) VALUE 'KCICSCR'.
+       01 RESPUESTA      PIC S9(08) COMP.
+       01 WS-EOF         PIC X VALUE SPACES.
+       01 WS-COLATRABAJO PIC X(08) VALUE 'KCICS01'.
+       01 COLA-TRABAJO.
+          05 T-AREA-LINK1 PIC X(01).
+          05 T-AREA-LINKF1 PIC XX.
+          05 T-AREA-LINK2 PIC X(09).
+          05 T-AREA-LINKF2 PIC XX.
+          05 T-AREA-LINK3 PIC X(100).
+          05 T-DNI       PIC X(09).
+          05 T-PAS       PIC X(08).
+          05 T-CLAVE     PIC X(08).
+          05 T-NOMBRE    PIC X(20).
+          05 T-APELLIDOS PIC X(20).
+          05 T-DIRECCION PIC X(35).
+          05 T-SQLCODE   PIC X(10).
+      * MODSQL - DEFINICION TABLA CURSOS SQL Y COBOL
+           EXEC SQL
+                INCLUDE CURSOS
+           END-EXEC.
+      *===============================================================
+      * MODSQL - SE TIENE QUE UTILIZAR SQLCA
+           EXEC SQL
+                INCLUDE SQLCA
+           END-EXEC.
+      *===============================================================
+           EXEC SQL
+              DECLARE CSR1 CURSOR FOR
+                   SELECT
+                        CURSO
+                       ,DESCRIPCION
+                       ,DNIPROFESOR
+                   FROM
+                       CURSOS
+                   WHERE
+                       DNIPROFESOR = :LK-CR-DNIPROFESOR
+                   ORDER BY CURSO ASC
+           END-EXEC
+      * MODSQL CAMPOS PARA ERROR DE DB2
+       01  DB2-ERR.
+           03  DB2-SQLCODE                PIC S9(9).
+           03  DB2-SQLCODE-Z              PIC -ZZZZZZZZ9.
+           03  DB2-ERROR.
+               05  DB2-ERR-MSG            PIC X(50).
+               05  DB2-ERR-CODE           PIC X(20).
+
+      *============================================================
+       LINKAGE SECTION.
+       01  DFHCOMMAREA        PIC X(49).
+
+      *=================================================================
+       PROCEDURE DIVISION USING DFHCOMMAREA.
+      *=================================================================
+      ******************************************************************
+      * 0000-RAIZ
+      ******************************************************************
+       0000-RAIZ.
+      *    MODSQL EXCEPCIONES SQL DB2
+           EXEC SQL
+                WHENEVER  SQLERROR    CONTINUE
+           END-EXEC
+
+           EXEC SQL
+                WHENEVER  SQLWARNING  CONTINUE
+           END-EXEC
+
+           EXEC SQL
+                WHENEVER  NOT FOUND   CONTINUE
+           END-EXEC
+
+           PERFORM 0100-INICIO
+           PERFORM 0200-EJECUTAR-OPERACION
+           PERFORM 0300-FIN
+           .
+      ******************************************************************
+      * 0100-INICIO
+      ******************************************************************
+       0100-INICIO.
+           MOVE DFHCOMMAREA TO AREA-LINK
+           .
+      ******************************************************************
+      * 0200-EJECUTAR-OPERACION
+      ******************************************************************
+       0200-EJECUTAR-OPERACION.
+           EVALUATE LK-CR-TIPO-OPE
+              WHEN '1'
+                 PERFORM 0210-CONSULTAR-CURSO
+              WHEN '2'
+                 PERFORM 0220-INSERTAR-CURSO
+              WHEN '3'
+                 PERFORM 0230-BORRAR-CURSO
+              WHEN '4'
+                 PERFORM 0240-MODIFICAR-CURSO
+              WHEN '5'
+                 IF LK-CR-SUBTIPO-OPE = '01'
+                   PERFORM 0250-CURSOR-01
+                 END-IF
+              WHEN OTHER
+                 MOVE 9             TO LK-CR-COD-RET
+           END-EVALUATE
+           .
+      **************************************************************
+      * 0210-CONSULTAR-CURSO
+      **************************************************************
+       0210-CONSULTAR-CURSO.
+           MOVE 1           TO LK-CR-COD-RET
+           MOVE LK-CR-CURSO TO CR-CURSO
+      *
+           EXEC SQL
+             SELECT
+                DESCRIPCION, DNIPROFESOR, ESTADO
+             INTO
+                :CR-DESCRIPCION, :CR-DNIPROFESOR, :CR-ESTADO
+             FROM CURSOS
+             WHERE CURSO =:CR-CURSO
+           END-EXEC
+
+           IF SQLCODE = 0 THEN
+              MOVE 0               TO  LK-CR-COD-RET
+              MOVE CR-DESCRIPCION  TO  LK-CR-DESCRIPCION
+              MOVE CR-DNIPROFESOR TO   LK-CR-DNIPROFESOR
+              MOVE CR-ESTADO       TO  LK-CR-ESTADO
+           ELSE
+              IF SQLCODE = +100 THEN
+                 MOVE 1 TO  LK-CR-COD-RET
+              ELSE
+                 MOVE 2 TO  LK-CR-COD-RET
+                 PERFORM 0900-ERROR-DB2
+              END-IF
+           END-IF
+           .
+      ***************************************************
+      * INSERTA LOS DATOS EN LA TABLA                   *
+      ***************************************************
+       0220-INSERTAR-CURSO.
+           MOVE LK-CR-CURSO        TO  CR-CURSO
+           MOVE LK-CR-DESCRIPCION  TO  CR-DESCRIPCION
+           MOVE LK-CR-DNIPROFESOR TO   CR-DNIPROFESOR
+           MOVE LK-CR-ESTADO       TO  CR-ESTADO
+
+           EXEC SQL
+             INSERT INTO CURSOS
+                (
+                 CURSO, DESCRIPCION, DNIPROFESOR, ESTADO
+                )
+             VALUES
+                (
+                 :CR-CURSO,:CR-DESCRIPCION, :CR-DNIPROFESOR,  :CR-ESTADO
+                )
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO LK-CR-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  LK-CR-COD-RET
+             ELSE
+                MOVE 2      TO  LK-CR-COD-RET
+                PERFORM 0900-ERROR-DB2
+             END-IF
+           END-IF
+           .
+      ***************************************************
+      * BORRA UN REGISTRO CON EL NUMERO DE LA CLAVE     *
+      ***************************************************
+       0230-BORRAR-CURSO.
+           MOVE LK-CR-CURSO      TO  CR-CURSO
+
+           EXEC SQL
+             DELETE FROM CURSOS
+               WHERE CURSO =:CR-CURSO
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO LK-CR-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  LK-CR-COD-RET
+             ELSE
+                MOVE 2      TO  LK-CR-COD-RET
+                PERFORM 0900-ERROR-DB2
+             END-IF
+           END-IF
+           .
+      ***************************************************
+      * ACTUALIZA LOS DATOS EN LA TABLA                 *
+      ***************************************************
+       0240-MODIFICAR-CURSO.
+           MOVE LK-CR-CURSO        TO  CR-CURSO
+           MOVE LK-CR-DESCRIPCION  TO  CR-DESCRIPCION
+           MOVE LK-CR-DNIPROFESOR TO   CR-DNIPROFESOR
+           MOVE LK-CR-ESTADO       TO  CR-ESTADO
+
+           EXEC SQL
+              UPDATE CURSOS
+              SET CURSO        = :CR-CURSO,
+                  DESCRIPCION  = :CR-DESCRIPCION,
+                  DNIPROFESOR = :CR-DNIPROFESOR,
+                  ESTADO       = :CR-ESTADO
+              WHERE CURSO      = :CR-CURSO
+           END-EXEC
+
+           IF SQLCODE = 0
+             MOVE 0         TO LK-CR-COD-RET
+           ELSE
+             IF SQLCODE = +100 THEN
+                MOVE 1      TO  LK-CR-COD-RET
+             ELSE
+                MOVE 2      TO  LK-CR-COD-RET
+                PERFORM 0900-ERROR-DB2
+             END-IF
+           END-IF
+           .
+       0250-CURSOR-01.
+           EXEC CICS DELETEQ TS
+                QUEUE (WS-NOMBRECOLA)
+                RESP (RESPUESTA)
+           END-EXEC
+           EXEC SQL
+                OPEN CSR1
+           END-EXEC
+           IF SQLCODE EQUAL ZERO
+            PERFORM 0263-FECTCH-CURSOS-DETA01
+                UNTIL SQLCODE NOT EQUAL 0
+           END-IF
+
+           EXEC SQL
+                CLOSE CSR1
+           END-EXEC
+           .
+       0263-FECTCH-CURSOS-DETA01.
+           EXEC SQL
+           FETCH CSR1
+                   INTO
+                       :CR-CURSO
+                      ,:CR-DESCRIPCION
+                      ,:CR-DNIPROFESOR
+           END-EXEC
+           IF SQLCODE = +100
+            MOVE 'Y' TO WS-EOF
+           END-IF
+           IF SQLCODE = 0
+             MOVE CR-CURSO       TO C-CURSO
+             MOVE CR-DESCRIPCION TO C-DESCRIPCION
+             MOVE CR-DNIPROFESOR TO C-DNIPROFESOR
+             EXEC CICS WRITEQ TS
+                QUEUE (WS-NOMBRECOLA)
+                FROM (COLA-CURSOS)
+             END-EXEC
+             .
+      ******************************************************************
+      * 0900-ERROR-DB2
+      ******************************************************************
+       0900-ERROR-DB2.
+           MOVE SQLCODE TO LK-CR-SQLCODE
+           MOVE SQLCODE TO DB2-SQLCODE
+      *    DISPLAY "ERROR DB2 EN RUTINA: "
+      *    DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
+      *    DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
+      *    DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG
+      *    DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE
+           .
+      ******************************************************************
+      * FIN SESION
+      ******************************************************************
+       0300-FIN.
+           MOVE AREA-LINK TO DFHCOMMAREA
+           GOBACK
+           .
+      ******************************************************************
 

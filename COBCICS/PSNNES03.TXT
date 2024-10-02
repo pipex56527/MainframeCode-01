@@ -24,8 +24,8 @@
       *     PUEDE VER LA INFORMACIÛN DE LOS ESTUDIANTES DE SU CURSO.   *
       ******************************************************************
        IDENTIFICATION DIVISION.
-       PROGRAM-ID. PSNNPR04.
-       AUTHOR.     URIEL ESCUDERO.
+       PROGRAM-ID. PSNNES03.
+       AUTHOR.     LUIS VELASQUEZ.
        ENVIRONMENT DIVISION.
        DATA DIVISION.
        WORKING-STORAGE SECTION.
@@ -47,6 +47,7 @@
            03 CA-NUM-REGISTRO      PIC 9(5).
            03 CA-CONTADOR-REGISTRO PIC S9(5).
            03 CA-FECHA             PIC X(10).
+           03 CA-US-FILLER         PIC X(48).
       *SAUL
        01  ID-COMMAREA.
            03 ID-TRANS                    PIC X(04).
@@ -106,10 +107,10 @@
        01 WS-COLA-CURSOS PIC X(08) VALUE 'KCICSCR'.
        01 COLA-NOTASFIN.
           05 KNT-CURSO         PIC X(05).
-          05 KNT-DNIESTUDIANTE PIC X(09).
+          05 KNT-DNIPROFESOR   PIC X(09).
           05 KNT-AAAA          PIC X(04).
           05 KNT-NOTA          PIC S9(5)V99.
-       01 WS-COLA-NOTASFIN     PIC X(08) VALUE 'KCICSNT'.
+       01 WS-COLAESTUDIANTE    PIC X(08) VALUE 'KCICSNE'.
        01 RESPUESTA      PIC S9(08) COMP.
        01 WS-EOF         PIC X VALUE SPACES.
        01 WS-COLATRABAJO PIC X(08) VALUE 'KCICS01'.
@@ -141,6 +142,7 @@
           03 WS-UENOMBRE      PIC X(20) VALUE 'DUMMY - N'.
           03 WS-UEAPELLIDOS   PIC X(20) VALUE 'DUMMY - A'.
           03 WS-CDNIPROFESOR  PIC X(09).
+      *------------------------------------------------
        01  WS-AREA-FECHOR.
            05  WS-CURRENT-DATE-DATA.
                10  WS-CURRENT-DATE.
@@ -167,7 +169,6 @@
                10  WS-ELMINUTO             PIC 9(02).
                10  FILLER                  PIC X(01) VALUE ":".
                10  WS-ELSEGUNDO            PIC 9(02).
-      *------------------------------------------------
        01 WS-MSG-TEXT        PIC X(80) VALUE 'FIN DE SESION'.
        01 WS-RESPUESTA       PIC S9(8) COMP.
        01 WS-RESPUESTA2      PIC S9(8) COMP.
@@ -182,7 +183,6 @@
            03 SW-CICLO             PIC X(02).
               88 CICLO-0                  VALUE "00".
               88 CICLO-1                  VALUE "01".
-              88 CICLO-9                  VALUE "09".
               88 CICLO-88                 VALUE "88".
       *------------------------------------------------
        77 WS-PRIMER-REGISTRO   PIC S9(4) COMP.
@@ -201,12 +201,12 @@
       *   COPY DEL MAPA GENERADO Y OTROS
        COPY DFHAID.
        COPY DFHBMSCA.
-       COPY CSNNP04.
-       COPY CCICS68.
+       COPY CSNNE03.
+       COPY CCICS69.
       *------------------------------------------------
       *------------------------------------------------
        LINKAGE SECTION.
-       01 DFHCOMMAREA     PIC X(138).
+       01 DFHCOMMAREA     PIC X(132).
        PROCEDURE DIVISION.
       ***************************************************************
       *0000-RAIZ
@@ -220,11 +220,11 @@
       *1000-INICIO
       ***************************************************************
        1000-INICIO.
+      *
            INITIALIZE WS-CURRENT-DATE-DATA
                       WS-COD-RET
 
            PERFORM 790-CONSEGUIR-FECHOR
-      *
            EVALUATE TRUE
              WHEN EIBCALEN = 0
                 SET CICLO-0 TO TRUE
@@ -232,12 +232,11 @@
                 MOVE DFHCOMMAREA TO MI-COMMAREA
                 MOVE WS-LAFECHA  TO CA-FECHA
                 MOVE CA-NUM-REGISTRO TO WS-CA-NUM-REGISTRO
-           END-EVALUATE
-           EVALUATE CA-CICLO
-             WHEN '00'
-               SET CICLO-0 TO TRUE
-             WHEN '01'
-               SET CICLO-1 TO TRUE
+             EVALUATE CA-CICLO
+               WHEN '00'
+                 SET CICLO-0 TO TRUE
+               WHEN '01'
+                 SET CICLO-1 TO TRUE
              WHEN '88'
                MOVE DFHCOMMAREA     TO ID-COMMAREA
                MOVE ID-TRANS        TO CA-TRANS
@@ -248,9 +247,10 @@
                MOVE ID-ID-NOMBRE    TO CA-ID-NOMBRE
                MOVE ID-ID-APELLIDOS TO CA-ID-APELLIDOS
                SET CICLO-0          TO TRUE
-             WHEN OTHER
-               MOVE "CICLO NO PROGRAMADO" TO WS-MSG-TEXT
-               PERFORM 7810-RETORNO-CICS-FIN
+               WHEN OTHER
+                 MOVE "CICLO NO PROGRAMADO" TO WS-MSG-TEXT
+                 PERFORM 7810-RETORNO-CICS-FIN
+             END-EVALUATE
            END-EVALUATE
            .
 
@@ -270,7 +270,8 @@
       *                SEGURIDAD                             *
       ********************************************************
        0300-FIN.
-           IF CA-ID-TIPOUSUA = 'PROFE'
+      * SAUL
+           IF CA-ID-TIPOUSUA = 'ESTUD'
              MOVE 'XCTL'     TO CA-TRANS
              MOVE '00'       TO CA-CICLO
              EXEC CICS XCTL
@@ -296,19 +297,19 @@
       *2210-CICLO-0
       ***************************************************************
        2210-CICLO-0.
-           MOVE LOW-VALUES TO MSNNP04O
-           IF CA-ID-TIPOUSUA = 'PROFE'
+           MOVE LOW-VALUES TO MSNNE03O
+           IF CA-ID-TIPOUSUA = 'ESTUD'
              MOVE DFHBMPRO     TO UDNIF
              MOVE CA-ID-DNI    TO UDNIO
              MOVE CA-ID-NOMBRE TO UNOMBO
            END-IF
-           MOVE CA-FECHA        TO MFECHAO
+           MOVE CA-FECHA TO MFECHAO
            MOVE CA-ID-APELLIDOS TO LAPEO
            MOVE CA-ID-NOMBRE    TO LNOMO
-           EXEC CICS SEND MAP('MSNNP04')
-               ERASE
-               FROM(MSNNP04O)
-               NOHANDLE
+           EXEC CICS SEND MAP('MSNNE03')
+                  ERASE
+                  FROM(MSNNE03O)
+                  NOHANDLE
            END-EXEC
            MOVE '01'       TO  CA-CICLO
            PERFORM 7800-RETORNO-TRANS-CICS
@@ -317,8 +318,8 @@
       *2215-CICLO-1
       ***************************************************************
        2215-CICLO-1.
-           EXEC CICS RECEIVE MAP('MSNNP04')
-                INTO(MSNNP04I)
+           EXEC CICS RECEIVE MAP('MSNNE03')
+                INTO(MSNNE03I)
                 NOHANDLE
            END-EXEC
 
@@ -341,13 +342,13 @@
       *3240-CONSULTAR-REGISTRO. <ENTER>
       ***************************************************************
        3240-CONSULTAR-REGISTRO.
-           IF CA-ID-TIPOUSUA = 'PROFE'
+           IF CA-ID-TIPOUSUA = 'ESTUD'
              MOVE DFHBMPRO   TO UDNIF
              MOVE CA-ID-DNI  TO UDNIO
              MOVE CA-ID-NOMBRE TO UNOMBO
            END-IF
            IF UDNII     EQUAL LOW-VALUES OR '_________' OR SPACES THEN
-              MOVE "DEBE DIGITAR IDENTIFICACION DEL PROFESOR"
+              MOVE "DEBE DIGITAR IDENTIFICACION DEL ESTUDIANTE"
                 TO MSGO
               PERFORM 730-ENVIAR-MSG
            END-IF
@@ -379,66 +380,29 @@
            MOVE LK-US-NOMBRE      TO  CA-US-NOMBRE
            MOVE LK-US-APELLIDOS   TO  CA-US-APELLIDOS
            MOVE LK-US-TIPOUSUARIO TO  CA-US-TIPOUSUA
-           IF LK-US-COD-RET = 0 AND LK-US-TIPOUSUARIO NOT = 'PROFE'
+           IF LK-US-COD-RET = 0 AND LK-US-TIPOUSUARIO NOT = 'ESTUD'
              MOVE 1 TO LK-US-COD-RET
            END-IF
            EVALUATE LK-US-COD-RET
               WHEN 0
-                PERFORM 280-VER-CURSOS-NOTASFIN
+                PERFORM 280-VER-NOTASFIN-CURSOS
                 PERFORM 0250-EMPIECE-TRAN
 
            END-EVALUATE
            .
-      ***************************************************************
-      *CONSULTA LOS CURSOS DEL PROFESOR Y SUS NOTAS
-      ***************************************************************
-       280-VER-CURSOS-NOTASFIN.
-      *
-           MOVE 9         TO LK-CR-COD-RET
-           MOVE 5         TO LK-CR-TIPO-OPE
-           MOVE 1         TO LK-CR-SUBTIPO-OPE
-           MOVE LK-US-DNI TO LK-CR-DNIPROFESOR
-
-           EXEC CICS LINK
-                     PROGRAM('RSNCURSO')
-                     COMMAREA(AREA-LINK)
-                     LENGTH(LENGTH OF AREA-LINK)
-                     RESP(WS-RESPUESTA)
-           END-EXEC
-
-      *
-             MOVE 1 TO WS-NUM-REGISTRO
-             EXEC CICS READQ  TS
-                  ITEM(WS-NUM-REGISTRO)
-                  QUEUE (WS-COLA-CURSOS)
-                  INTO (COLA-CURSOS)
-                  RESP (RESPUESTA)
-             END-EXEC
-             IF RESPUESTA = DFHRESP(NORMAL)
-               MOVE 'N' TO WS-EOF
-             ELSE
-               IF RESPUESTA = DFHRESP(NOTFND)
-                 MOVE 'Y' TO WS-EOF
-               ELSE
-                 MOVE 'Y' TO WS-EOF
-               END-IF
-             END-IF
-             EXEC CICS DELETEQ TS
-               QUEUE (WS-COLA-NOTASFIN)
-               RESP (RESPUESTA)
-             END-EXEC
-             PERFORM CREE-COLA-NOTASFIN UNTIL WS-EOF = 'Y'
-
-           .
-       CREE-COLA-NOTASFIN.
+       280-VER-NOTASFIN-CURSOS.
            MOVE 9         TO LK-NT-COD-RET
            MOVE 5         TO LK-NT-TIPO-OPE
-           MOVE 1         TO LK-NT-SUBTIPO-OPE
-           MOVE KCR-CURSO TO LK-NT-CURSO
-           MOVE SPACES    TO LK-NT-DNIESTUD LK-NT-FILLER
+           MOVE 2         TO LK-NT-SUBTIPO-OPE
+           MOVE CA-US-DNI TO LK-NT-DNIESTUD
+           MOVE SPACES    TO LK-NT-CURSO
            MOVE ZEROS     TO LK-NT-CONTADOR LK-NT-COD-RET
            MOVE ZEROS     TO LK-NT-FILLER
 
+             EXEC CICS DELETEQ TS
+               QUEUE (WS-COLAESTUDIANTE)
+               RESP (RESPUESTA)
+             END-EXEC
            EXEC CICS LINK
                      PROGRAM('RSNNOFIN')
                      COMMAREA(AREA-LINK-TNT)
@@ -449,25 +413,9 @@
            IF WS-RESPUESTA = DFHRESP(NORMAL) THEN
              MOVE LK-NT-CONTADOR   TO    CA-CONTADOR-REGISTRO
            END-IF
-           ADD  1 TO WS-NUM-REGISTRO
-           EXEC CICS READQ  TS
-                ITEM(WS-NUM-REGISTRO)
-                QUEUE (WS-COLA-CURSOS)
-                INTO (COLA-CURSOS)
-                RESP (RESPUESTA)
-           END-EXEC
-           IF RESPUESTA = DFHRESP(NORMAL)
-                MOVE 'N' TO WS-EOF
-           ELSE
-              IF RESPUESTA = DFHRESP(NOTFND)
-                MOVE 'Y' TO WS-EOF
-              ELSE
-                MOVE 'Y' TO WS-EOF
-              END-IF
-           END-IF
            .
        0250-EMPIECE-TRAN.
-           MOVE LOW-VALUE          TO MSNNP04O
+           MOVE LOW-VALUE          TO MSNNE03O
            MOVE CA-US-DNI          TO UDNIO
            MOVE CA-US-NOMBRE       TO WS-NOMAPE(1:20)
            MOVE CA-US-APELLIDOS    TO WS-NOMAPE(21:20)
@@ -476,17 +424,17 @@
            MOVE 0 TO CA-NUM-REGISTRO WS-CA-NUM-REGISTRO
            MOVE 8 TO WS-PROXIMO
            PERFORM 3200-PRESENTA
-           IF CA-ID-TIPOUSUA = 'PROFE'
+           IF CA-ID-TIPOUSUA = 'ESTUD'
              MOVE DFHBMPRO     TO UDNIF
              MOVE CA-ID-DNI    TO UDNIO
              MOVE CA-ID-NOMBRE TO UNOMBO
            END-IF
-           MOVE CA-FECHA        TO MFECHAO
+           MOVE CA-FECHA TO MFECHAO
            MOVE CA-ID-APELLIDOS TO LAPEO
            MOVE CA-ID-NOMBRE    TO LNOMO
-           EXEC CICS SEND MAP('MSNNP04')
+           EXEC CICS SEND MAP('MSNNE03')
                ERASE
-               FROM(MSNNP04O)
+               FROM(MSNNE03O)
                NOHANDLE
            END-EXEC
            MOVE '01'       TO  CA-CICLO
@@ -507,17 +455,17 @@
            MOVE 8 TO WS-PROXIMO
            PERFORM 3200-PRESENTA
            MOVE CA-CONTADOR-REGISTRO TO NUMCO
-           IF CA-ID-TIPOUSUA = 'PROFE'
+           IF CA-ID-TIPOUSUA = 'ESTUD'
              MOVE DFHBMPRO     TO UDNIF
              MOVE CA-ID-DNI    TO UDNIO
              MOVE CA-ID-NOMBRE TO UNOMBO
            END-IF
-           MOVE CA-FECHA        TO MFECHAO
+           MOVE CA-FECHA TO MFECHAO
            MOVE CA-ID-APELLIDOS TO LAPEO
            MOVE CA-ID-NOMBRE    TO LNOMO
-           EXEC CICS SEND MAP('MSNNP04')
+           EXEC CICS SEND MAP('MSNNE03')
                   ERASE
-                  FROM(MSNNP04O)
+                  FROM(MSNNE03O)
                   NOHANDLE
            END-EXEC
            MOVE '01'     TO CA-CICLO
@@ -546,12 +494,17 @@
            MOVE 8 TO WS-PROXIMO
            PERFORM 3200-PRESENTA
            MOVE CA-CONTADOR-REGISTRO TO NUMCO
-           MOVE CA-FECHA        TO MFECHAO
+           IF CA-ID-TIPOUSUA = 'ESTUD'
+             MOVE DFHBMPRO     TO UDNIF
+             MOVE CA-ID-DNI    TO UDNIO
+             MOVE CA-ID-NOMBRE TO UNOMBO
+           END-IF
+           MOVE CA-FECHA TO MFECHAO
            MOVE CA-ID-APELLIDOS TO LAPEO
            MOVE CA-ID-NOMBRE    TO LNOMO
-           EXEC CICS SEND MAP('MSNNP04')
+           EXEC CICS SEND MAP('MSNNE03')
                   ERASE
-                  FROM(MSNNP04O)
+                  FROM(MSNNE03O)
                   NOHANDLE
            END-EXEC
            MOVE '01'     TO CA-CICLO
@@ -595,7 +548,7 @@
            END-IF
            EXEC CICS READQ  TS
                 ITEM(WS-CA-NUM-REGISTRO)
-                QUEUE (WS-COLA-NOTASFIN)
+                QUEUE (WS-COLAESTUDIANTE)
                 INTO (COLA-NOTASFIN)
                 RESP (RESPUESTA)
            END-EXEC
@@ -612,19 +565,29 @@
       *    PANTALLA                                     *
       ***************************************************
        3100-PRESENTA-LINEA.
-           MOVE SPACES            TO AREA-LINK
+           MOVE SPACES    TO AREA-LINK-RCR
+           MOVE 9         TO LK-CR-COD-RET
+           MOVE 1         TO LK-CR-TIPO-OPE
+           MOVE 1         TO LK-CR-SUBTIPO-OPE
+           MOVE KNT-CURSO TO LK-CR-CURSO
+
+           EXEC CICS LINK
+                     PROGRAM('RSNCURSO')
+                     COMMAREA(AREA-LINK)
+                     LENGTH(LENGTH OF AREA-LINK)
+                     RESP(WS-RESPUESTA)
+           END-EXEC
            MOVE 9                 TO LK-US-COD-RET
            MOVE 1                 TO LK-US-TIPO-OPE
            MOVE 1                 TO LK-US-SUBTIPO-OPE
-           MOVE KNT-DNIESTUDIANTE TO LK-US-DNI CA-US-DNI
-
+           MOVE LK-CR-DNIPROFESOR TO LK-US-DNI
            EXEC CICS LINK
                      PROGRAM('RSNUSUAR')
                      COMMAREA(AREA-LINK)
                      LENGTH(LENGTH OF AREA-LINK)
                      RESP(WS-RESPUESTA)
            END-EXEC
-           IF LK-US-COD-RET = 0 AND LK-US-TIPOUSUARIO NOT = 'ESTUD'
+           IF LK-US-COD-RET = 0 AND LK-US-TIPOUSUARIO NOT = 'PROFE'
              MOVE LK-US-TIPOUSUARIO     TO LK-US-APELLIDOS
            END-IF
            IF LK-US-COD-RET NOT = 0
@@ -633,7 +596,7 @@
            END-IF
            MOVE LK-US-NOMBRE              TO WS-NOMAPE(1:20)
            MOVE LK-US-APELLIDOS           TO WS-NOMAPE(21:20)
-           MOVE KNT-DNIESTUDIANTE         TO EDNI-VALOR(L)
+           MOVE LK-US-DNI                 TO EDNI-VALOR(L)
            MOVE WS-NOMAPE                 TO UENOMB-VALOR(L)
            MOVE KNT-CURSO                 TO CCURSO-VALOR(L)
            MOVE KNT-AAAA                  TO NAAAA-VALOR(L)
@@ -671,8 +634,8 @@
       ***************************************************************
        7200-ENVIAR-MSG-MAPA-O-RT.
 
-            EXEC CICS SEND MAP('MSNNP04')
-                 FROM(MSNNP04O)
+            EXEC CICS SEND MAP('MSNNE03')
+                 FROM(MSNNE03O)
                  ERASE
                  NOHANDLE
             END-EXEC
@@ -688,6 +651,7 @@
                 MOVE '99'     TO CA-CICLO
                 PERFORM 0300-FIN
               END-IF
+      * SAUL
             MOVE '99'     TO CA-CICLO
             PERFORM 0300-FIN
               .
@@ -701,25 +665,17 @@
            MOVE WS-CURRENT-HRA        TO WS-LAHORA
            MOVE WS-CURRENT-MIN        TO WS-ELMINUTO
            MOVE WS-CURRENT-SEG        TO WS-ELSEGUNDO
-             MOVE SPACES       TO COLA-TRABAJO
-             MOVE WS-ELANO     TO T-AREA-LINK1
-             MOVE WS-ELMES     TO T-AREA-LINK2
-             MOVE WS-ELDIA     TO T-AREA-LINK3
-             EXEC CICS WRITEQ TS
-                QUEUE (WS-COLATRABAJO)
-                FROM (COLA-TRABAJO)
-             END-EXEC
            .
-      *
       *
       * 730-ENVIAR-MSG.
       *
        730-ENVIAR-MSG.
       *
            MOVE DFHBLINK  TO  MSGH
+           MOVE CA-FECHA TO MFECHAO
 
-              EXEC CICS SEND MAP('MSNNP04')
-                   FROM(MSNNP04O)
+              EXEC CICS SEND MAP('MSNNE03')
+                   FROM(MSNNE03O)
                    NOHANDLE
               END-EXEC
            PERFORM 7800-RETORNO-TRANS-CICS
@@ -734,18 +690,16 @@
             END-EXEC
             EXIT
             .
-      *****************************************
-      * DEVUELVE EL CONTROL A LA TRANSACCION  *
-      *****************************************
       ***************************************************************
       *7800-RETORNO-TRANS-CICS.
       ***************************************************************
        7800-RETORNO-TRANS-CICS.
             MOVE WS-CA-NUM-REGISTRO      TO CA-NUM-REGISTRO
             MOVE EIBTRMID  TO CA-TERM
-            MOVE 'SN04'    TO CA-TRANS
+            MOVE EIBTRNID  TO CA-TRANS
+            MOVE 'SN03'    TO CA-TRANS
             EXEC CICS RETURN
-                 TRANSID('SN04')
+                 TRANSID('SN03')
                  COMMAREA(MI-COMMAREA)
                  LENGTH(LENGTH OF MI-COMMAREA)
             END-EXEC

@@ -1,6 +1,6 @@
 DSN    SYSTEM     (DSN1)
 BIND   PACKAGE    (PKNOTAS) -
-       MEMBER     (RSNCURSO)-
+       MEMBER     (RSNNOFIN)-
        ACTION     (REPLACE) -
        ISOLATION  (CS)      -
        VALIDATE   (BIND)    -
