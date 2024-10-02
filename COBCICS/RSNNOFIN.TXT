@@ -1,25 +1,42 @@
-      *************************************************************
-      *   ENCAPSULADOR TABLA NOTAS
-      *   RUTINA QUE EJECUTA LAS SENTENCIAS DE LA BASE DE DATOS A
-      *   PARTIR DE UN TIPO Y SUBTIPO DE OPERACION QUE ENVIA
-      *   EL PROGRAMA QUE LA INVOCA.
-      *   TIPO    1: CONSULTA  - SELECT
-      *           2: ADICION   - INSERT
-      *           3: BORRAR    - DELETE
-      *           4: MODIFICAR - UPDATE
-      *   SUBTIPO 1: CONSULTA DE NOTAS POR CURSO Y ESTUDIANTE
-      *           2: CONSULTA DE NOTAS POR CURSO
-      *           3: CONSULTA DE NOTAS POR ESTUDIANTE
-      *           4: CONSULTA DE CONTADOR DE REGISTROS
-      *           5: CONSULTA DE NOTAS ESPECIFICAS DE UN ESTUDIANTE
-      *           7: CONSULTA DE NOTAS POR CURSO-ESTUDIANTE DESC
-      *           8: CONSULTA DE NOTAS POR CURSO-ESTUDIANTE ASC
-      *************************************************************
        IDENTIFICATION DIVISION.
-         PROGRAM-ID. RSNNOFIN.
+       PROGRAM-ID. RSNNOFIN.
        ENVIRONMENT DIVISION.
        DATA DIVISION.
        WORKING-STORAGE SECTION.
+       01  AREA-LINK.
+           05 LK-NT-TIPO-OPE      PIC 9(01).
+           05 LK-NT-SUBTIPO-OPE   PIC 9(02).
+           05 LK-NT-CURSO         PIC X(05).
+           05 LK-NT-DNIESTUD      PIC X(09).
+           05 LK-NT-AAAA          PIC X(04).
+           05 LK-NT-NOTA          PIC 99V99.
+           05 LK-NT-CONTADOR      PIC 9(10).
+           05 LK-NT-COD-RET       PIC 9(02).
+           05 LK-NT-SQLCODE       PIC S9(9).
+           05 LK-NT-FILLER        PIC X(54).
+       01 COLA-NOTASFIN.
+          05 C-CURSO         PIC X(05).
+          05 C-DNIESTUDIANTE PIC X(09).
+          05 C-AAAA          PIC X(04).
+          05 C-NOTA          PIC S9(5)V99.
+       01 WS-COLAPROFESOR   PIC X(08) VALUE 'KCICSNT'.
+       01 WS-COLAESTUDIANTE PIC X(08) VALUE 'KCICSNE'.
+       01 RESPUESTA      PIC S9(08) COMP.
+       01 WS-EOF         PIC X VALUE SPACES.
+       01 WS-COLATRABAJO PIC X(08) VALUE 'KCICS01'.
+       01 COLA-TRABAJO.
+          05 T-AREA-LINK1 PIC X(20).
+          05 T-AREA-LINKF1 PIC XX.
+          05 T-AREA-LINK2 PIC X(10).
+          05 T-AREA-LINKF2 PIC XX.
+          05 T-AREA-LINK3 PIC X(100).
+          05 T-DNI       PIC X(09).
+          05 T-PAS       PIC X(08).
+          05 T-CLAVE     PIC X(08).
+          05 T-NOMBRE    PIC X(20).
+          05 T-APELLIDOS PIC X(20).
+          05 T-DIRECCION PIC X(35).
+          05 T-SQLCODE   PIC X(10).
       *===============================================================
       * MODSQL - DEFINICION TABLA CURSOS SQL Y COBOL
            EXEC SQL
@@ -31,45 +48,47 @@
                 INCLUDE SQLCA
            END-EXEC.
       *===============================================================
+           EXEC SQL
+              DECLARE CSR1 CURSOR FOR
+                   SELECT
+                        CURSO
+                       ,DNIESTUDIANTE
+                       ,AAAA
+                       ,NOTA
+                   FROM
+                       NOTASFIN
+                   WHERE
+                       CURSO = :LK-NT-CURSO
+                   ORDER BY CURSO ASC
+           END-EXEC
+      *
+           EXEC SQL
+              DECLARE CSR2 CURSOR FOR
+                   SELECT
+                        CURSO
+                       ,DNIESTUDIANTE
+                       ,AAAA
+                       ,NOTA
+                   FROM
+                       NOTASFIN
+                   WHERE
+                       DNIESTUDIANTE = :LK-NT-DNIESTUD
+                   ORDER BY CURSO ASC
+           END-EXEC
       * MODSQL CAMPOS PARA ERROR DE DB2
        01  DB2-ERR.
-           03  DB2-SQLCODE        PIC S9(9).
-           03  DB2-SQLCODE-Z      PIC -ZZZZZZZZ9.
+           03  DB2-SQLCODE                PIC S9(9).
+           03  DB2-SQLCODE-Z              PIC -ZZZZZZZZ9.
            03  DB2-ERROR.
-               05  DB2-ERR-MSG    PIC X(50).
-               05  DB2-ERR-CODE   PIC X(20).
+               05  DB2-ERR-MSG            PIC X(50).
+               05  DB2-ERR-CODE           PIC X(20).
 
       *============================================================
-       01  WS-NOMBRECOLA          PIC X(08) VALUE 'NOTAS_TS'.
-       01  WS-RESPUESTA           PIC S9(8) COMP.
-       01  WS-DB2-COUNT1          PIC S9(9) COMP-3.
-       01  WS-INDICE-TS           PIC S9(9) COMP-3.
-       01  WS-I                   PIC 9(10).
-       01  WS-AREA-COLA.
-           05 WS-COLA-TIPOOPE     PIC 9(01).
-           05 WS-COLA-SUBTIPO     PIC 9(02).
-           05 WS-COLA-CURSO       PIC X(05).
-           05 WS-COLA-DNIESTUD    PIC X(09).
-           05 WS-COLA-AAAA        PIC X(04).
-           05 WS-COLA-NOTA        PIC 99V99.
-           05 WS-COLA-CONTADOR    PIC 9(10).
-           05 WS-COLA-INDICE      PIC 9(10).
-      *
-       01  WS-TRAZA               PIC X(150).
+       01  DB2-COUNT1                     PIC S9(9) COMP-3.
+       77 WS-CONTADOR-REGISTRO PIC S9(5) VALUE ZEROS.
       *=============================================================
        LINKAGE SECTION.
        01  DFHCOMMAREA            PIC X(100).
-       01  AREA-LINK           REDEFINES DFHCOMMAREA.
-           05 LK-NT-TIPO-OPE      PIC 9(01).
-           05 LK-NT-SUBTIPO       PIC 9(02).
-           05 LK-NT-CURSO         PIC X(05).
-           05 LK-NT-DNIESTUD      PIC X(09).
-           05 LK-NT-AAAA          PIC X(04).
-           05 LK-NT-NOTA          PIC 99V99.
-           05 LK-NT-CONTADOR      PIC 9(10).
-           05 LK-NT-INDICE        PIC 9(10).
-           05 LK-NT-SQLCODE       PIC S9(9).
-           05 LK-NT-COD-RET       PIC 9(02).
 
       *=================================================================
        PROCEDURE DIVISION USING DFHCOMMAREA.
@@ -90,55 +109,37 @@
            EXEC SQL
                 WHENEVER  NOT FOUND   CONTINUE
            END-EXEC
-      ****
-           MOVE SPACES TO WS-TRAZA
-           STRING ' INICIO PROGRAMA AREA-L = '   DELIMITED BY SIZE
-                  AREA-LINK DELIMITED BY SIZE
-           INTO WS-TRAZA
-           PERFORM 0000-COLA-TS
-      ****
-           PERFORM 0000-LIMPIAR-COLA
+
            PERFORM 0100-INICIO
            PERFORM 0200-EJECUTAR-OPERACION
            PERFORM 0300-FIN
            .
       ******************************************************************
-      * 0000-LIMPIAR-COLA.
-      ******************************************************************
-       0000-LIMPIAR-COLA.
-             EXEC CICS DELETEQ TS
-                  QUEUE (WS-NOMBRECOLA)
-                  RESP (WS-RESPUESTA)
-             END-EXEC
-
-             DISPLAY "CONTENIDO COLA:   " WS-AREA-COLA
-           .
-      ******************************************************************
       * 0100-INICIO
       ******************************************************************
        0100-INICIO.
-           DISPLAY "AREA-LINK INP: " AREA-LINK
+           MOVE DFHCOMMAREA TO AREA-LINK
            .
       ******************************************************************
       * 0200-EJECUTAR-OPERACION
       ******************************************************************
        0200-EJECUTAR-OPERACION.
-      ****
-           MOVE SPACES TO WS-TRAZA
-           STRING ' TIPO OPERAC INICIO =  ' DELIMITED BY SIZE
-                  AREA-LINK      DELIMITED BY SIZE
-           INTO WS-TRAZA
-           PERFORM 0000-COLA-TS
-      ****
            EVALUATE LK-NT-TIPO-OPE
-              WHEN 1
+              WHEN '1'
                  PERFORM 0210-CONSULTAR-NOTA
-              WHEN 2
+              WHEN '2'
                  PERFORM 0220-INSERTAR-NOTA
-              WHEN 3
+              WHEN '3'
                  PERFORM 0230-BORRAR-NOTA
-              WHEN 4
+              WHEN '4'
                  PERFORM 0240-MODIFICAR-NOTA
+              WHEN '5'
+                 IF LK-NT-SUBTIPO-OPE = '01'
+                   PERFORM 0250-CURSOR-01
+                 END-IF
+                 IF LK-NT-SUBTIPO-OPE = '02'
+                   PERFORM 0250-CURSOR-02
+                 END-IF
               WHEN OTHER
                  MOVE 9             TO LK-NT-COD-RET
            END-EVALUATE
@@ -147,41 +148,23 @@
       * 0210-CONSULTAR-NOTA
       **************************************************************
        0210-CONSULTAR-NOTA.
-      ****
-           MOVE SPACES TO WS-TRAZA
-           STRING ' SUBTIPO OPE = '   DELIMITED BY SIZE
-                  LK-NT-SUBTIPO       DELIMITED BY SIZE
-           INTO WS-TRAZA
-           PERFORM 0000-COLA-TS
-      ****
            MOVE 1           TO LK-NT-COD-RET
-           EVALUATE LK-NT-SUBTIPO
-              WHEN 1
+           EVALUATE LK-NT-SUBTIPO-OPE
+              WHEN '1'
                  PERFORM 0211-CONSULTA-NOTA-SUBTIPO-1
-              WHEN 2
+              WHEN '2'
                  PERFORM 0212-CONSULTA-NOTA-SUBTIPO-2
-              WHEN 3
+              WHEN '3'
                  PERFORM 0213-CONSULTA-NOTA-SUBTIPO-3
-              WHEN 4
+              WHEN '4'
                  PERFORM 0214-CONSULTA-NOTA-SUBTIPO-4
-              WHEN 5
-                 PERFORM 0215-CONSULTA-NOTA-SUBTIPO-5
-              WHEN 7
+              WHEN '7'
                  PERFORM 0217-CONSULTA-NOTA-SUBTIPO-7
-              WHEN 8
+              WHEN '8'
                  PERFORM 0218-CONSULTA-NOTA-SUBTIPO-8
               WHEN OTHER
                  MOVE 9             TO LK-NT-COD-RET
            END-EVALUATE
-
-
-      ****
-           MOVE SPACES TO WS-TRAZA
-           STRING ' CODIGO RETORNO  = '   DELIMITED BY SIZE
-                  LK-NT-COD-RET       DELIMITED BY SIZE
-           INTO WS-TRAZA
-           PERFORM 0000-COLA-TS
-      ****
            .
 
       **************************************************************
@@ -282,7 +265,7 @@
       *
            EXEC SQL
              SELECT
-                COUNT(*) INTO :WS-DB2-COUNT1
+                COUNT(*) INTO :DB2-COUNT1
              FROM NOTASFIN
              WHERE DNIESTUDIANTE  = :NT-DNIESTUDIANTE
 
@@ -290,162 +273,42 @@
 
            IF SQLCODE = 0 THEN
               MOVE 0               TO  LK-NT-COD-RET
-              MOVE WS-DB2-COUNT1   TO  LK-NT-CONTADOR
+              MOVE DB2-COUNT1      TO  LK-NT-CONTADOR
            ELSE
               IF SQLCODE = +100 THEN
                  MOVE 1 TO  LK-NT-COD-RET
-                 MOVE 0 TO  LK-NT-CONTADOR
               ELSE
                  MOVE 2 TO  LK-NT-COD-RET
-                 MOVE 0 TO  LK-NT-CONTADOR
-                 PERFORM 0900-ERROR-DB2
-              END-IF
-           END-IF
-           .
-      **************************************************************
-      * 0215-ENTREGA UN REGISTRO ESPECÍFICO DE UN CURSO Y ESTUDIANTE
-      **************************************************************
-       0215-CONSULTA-NOTA-SUBTIPO-5.
-      ****
-           MOVE SPACES TO WS-TRAZA
-           STRING ' ENTRE A 215 = '   DELIMITED BY SIZE
-                  AREA-LINK           DELIMITED BY SIZE
-           INTO WS-TRAZA
-           PERFORM 0000-COLA-TS
-      ****
-
-           MOVE LK-NT-TIPO-OPE   TO WS-COLA-TIPOOPE
-           MOVE LK-NT-SUBTIPO    TO WS-COLA-SUBTIPO
-           MOVE LK-NT-DNIESTUD   TO WS-COLA-DNIESTUD
-
-           MOVE 0 TO WS-I
-      ****
-           MOVE SPACES TO WS-TRAZA
-           STRING ' AREA-LINK 215  = '   DELIMITED BY SIZE
-                  AREA-LINK           DELIMITED BY SIZE
-           INTO WS-TRAZA
-           PERFORM 0000-COLA-TS
-      ****
-
-           EXEC SQL
-                DECLARE CURPROX CURSOR FOR
-                   SELECT
-                      CURSO, DNIESTUDIANTE, AAAA, NOTA
-                   FROM NOTASFIN
-                   WHERE
-                      DNIESTUDIANTE  = :LK-NT-DNIESTUD
-                   ORDER BY  AAAA    ASC
-           END-EXEC
-      *
-           EXEC SQL
-                OPEN CURPROX
-           END-EXEC
-      *
-      ****
-           MOVE SPACES TO WS-TRAZA
-           STRING ' INDICES ANTES FETCH WS-I = '  DELIMITED BY SIZE
-                    WS-I          DELIMITED BY SIZE
-           ' INDICE ANTES FETCH LK-NT-INDICE = ' DELIMITED BY SIZE
-                    LK-NT-INDICE  DELIMITED BY SIZE
-           INTO WS-TRAZA
-           PERFORM 0000-COLA-TS
-
-           PERFORM 0215-1-FETCH-NOTA  UNTIL WS-I = LK-NT-INDICE
-                                     OR LK-NT-COD-RET EQUAL 1
-
-           IF SQLCODE = 0 THEN
-              MOVE 0                      TO LK-NT-COD-RET
-              MOVE NT-CURSO               TO LK-NT-CURSO
-              MOVE NT-DNIESTUDIANTE       TO LK-NT-DNIESTUD
-              MOVE NT-AAAA                TO LK-NT-AAAA
-              MOVE NT-NOTA                TO LK-NT-NOTA
-
-      ****
-           MOVE SPACES TO WS-TRAZA
-           STRING ' AREA LINK-FETCH SALIDA = '   DELIMITED BY SIZE
-                  AREA-LINK            DELIMITED BY SIZE
-           INTO WS-TRAZA
-           PERFORM 0000-COLA-TS
-      ****
-           ELSE
-              IF SQLCODE = +100 THEN
-                 MOVE 1             TO  LK-NT-COD-RET
-              ELSE
-                 MOVE 2             TO  LK-NT-COD-RET
-                 PERFORM 0900-ERROR-DB2
-              END-IF
-           END-IF
-           EXEC SQL
-                CLOSE CURPROX
-           END-EXEC
-           .
-      **************************************************************
-      * 0215-1-FETCH-ESTUDIANTE
-      **************************************************************
-       0215-1-FETCH-NOTA.
-           EXEC SQL
-                FETCH CURPROX
-                INTO
-                     :NT-CURSO
-                   , :NT-DNIESTUDIANTE
-                   , :NT-AAAA
-                   , :NT-NOTA
-           END-EXEC
-
-
-      ****
-           MOVE SPACES TO WS-TRAZA
-           STRING ' AREA-LINK LK-NT 215-1 FETCH = '  DELIMITED BY SIZE
-                    AREA-LINK      DELIMITED BY SIZE
-           INTO WS-TRAZA
-           PERFORM 0000-COLA-TS
-      ****
-
-           IF SQLCODE = 0 THEN
-              ADD  1                  TO WS-I
-              MOVE 0                  TO LK-NT-COD-RET
-              MOVE NT-CURSO           TO LK-NT-CURSO
-                                         WS-COLA-CURSO
-              MOVE NT-DNIESTUDIANTE   TO WS-COLA-DNIESTUD
-              MOVE NT-AAAA            TO LK-NT-AAAA
-                                         WS-COLA-AAAA
-              MOVE NT-NOTA            TO LK-NT-NOTA
-                                         WS-COLA-NOTA
-              EXEC CICS  WRITEQ TS
-                   QUEUE (WS-NOMBRECOLA)
-                   FROM  (WS-AREA-COLA)
-                   RESP  (WS-RESPUESTA)
-              END-EXEC
-           ELSE
-              IF SQLCODE = +100 THEN
-                 MOVE 1             TO  LK-NT-COD-RET
-              ELSE
-                 MOVE 2             TO  LK-NT-COD-RET
                  PERFORM 0900-ERROR-DB2
               END-IF
            END-IF
            .
       ***************************************************
-      * 0217-CONSULTA-NOTA-SUBTIPO-7              *
+      * 0217-CONSULTA-NOTA-SUBTIPO-7 POR ESTUDIANTE ANT *
       ***************************************************
        0217-CONSULTA-NOTA-SUBTIPO-7.
-      *    MOVE LK-NT-CURSO      TO NT-CURSO
+           MOVE LK-NT-CURSO      TO NT-CURSO
            MOVE LK-NT-DNIESTUD   TO NT-DNIESTUDIANTE
 
            EXEC SQL
                 DECLARE CURPREV CURSOR FOR
+      *            SELECT
+      *               CURSO, DNIESTUDIANTE, AAAA, NOTA
+      *            FROM NOTASFIN
+      *            WHERE CURSO = :NT-CURSO
+      *              AND DNIESTUDIANTE  < :NT-DNIESTUDIANTE
+      *            ORDER BY CURSO, DNIESTUDIANTE DESC
                    SELECT
                       CURSO, DNIESTUDIANTE, AAAA, NOTA
                    FROM NOTASFIN
-                   WHERE
-                      DNIESTUDIANTE  < :NT-DNIESTUDIANTE
+                   WHERE DNIESTUDIANTE  < :NT-DNIESTUDIANTE
                    ORDER BY DNIESTUDIANTE DESC
            END-EXEC
       *
            EXEC SQL
                 OPEN CURPREV
            END-EXEC
-      *****               FETCH PREV                *****
+      *
            EXEC SQL
                 FETCH CURPREV
                 INTO
@@ -458,7 +321,6 @@
            IF SQLCODE = 0 THEN
       *       REGISTRO ANTERIOR
               MOVE 0                      TO LK-NT-COD-RET
-              MOVE NT-CURSO               TO LK-NT-CURSO
               MOVE NT-DNIESTUDIANTE       TO LK-NT-DNIESTUD
               MOVE NT-AAAA                TO LK-NT-AAAA
               MOVE NT-NOTA                TO LK-NT-NOTA
@@ -476,27 +338,31 @@
            END-EXEC
            .
       ***************************************************
-      * 0218-CONSULTA-NOTA-SUBTIPO-8                   *
+      * 0218-CONSULTA-NOTA-SUBTIPO-8 POR ESTUDIANTE SIG *
       ***************************************************
        0218-CONSULTA-NOTA-SUBTIPO-8.
-      *     MOVE LK-NT-CURSO      TO NT-CURSO
-            MOVE LK-NT-DNIESTUD   TO NT-DNIESTUDIANTE
+           MOVE LK-NT-CURSO      TO NT-CURSO
+           MOVE LK-NT-DNIESTUD   TO NT-DNIESTUDIANTE
 
            EXEC SQL
                 DECLARE CURNEXT CURSOR FOR
+      *            SELECT
+      *               CURSO, DNIESTUDIANTE, AAAA, NOTA
+      *            FROM NOTASFIN
+      *            WHERE CURSO = :NT-CURSO
+      *              AND DNIESTUDIANTE  > :NT-DNIESTUDIANTE
+      *            ORDER BY CURSO, DNIESTUDIANTE ASC
                    SELECT
                       CURSO, DNIESTUDIANTE, AAAA, NOTA
                    FROM NOTASFIN
-                   WHERE
-                      DNIESTUDIANTE  > :NT-DNIESTUDIANTE
-                   ORDER BY  DNIESTUDIANTE ASC
+                   WHERE DNIESTUDIANTE  > :NT-DNIESTUDIANTE
+                   ORDER BY DNIESTUDIANTE ASC
            END-EXEC
       *
            EXEC SQL
                 OPEN CURNEXT
            END-EXEC
-
-      *****               FETCH NEXT                *****
+      *
            EXEC SQL
                 FETCH CURNEXT
                 INTO
@@ -509,7 +375,6 @@
            IF SQLCODE = 0 THEN
       *       REGISTRO SIGUIENTE
               MOVE 0                      TO LK-NT-COD-RET
-              MOVE NT-CURSO               TO LK-NT-CURSO
               MOVE NT-DNIESTUDIANTE       TO LK-NT-DNIESTUD
               MOVE NT-AAAA                TO LK-NT-AAAA
               MOVE NT-NOTA                TO LK-NT-NOTA
@@ -611,34 +476,102 @@
              END-IF
            END-IF
            .
+       0250-CURSOR-01.
+           EXEC SQL
+                OPEN CSR1
+           END-EXEC
+           IF SQLCODE EQUAL ZERO
+             MOVE ZEROS TO WS-CONTADOR-REGISTRO
+             PERFORM 0263-FECTCH-NOTASFIN-DETA01
+                UNTIL SQLCODE NOT EQUAL 0
+             MOVE WS-CONTADOR-REGISTRO TO LK-NT-CONTADOR
+           END-IF
+
+           EXEC SQL
+                CLOSE CSR1
+           END-EXEC
+           .
+       0263-FECTCH-NOTASFIN-DETA01.
+           EXEC SQL
+           FETCH CSR1
+                   INTO
+                       :NT-CURSO
+                      ,:NT-DNIESTUDIANTE
+                      ,:NT-AAAA
+                      ,:NT-NOTA
+           END-EXEC
+           IF SQLCODE = +100
+            MOVE 'Y' TO WS-EOF
+           END-IF
+           IF SQLCODE = 0
+             ADD 1                 TO WS-CONTADOR-REGISTRO
+             MOVE NT-CURSO         TO C-CURSO
+             MOVE NT-DNIESTUDIANTE TO C-DNIESTUDIANTE
+             MOVE NT-AAAA          TO C-AAAA
+             MOVE NT-NOTA          TO C-NOTA
+             EXEC CICS WRITEQ TS
+                QUEUE (WS-COLAPROFESOR)
+                FROM (COLA-NOTASFIN)
+             END-EXEC
+           END-IF
+             .
+       0250-CURSOR-02.
+           EXEC SQL
+                OPEN CSR2
+           END-EXEC
+           IF SQLCODE EQUAL ZERO
+             MOVE ZEROS TO WS-CONTADOR-REGISTRO
+             PERFORM 0263-FECTCH-NOTASFIN-DETA02
+                UNTIL SQLCODE NOT EQUAL 0
+             MOVE WS-CONTADOR-REGISTRO TO LK-NT-CONTADOR
+           END-IF
+
+           EXEC SQL
+                CLOSE CSR2
+           END-EXEC
+           .
+       0263-FECTCH-NOTASFIN-DETA02.
+           EXEC SQL
+           FETCH CSR2
+                   INTO
+                       :NT-CURSO
+                      ,:NT-DNIESTUDIANTE
+                      ,:NT-AAAA
+                      ,:NT-NOTA
+           END-EXEC
+           IF SQLCODE = +100
+            MOVE 'Y' TO WS-EOF
+           END-IF
+           IF SQLCODE = 0
+             ADD 1                 TO WS-CONTADOR-REGISTRO
+             MOVE NT-CURSO         TO C-CURSO
+             MOVE NT-DNIESTUDIANTE TO C-DNIESTUDIANTE
+             MOVE NT-AAAA          TO C-AAAA
+             MOVE NT-NOTA          TO C-NOTA
+             EXEC CICS WRITEQ TS
+                QUEUE (WS-COLAESTUDIANTE)
+                FROM (COLA-NOTASFIN)
+             END-EXEC
+           END-IF
+             .
       ******************************************************************
       * 0900-ERROR-DB2
       ******************************************************************
        0900-ERROR-DB2.
            MOVE SQLCODE TO LK-NT-SQLCODE
            MOVE SQLCODE TO DB2-SQLCODE
-           DISPLAY "ERROR DB2 EN RUTINA: "
-           DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
-           DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
-           DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG
-           DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE
+      *    DISPLAY "ERROR DB2 EN RUTINA: "
+      *    DISPLAY "DB2-SQLCODE ----> "  DB2-SQLCODE
+      *    DISPLAY "DB2-SQLCODE-Z --> "  DB2-SQLCODE-Z
+      *    DISPLAY "DB2-ERR-MSG ----> "  DB2-ERR-MSG
+      *    DISPLAY "DB2-ERR-CODE ---> "  DB2-ERR-CODE
            .
       ******************************************************************
       * FIN SESION
       ******************************************************************
        0300-FIN.
+           MOVE AREA-LINK TO DFHCOMMAREA
            GOBACK
            .
       ******************************************************************
-      * 0000-COLA-TS.
-      ******************************************************************
-       0000-COLA-TS.
-
-              EXEC CICS  WRITEQ TS
-                   QUEUE ('COLA_TS')
-                   FROM  (WS-TRAZA)
-                   RESP  (WS-RESPUESTA)
-              END-EXEC
-           EXIT
-           .
 

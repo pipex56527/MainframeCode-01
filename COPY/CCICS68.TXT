@@ -1,0 +1,42 @@
+      *
+      * TRATAMIENTO DE LAS LINEAS DE HOLS COMO OCCURS 4
+      *
+       01  CCICS68 REDEFINES MSNNP04O.
+           02  FILLER                      PIC X(131).
+           02  WT-LINEAS-MAPA.
+               03  WT-ITEM                 OCCURS 8 INDEXED BY L.
+      *
+                   05  EDNI-LONG            PIC XX.
+                   05  EDNI-ATTR            PIC X.
+                   05  EDNI-COLOR           PIC X.
+      *            05  EDNI-FILL1           PIC X(4).
+                   05  EDNI-VALOR           PIC X(9).
+      *
+                   05  UENOMB-LONG         PIC XX.
+                   05  UENOMN-ATTR         PIC X.
+                   05  UENOMB-COLOR        PIC X.
+      *            05  UENOMB-FILL1        PIC X(4).
+                   05  UENOMB-VALOR        PIC X(40).
+      *
+                   05  CCURSO-LONG          PIC XX.
+                   05  CCURSO-ATTR          PIC X.
+                   05  CCURSO-COLOR         PIC X.
+      *            05  CCURSO-FILL1         PIC X(4).
+                   05  CCURSO-VALOR         PIC X(05).
+      *
+                   05  NAAAA-LONG          PIC XX.
+                   05  NAAAA-ATTR          PIC X.
+                   05  NAAAA-COLOR         PIC X.
+      *            05  NAAAA-FILL1         PIC X(4).
+                   05  NAAAA-VALOR         PIC X(04).
+      *
+                   05  ENOTA-LONG          PIC XX.
+                   05  ENOTA-ATTR          PIC X.
+                   05  ENOTA-COLOR         PIC X.
+      *            05  ENOTA-FILL1         PIC X(4).
+                   05  ENOTA-VALOR         PIC X(05).
+      *            05  ENOTA-FILL1         PIC X(3).
+      *
+           02  FILLER                      PIC X(182).
+      * ---------------------------------------------------------------
+
