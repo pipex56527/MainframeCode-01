@@ -1,3 +1,20 @@
+      *************************************************************
+      *   ENCAPSULADOR TABLA NOTFIN
+      *   RUTINA QUE EJECUTA LAS SENTENCIAS DE LA BASE DE DATOS A
+      *   PARTIR DE UN TIPO Y SUBTIPO DE OPERACION QUE ENVIA
+      *   EL PROGRAMA QUE LA INVOCA.
+      *   TIPO 1: CONSULTA - SELECT
+      *      SUBTIPO 1: CONSULTA ESTUDIANTE O POR PROFESOR
+      *        2: ADICION - INSERT
+      *        3: BORRAR - DELETE
+      *        4: MODIFICAR - UPDATE
+      *************************************************************
+      * MODIFICACIONES                                            *
+      * OCT 9-2024 : ULTIMA VERSION DE LA ACTIVIDAD DEL SISTEMA   *
+      * SAUL         DE NOTAS                                     *
+      *              SE AGREGO LA TERMINAL A LOS NOMBRES DE LAS   *
+      *              COLAS PARA QUE FUNCIONEN BIEN EN SERVIDORES  *
+      *************************************************************
        IDENTIFICATION DIVISION.
        PROGRAM-ID. RSNNOFIN.
        ENVIRONMENT DIVISION.
@@ -14,13 +31,13 @@
            05 LK-NT-COD-RET       PIC 9(02).
            05 LK-NT-SQLCODE       PIC S9(9).
            05 LK-NT-FILLER        PIC X(54).
-       01 COLA-NOTASFIN.
-          05 C-CURSO         PIC X(05).
-          05 C-DNIESTUDIANTE PIC X(09).
-          05 C-AAAA          PIC X(04).
-          05 C-NOTA          PIC S9(5)V99.
-       01 WS-COLAPROFESOR   PIC X(08) VALUE 'KCICSNT'.
-       01 WS-COLAESTUDIANTE PIC X(08) VALUE 'KCICSNE'.
+       01 COLA-PROFESORES.
+          05 K-CURSO         PIC X(05).
+          05 K-DNIESTUDIANTE PIC X(09).
+          05 K-AAAA          PIC X(04).
+          05 K-NOTA          PIC S9(5)V99.
+       01 WS-COLA-PROFESORES PIC X(08).
+       01 WS-COLA-ESTUDIANTES PIC X(08) .
        01 RESPUESTA      PIC S9(08) COMP.
        01 WS-EOF         PIC X VALUE SPACES.
        01 WS-COLATRABAJO PIC X(08) VALUE 'KCICS01'.
@@ -116,9 +133,13 @@
            .
       ******************************************************************
       * 0100-INICIO
-      ******************************************************************
+      *********************************************F COLA-**************
        0100-INICIO.
            MOVE DFHCOMMAREA TO AREA-LINK
+           MOVE 'KSNE'        TO WS-COLA-ESTUDIANTES(1:4)
+           MOVE EIBTRMID      TO WS-COLA-ESTUDIANTES(5:4)
+           MOVE 'KSNP'        TO WS-COLA-PROFESORES(1:4)
+           MOVE EIBTRMID      TO WS-COLA-PROFESORES(5:4)
            .
       ******************************************************************
       * 0200-EJECUTAR-OPERACION
@@ -505,13 +526,13 @@
            END-IF
            IF SQLCODE = 0
              ADD 1                 TO WS-CONTADOR-REGISTRO
-             MOVE NT-CURSO         TO C-CURSO
-             MOVE NT-DNIESTUDIANTE TO C-DNIESTUDIANTE
-             MOVE NT-AAAA          TO C-AAAA
-             MOVE NT-NOTA          TO C-NOTA
+             MOVE NT-CURSO         TO K-CURSO
+             MOVE NT-DNIESTUDIANTE TO K-DNIESTUDIANTE
+             MOVE NT-AAAA          TO K-AAAA
+             MOVE NT-NOTA          TO K-NOTA
              EXEC CICS WRITEQ TS
-                QUEUE (WS-COLAPROFESOR)
-                FROM (COLA-NOTASFIN)
+                QUEUE (WS-COLA-PROFESORES)
+                FROM (COLA-PROFESORES)
              END-EXEC
            END-IF
              .
@@ -544,13 +565,13 @@
            END-IF
            IF SQLCODE = 0
              ADD 1                 TO WS-CONTADOR-REGISTRO
-             MOVE NT-CURSO         TO C-CURSO
-             MOVE NT-DNIESTUDIANTE TO C-DNIESTUDIANTE
-             MOVE NT-AAAA          TO C-AAAA
-             MOVE NT-NOTA          TO C-NOTA
+             MOVE NT-CURSO         TO K-CURSO
+             MOVE NT-DNIESTUDIANTE TO K-DNIESTUDIANTE
+             MOVE NT-AAAA          TO K-AAAA
+             MOVE NT-NOTA          TO K-NOTA
              EXEC CICS WRITEQ TS
-                QUEUE (WS-COLAESTUDIANTE)
-                FROM (COLA-NOTASFIN)
+                QUEUE (WS-COLA-ESTUDIANTES)
+                FROM (COLA-PROFESORES)
              END-EXEC
            END-IF
              .

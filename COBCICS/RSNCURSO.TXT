@@ -9,6 +9,12 @@
       *        3: BORRAR - DELETE
       *        4: MODIFICAR - UPDATE
       *************************************************************
+      * MODIFICACIONES                                            *
+      * OCT 9-2024 : ULTIMA VERSION DE LA ACTIVIDAD DEL SISTEMA   *
+      * SAUL         DE NOTAS                                     *
+      *              SE AGREGO LA TERMINAL A LOS NOMBRES DE LAS   *
+      *              COLAS PARA QUE FUNCIONEN BIEN EN SERVIDORES  *
+      *************************************************************
        IDENTIFICATION DIVISION.
        PROGRAM-ID. RSNCURSO.
        ENVIRONMENT DIVISION.
@@ -28,7 +34,7 @@
           05 C-CURSO       PIC X(05).
           05 C-DESCRIPCION PIC X(20).
           05 C-DNIPROFESOR PIC X(09).
-       01 WS-NOMBRECOLA  PIC X(08) VALUE 'KCICSCR'.
+       01 WS-COLA-CURSOS PIC X(08) .
        01 RESPUESTA      PIC S9(08) COMP.
        01 WS-EOF         PIC X VALUE SPACES.
        01 WS-COLATRABAJO PIC X(08) VALUE 'KCICS01'.
@@ -108,6 +114,8 @@
       ******************************************************************
        0100-INICIO.
            MOVE DFHCOMMAREA TO AREA-LINK
+           MOVE 'KSNC'        TO WS-COLA-CURSOS(1:4)
+           MOVE EIBTRMID      TO WS-COLA-CURSOS(5:4)
            .
       ******************************************************************
       * 0200-EJECUTAR-OPERACION
@@ -244,7 +252,7 @@
            .
        0250-CURSOR-01.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-CURSOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -275,7 +283,7 @@
              MOVE CR-DESCRIPCION TO C-DESCRIPCION
              MOVE CR-DNIPROFESOR TO C-DNIPROFESOR
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-CURSOS)
                 FROM (COLA-CURSOS)
              END-EXEC
              .
