@@ -1,8 +1,14 @@
-      ********************************************************
-      *MODELO TABLA USUARIOS OPERACIONES DE.INSERT,UPDATE,SELECT,*
-      *DELETE RECIBE COMO PARAMETROS EN EL COMAREA LOS DATOS  *
-      *A ACTUALIZAR                                           *
-      *********************************************************
+      *************************************************************
+      *MODELO TABLA USUARIOS OPERACIONES DE.INSERT,UPDATE,SELECT, *
+      *DELETE RECIBE COMO PARAMETROS EN EL COMAREA LOS DATOS      *
+      *A ACTUALIZAR                                               *
+      *************************************************************
+      * MODIFICACIONES                                            *
+      * OCT 9-2024 : ULTIMA VERSION DE LA ACTIVIDAD DEL SISTEMA   *
+      * SAUL         DE NOTAS                                     *
+      *              SE AGREGO LA TERMINAL A LOS NOMBRES DE LAS   *
+      *              COLAS PARA QUE FUNCIONEN BIEN EN SERVIDORES  *
+      *************************************************************
        IDENTIFICATION DIVISION.
        PROGRAM-ID. RENUSUA2.
        ENVIRONMENT DIVISION.
@@ -243,7 +249,7 @@
              05 DB2-ERR-MSG           PIC X(50).
              05 DB2-ERR-CODE          PIC X(20).
        01 RESPUESTA      PIC S9(08) COMP.
-       77 WS-NOMBRECOLA  PIC X(08) VALUE 'KCICS03'.
+       77 WS-COLA-USUARIOS PIC X(08).
        77 WS-TRABAJOCOLA PIC X(08) VALUE 'KCICS76'.
        77 WS-NUM-ELMENT  PIC S9(4) COMP VALUE 1.
        77 WS-CONTADOR-REGISTRO PIC S9(5) VALUE ZEROS.
@@ -274,6 +280,8 @@
       **********************************************************
        0100-INICIO.
            MOVE DFHCOMMAREA TO  MI-COMMAREA
+           MOVE 'KSNU'        TO WS-COLA-USUARIOS(1:4)
+           MOVE EIBTRMID      TO WS-COLA-USUARIOS(5:4)
            EVALUATE TIPO
              WHEN 'INSERT'
                EVALUATE SUB-TIPO
@@ -466,7 +474,7 @@
            .
        0150-CURSOR-01.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -501,13 +509,13 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
        0150-CURSOR-02.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -542,13 +550,13 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
        0150-CURSOR-03.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -583,13 +591,13 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
        0150-CURSOR-04.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -624,13 +632,13 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
        0150-CURSOR-05.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -665,13 +673,13 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
        0150-CURSOR-06.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -706,13 +714,13 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
        0150-CURSOR-07.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -747,13 +755,13 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
        0150-CURSOR-08.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -788,13 +796,13 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
        0150-CURSOR-09.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -829,13 +837,13 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
        0150-CURSOR-10.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -870,13 +878,13 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
        0150-CURSOR-11.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -911,13 +919,13 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
        0150-CURSOR-12.
            EXEC CICS DELETEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            EXEC SQL
@@ -952,7 +960,7 @@
              MOVE US-APELLIDOS TO C-APELLIDOS
              MOVE US-DIRECCION TO C-DIRECCION
              EXEC CICS WRITEQ TS
-                QUEUE (WS-NOMBRECOLA)
+                QUEUE (WS-COLA-USUARIOS)
                 FROM (COLA-USUARIOS)
              END-EXEC
              .
