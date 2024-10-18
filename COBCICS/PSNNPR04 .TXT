@@ -1,8 +1,8 @@
       ******************************************************************
       * PROYECTO .: SNIU-SISTEMA DE NOTAS DE IDENTIFICACIÛN DE USUARIOS*
-      * PROGRAMA .: PSNNPR0Z FUNCIONA BIEN CON NOTA ANTES ENCAPSULA    *
-      * VERSION ..: .OMBRES Y APELLIDOS JUNTOS - OK                    *
-      * TITULO: ..:PROGRAMA SISTEMA NOTAS CONSULTA NOTAS PROFESOR 04   *
+      * PROGRAMA .: PSNNPR04                                           *
+      * VERSION ..: ULTIMA VERSION DE LA ACTIVIDAD                     *
+      * TITULO: ..: PROGRAMA SISTEMA NOTAS CONSULTA NOTAS PROFESOR 04  *
       *                                                                *
       * TIPO .......:                                                  *
       *   - LENGUAJE ..................: COBOL II                      *
@@ -16,12 +16,15 @@
       *   - SE MUESTRA EN LA PANTALLA LA IDENTIFICACIÛN DEL PROFESOR   *
       *     A CONSULTAR Y EN LAS PRÛXIMAS LÌNEAS SE MUESTRAN , EL DNI, *
       *     APELLIDOS Y NOMBRE, CURSO, AÒO DEL CURSO Y LA NOTA FINAL   *
-      *     DE CADA ESTUDIANTE DEL CURSO DICTADO POR EL PROFESOR.      *
-      *     PARA UN PROFERSOR (PRIMERA LÌNEA) SE MUESTRAN LAS NOTAS DE *
-      *     TODOS LOS ESTUDIANTES, DEL CURSO QUE EL PROFESOR DICTA.    *
-      *     PARA EL USUARIO ADMIN SE DEBE MOSTRAR LA INFORMACIÛN DE LOS*
-      *     ESTUDIANTES DE TODOS LOS PROFESORES, PERO EL PROFESOR SÛLO *
-      *     PUEDE VER LA INFORMACIÛN DE LOS ESTUDIANTES DE SU CURSO.   *
+      *     DE CADA ESTUDIANTE DE LOS CURSOS DICTADO POR EL PROFESOR.  *
+      *     PARA EL USUARIO ADMIN SE PUEDE CONSULTAR LAS NOTAS DE TODOS*
+      *     LOS PROFESORES, PERO PARA EL USUARIO PROFESOR, SOLO PUEDE  *
+      *     VER LAS NOTAS DE LOS ESTUDIANTES DE LOS CURSOS QUE DICTA   *
+      ******************************************************************
+      * MODIFICACIONES:                                                *
+      * OCT 9-2024 : SE AGREGO A LOS NOMBRES DE LAS COLAS, EL NUMERO   *
+      * SAUL         DE LA TERMINAL PARA QUE FUNCIONE CUANDO EL SISTEMA*
+      *              ESTE EN UN SERVIDOR                               *
       ******************************************************************
        IDENTIFICATION DIVISION.
        PROGRAM-ID. PSNNPR04.
@@ -103,13 +106,13 @@
           05 KCR-CURSO       PIC X(05).
           05 KCR-DESCRIPCION PIC X(20).
           05 KCR-DNIPROFESOR PIC X(09).
-       01 WS-COLA-CURSOS PIC X(08) VALUE 'KCICSCR'.
-       01 COLA-NOTASFIN.
-          05 KNT-CURSO         PIC X(05).
-          05 KNT-DNIESTUDIANTE PIC X(09).
-          05 KNT-AAAA          PIC X(04).
-          05 KNT-NOTA          PIC S9(5)V99.
-       01 WS-COLA-NOTASFIN     PIC X(08) VALUE 'KCICSNT'.
+       01 WS-COLA-CURSOS PIC X(08) .
+       01 COLA-PROFESORES.
+          05 KPR-CURSO         PIC X(05).
+          05 KPR-DNIESTUDIANTE PIC X(09).
+          05 KPR-AAAA          PIC X(04).
+          05 KPR-NOTA          PIC S9(5)V99.
+       01 WS-COLA-PROFESORES   PIC X(08).
        01 RESPUESTA      PIC S9(08) COMP.
        01 WS-EOF         PIC X VALUE SPACES.
        01 WS-COLATRABAJO PIC X(08) VALUE 'KCICS01'.
@@ -224,6 +227,10 @@
                       WS-COD-RET
 
            PERFORM 790-CONSEGUIR-FECHOR
+           MOVE 'KSNC'        TO WS-COLA-CURSOS(1:4)
+           MOVE EIBTRMID      TO WS-COLA-CURSOS(5:4)
+           MOVE 'KSNP'        TO WS-COLA-PROFESORES(1:4)
+           MOVE EIBTRMID      TO WS-COLA-PROFESORES(5:4)
       *
            EVALUATE TRUE
              WHEN EIBCALEN = 0
@@ -346,7 +353,7 @@
              MOVE CA-ID-DNI  TO UDNIO
              MOVE CA-ID-NOMBRE TO UNOMBO
            END-IF
-           IF UDNII     EQUAL LOW-VALUES OR '_________' OR SPACES THEN
+           IF UDNII EQUAL LOW-VALUES OR '_________' OR SPACES THEN
               MOVE "DEBE DIGITAR IDENTIFICACION DEL PROFESOR"
                 TO MSGO
               PERFORM 730-ENVIAR-MSG
@@ -424,13 +431,13 @@
                END-IF
              END-IF
              EXEC CICS DELETEQ TS
-               QUEUE (WS-COLA-NOTASFIN)
+               QUEUE (WS-COLA-PROFESORES)
                RESP (RESPUESTA)
              END-EXEC
-             PERFORM CREE-COLA-NOTASFIN UNTIL WS-EOF = 'Y'
+             PERFORM CREE-COLA-PROFESORES UNTIL WS-EOF = 'Y'
 
            .
-       CREE-COLA-NOTASFIN.
+       CREE-COLA-PROFESORES.
            MOVE 9         TO LK-NT-COD-RET
            MOVE 5         TO LK-NT-TIPO-OPE
            MOVE 1         TO LK-NT-SUBTIPO-OPE
@@ -595,8 +602,8 @@
            END-IF
            EXEC CICS READQ  TS
                 ITEM(WS-CA-NUM-REGISTRO)
-                QUEUE (WS-COLA-NOTASFIN)
-                INTO (COLA-NOTASFIN)
+                QUEUE (WS-COLA-PROFESORES)
+                INTO (COLA-PROFESORES)
                 RESP (RESPUESTA)
            END-EXEC
            IF RESPUESTA = DFHRESP(NORMAL) AND
@@ -616,7 +623,7 @@
            MOVE 9                 TO LK-US-COD-RET
            MOVE 1                 TO LK-US-TIPO-OPE
            MOVE 1                 TO LK-US-SUBTIPO-OPE
-           MOVE KNT-DNIESTUDIANTE TO LK-US-DNI CA-US-DNI
+           MOVE KPR-DNIESTUDIANTE TO LK-US-DNI CA-US-DNI
 
            EXEC CICS LINK
                      PROGRAM('RSNUSUAR')
@@ -633,11 +640,11 @@
            END-IF
            MOVE LK-US-NOMBRE              TO WS-NOMAPE(1:20)
            MOVE LK-US-APELLIDOS           TO WS-NOMAPE(21:20)
-           MOVE KNT-DNIESTUDIANTE         TO EDNI-VALOR(L)
+           MOVE KPR-DNIESTUDIANTE         TO EDNI-VALOR(L)
            MOVE WS-NOMAPE                 TO UENOMB-VALOR(L)
-           MOVE KNT-CURSO                 TO CCURSO-VALOR(L)
-           MOVE KNT-AAAA                  TO NAAAA-VALOR(L)
-           MOVE KNT-NOTA                  TO WS-NOTA
+           MOVE KPR-CURSO                 TO CCURSO-VALOR(L)
+           MOVE KPR-AAAA                  TO NAAAA-VALOR(L)
+           MOVE KPR-NOTA                  TO WS-NOTA
            MOVE WS-NOTA                   TO ENOTA-VALOR(L)
            .
        3100-PRESENTA-LINEA-EXIT.
@@ -701,14 +708,6 @@
            MOVE WS-CURRENT-HRA        TO WS-LAHORA
            MOVE WS-CURRENT-MIN        TO WS-ELMINUTO
            MOVE WS-CURRENT-SEG        TO WS-ELSEGUNDO
-             MOVE SPACES       TO COLA-TRABAJO
-             MOVE WS-ELANO     TO T-AREA-LINK1
-             MOVE WS-ELMES     TO T-AREA-LINK2
-             MOVE WS-ELDIA     TO T-AREA-LINK3
-             EXEC CICS WRITEQ TS
-                QUEUE (WS-COLATRABAJO)
-                FROM (COLA-TRABAJO)
-             END-EXEC
            .
       *
       *

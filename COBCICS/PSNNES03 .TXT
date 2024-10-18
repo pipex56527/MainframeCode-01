@@ -1,8 +1,8 @@
       ******************************************************************
       * PROYECTO .: SNIU-SISTEMA DE NOTAS DE IDENTIFICACIÛN DE USUARIOS*
-      * PROGRAMA .: PSNNPR0Z FUNCIONA BIEN CON NOTA ANTES ENCAPSULA    *
-      * VERSION ..: .OMBRES Y APELLIDOS JUNTOS - OK                    *
-      * TITULO: ..:PROGRAMA SISTEMA NOTAS CONSULTA NOTAS PROFESOR 04   *
+      * PROGRAMA .: PSNNES03 FUNCIONA BIEN CON NOTA ANTES ENCAPSULA    *
+      * VERSION ..: ULTIMA DE LA ACTIVIDAD                             *
+      * TITULO: ..: PROGRAMA SISTEMA NOTAS CONSULTA NOTAS ESTUDIANTES  *
       *                                                                *
       * TIPO .......:                                                  *
       *   - LENGUAJE ..................: COBOL II                      *
@@ -10,18 +10,19 @@
       *   - BASE DE DATOS .............: DB2                           *
       *                                                                *
       * DESCRIPCION.....:    FECHA SEP 21 HORA 20:56                   *
-      *   - PSNNPR04         TIENE LA COMMAREA Y LINK ENCAPS USUARIOS  *
+      *   - PSNNES03         TIENE LA COMMAREA Y LINK ENCAPS USUARIOS  *
       *   -                                                            *
       *   - USA CURSORES PARA F7-ANTERIOR Y F8-SIGUIENTE               *
-      *   - SE MUESTRA EN LA PANTALLA LA IDENTIFICACIÛN DEL PROFESOR   *
-      *     A CONSULTAR Y EN LAS PRÛXIMAS LÌNEAS SE MUESTRAN , EL DNI, *
-      *     APELLIDOS Y NOMBRE, CURSO, AÒO DEL CURSO Y LA NOTA FINAL   *
-      *     DE CADA ESTUDIANTE DEL CURSO DICTADO POR EL PROFESOR.      *
-      *     PARA UN PROFERSOR (PRIMERA LÌNEA) SE MUESTRAN LAS NOTAS DE *
-      *     TODOS LOS ESTUDIANTES, DEL CURSO QUE EL PROFESOR DICTA.    *
-      *     PARA EL USUARIO ADMIN SE DEBE MOSTRAR LA INFORMACIÛN DE LOS*
-      *     ESTUDIANTES DE TODOS LOS PROFESORES, PERO EL PROFESOR SÛLO *
-      *     PUEDE VER LA INFORMACIÛN DE LOS ESTUDIANTES DE SU CURSO.   *
+      *   - MUESTRA TODAS LAS NOTAS QUE TIENE UN ESTUDICNATE           *
+      *   - SI EL  USUARIO ES UN ESTUDIANTE, SOLO SE LE PERMITE        *
+      *     CONSULTAR SUS NOTAS                                        *
+      *   - SI ES USUARIO ES DE TIPO ADMINISTRATIVO, SE DEBE CAPTURAR  *
+      *     EL DNI DEL ESTUDIANTES Y DE AHI SE LE MUESTRAN TODAS SUS   *
+      *     NOTAS.                                                     *
+      ******************************************************************
+      *   - MODIFICACIONES:                                            *
+      *     OCT 9 2024 : SE AGREGO EL NUMERO DE LA TERMINAL A LAS COLAS*
+      *     SAUL         QUE MANEJA PARA QUE FUNCIONE  EN UN SERVIDOR  *
       ******************************************************************
        IDENTIFICATION DIVISION.
        PROGRAM-ID. PSNNES03.
@@ -100,17 +101,12 @@
       *-- ZONA COMMAREA -------------------------------
       *
       *-- VARIABLES -----------------------------------
-       01 COLA-CURSOS.
-          05 KCR-CURSO       PIC X(05).
-          05 KCR-DESCRIPCION PIC X(20).
-          05 KCR-DNIPROFESOR PIC X(09).
-       01 WS-COLA-CURSOS PIC X(08) VALUE 'KCICSCR'.
-       01 COLA-NOTASFIN.
-          05 KNT-CURSO         PIC X(05).
-          05 KNT-DNIPROFESOR   PIC X(09).
-          05 KNT-AAAA          PIC X(04).
-          05 KNT-NOTA          PIC S9(5)V99.
-       01 WS-COLAESTUDIANTE    PIC X(08) VALUE 'KCICSNE'.
+       01 COLA-ESTUDIANTES.
+          05 KPR-CURSO         PIC X(05).
+          05 KPR-DNIPROFESOR   PIC X(09).
+          05 KPR-AAAA          PIC X(04).
+          05 KPR-NOTA          PIC S9(5)V99.
+       01 WS-COLA-ESTUDIANTES  PIC X(08).
        01 RESPUESTA      PIC S9(08) COMP.
        01 WS-EOF         PIC X VALUE SPACES.
        01 WS-COLATRABAJO PIC X(08) VALUE 'KCICS01'.
@@ -225,6 +221,8 @@
                       WS-COD-RET
 
            PERFORM 790-CONSEGUIR-FECHOR
+           MOVE 'KSNE'        TO WS-COLA-ESTUDIANTES(1:4)
+           MOVE EIBTRMID      TO WS-COLA-ESTUDIANTES(5:4)
            EVALUATE TRUE
              WHEN EIBCALEN = 0
                 SET CICLO-0 TO TRUE
@@ -400,7 +398,7 @@
            MOVE ZEROS     TO LK-NT-FILLER
 
              EXEC CICS DELETEQ TS
-               QUEUE (WS-COLAESTUDIANTE)
+               QUEUE (WS-COLA-ESTUDIANTES)
                RESP (RESPUESTA)
              END-EXEC
            EXEC CICS LINK
@@ -548,8 +546,8 @@
            END-IF
            EXEC CICS READQ  TS
                 ITEM(WS-CA-NUM-REGISTRO)
-                QUEUE (WS-COLAESTUDIANTE)
-                INTO (COLA-NOTASFIN)
+                QUEUE (WS-COLA-ESTUDIANTES)
+                INTO (COLA-ESTUDIANTES)
                 RESP (RESPUESTA)
            END-EXEC
            IF RESPUESTA = DFHRESP(NORMAL) AND
@@ -569,7 +567,7 @@
            MOVE 9         TO LK-CR-COD-RET
            MOVE 1         TO LK-CR-TIPO-OPE
            MOVE 1         TO LK-CR-SUBTIPO-OPE
-           MOVE KNT-CURSO TO LK-CR-CURSO
+           MOVE KPR-CURSO TO LK-CR-CURSO
 
            EXEC CICS LINK
                      PROGRAM('RSNCURSO')
@@ -598,9 +596,9 @@
            MOVE LK-US-APELLIDOS           TO WS-NOMAPE(21:20)
            MOVE LK-US-DNI                 TO EDNI-VALOR(L)
            MOVE WS-NOMAPE                 TO UENOMB-VALOR(L)
-           MOVE KNT-CURSO                 TO CCURSO-VALOR(L)
-           MOVE KNT-AAAA                  TO NAAAA-VALOR(L)
-           MOVE KNT-NOTA                  TO WS-NOTA
+           MOVE KPR-CURSO                 TO CCURSO-VALOR(L)
+           MOVE KPR-AAAA                  TO NAAAA-VALOR(L)
+           MOVE KPR-NOTA                  TO WS-NOTA
            MOVE WS-NOTA                   TO ENOTA-VALOR(L)
            .
        3100-PRESENTA-LINEA-EXIT.

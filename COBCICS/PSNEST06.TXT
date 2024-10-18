@@ -2,6 +2,11 @@
       *    SCROLL DE ESTUDIANTES Y PERMITE LLAMAR AL PROGRAMA   *
       *    DEL CRUD                                             *
       ***********************************************************
+      * OCT 9-2024: ULTIMA VERSION DE LA ACTIVIDAD
+      *             SE LEEN LOS PERMISOS Y PERFILES DEL USUARIO
+      *             NRO TERMINAL PARA CUANDO ESTE LA VERSION EN
+      *             SERVIDOR
+      ***********************************************************
        IDENTIFICATION DIVISION.
        PROGRAM-ID. PSNEST06.
        ENVIRONMENT DIVISION.
@@ -111,7 +116,7 @@
           03 WC-CUR-SEL4          PIC S9(4) COMP VALUE +1205.
       *ESTA COLA LA USO PARA LLEVAR LOS REGISTROS LEIDOS EN TABLA
       *DE ESTUDIANTES Y DESPUES MOSTRAR POR CONSULTA ESTOS DATOS
-       01 COLA-ESTUD.
+       01 COLA-USUARIOS.
           05 C-DNI       PIC X(09).
           05 C-NOMBRE    PIC X(20).
           05 C-APELLIDOS PIC X(20).
@@ -132,7 +137,7 @@
        01 SW-ERROR-VALIDACION          PIC X    VALUE 'N'.
           88 ERROR-VALIDACION                   VALUE 'S'.
       * AYUSASA COLATS
-       77 WS-NOMBRECOLA        PIC X(08) VALUE 'KCICS03'.
+       77 WS-COLA-USUARIOS     PIC X(08).
        77 WS-NUM-REGISTRO      PIC S9(4) COMP.
        77 WS-PRIMER-REGISTRO   PIC S9(4) COMP.
        77 WS-CONTADOR-REGISTRO PIC S9(5) COMP.
@@ -170,6 +175,8 @@
       * ESTAMOS TRABAJANDO Y NOS LLEVA A CONTINUAR EN ESE CICLO*
       **********************************************************
        0100-INICIO.
+           MOVE 'KSNU'        TO WS-COLA-USUARIOS(1:4)
+           MOVE EIBTRMID      TO WS-COLA-USUARIOS(5:4)
            EVALUATE TRUE
             WHEN EIBCALEN = 0
               SET CICLO-0 TO TRUE
@@ -252,6 +259,9 @@
            EVALUATE EIBAID
              WHEN DFHENTER
                 PERFORM 0250-PROCESE-TRAN
+             WHEN DFHPF2
+      *         VUELVE AL ESTADO INICIAL
+                PERFORM 0201-CICLO-0
              WHEN DFHPF5
                 PERFORM 1300-PROCESO-ORDENAR
              WHEN DFHPF8
@@ -438,6 +448,8 @@
            IF WS-NUM-REGISTRO + 4 < CONTADOR-REGISTRO
              MOVE '+' TO MDOWNO
            ELSE
+             MOVE DFHGREEN                   TO MSGC
+             MOVE 'PAGINA FINAL          '   TO MSGO
              MOVE '-' TO MDOWNO
            END-IF
            MOVE 'N' TO WS-EOF
@@ -458,8 +470,8 @@
            END-IF
            EXEC CICS READQ  TS
                 ITEM(WS-NUM-REGISTRO)
-                QUEUE (WS-NOMBRECOLA)
-                INTO (COLA-ESTUD)
+                QUEUE (WS-COLA-USUARIOS)
+                INTO (COLA-USUARIOS)
                 RESP (RESPUESTA)
            END-EXEC
            IF RESPUESTA = DFHRESP(NORMAL) AND
